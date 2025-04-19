@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  getShowtime,
+  getShowtimes,
   deleteShowtime,
   getMovies,
   getRooms,
@@ -54,7 +54,7 @@ export default function ShowtimeManagement() {
   useEffect(() => {
     getMovies().then(setMovies);
     getRooms().then(setRooms);
-    getShowtime().then(setShowtime);
+    getShowtimes().then(setShowtime);
   }, []);
 
   const handleEditShowtime = (showtime) => {
@@ -176,7 +176,7 @@ export default function ShowtimeManagement() {
 
       setshowAddModal(false);
 
-      await getShowtime().then((data) => {
+      await getShowtimes().then((data) => {
         setShowtime(data);
         setToast({
           show: true,
@@ -438,7 +438,7 @@ export default function ShowtimeManagement() {
     const fetchShowtime = async () => {
       try {
         setLoading(true);
-        const data = await getShowtime();
+        const data = await getShowtimes();
         setShowtime(data);
         setLoading(false);
       } catch (err) {
