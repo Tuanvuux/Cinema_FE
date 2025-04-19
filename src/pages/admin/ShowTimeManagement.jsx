@@ -9,7 +9,6 @@ import {
 } from "../../services/api.jsx";
 import { Link } from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from "date-fns";
-import showtime from "@/components/Showtime.jsx";
 
 export default function ShowtimeManagement() {
   const [Showtime, setShowtime] = useState([]);

@@ -82,6 +82,11 @@ export const deleteRoom = async (roomId) => {
   return response.data;
 };
 
+export const getRoomByRoomId = async (roomId) => {
+  const response = await api.get(`/rooms/${roomId}`);
+  return response.data;
+};
+
 // Showtime
 export const getShowtimes = async () => {
   const response = await api.get("/showtime");
