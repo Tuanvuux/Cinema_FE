@@ -20,7 +20,9 @@ export default function RoomManagement () {
     const [selectedRooms, setSelectedRooms] = useState([]);
 
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingRoom, setEditingRoom] = useState({ id: '', name: '', seatCount: '', status: '' });
+    const [editingRoom, setEditingRoom] = useState({ id: '', name: '', seatCount: '',numberOfcolumns: '',
+                                                                    numberOfrows:'',
+                                                                    screenType: '', status: '' });
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedRoomId, setSelectedRoomId] = useState(null);
 
@@ -83,6 +85,9 @@ export default function RoomManagement () {
             const updatedRoom = await updateRoom(editingRoom.id, {
                 name: editingRoom.name,
                 seatCount: editingRoom.seatCount,
+                numberOfcolumns: editingRoom.numberOfcolumns,
+                numberOfrows: editingRoom.numberOfrows,
+                screenType: editingRoom.screenType,
                 status: editingRoom.status,
             });
 
@@ -303,13 +308,20 @@ export default function RoomManagement () {
 
 
     // Filter rooms based on search term and status
-    const filteredRooms = rooms.filter(room => {
-        const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'all' ||
-            (statusFilter === 'active' && room.status === 'ACTIVE') ||
-            (statusFilter === 'inactive' && room.status === 'INACTIVE');
-        return matchesSearch && matchesStatus;
-    });
+    // const filteredRooms = rooms.filter(room => {
+    //     const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase());
+    //     const matchesStatus = statusFilter === 'all' ||
+    //         (statusFilter === 'active' && room.status === 'ACTIVE') ||
+    //         (statusFilter === 'inactive' && room.status === 'INACTIVE');
+    //     return matchesSearch && matchesStatus;
+    // });
+
+    const filteredRooms = rooms.filter(room =>
+        Object.values(room).some(value =>
+            value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
+
 
     // Calculate pagination
     const indexOfLastRoom = currentPage * itemsPerPage;
@@ -358,6 +370,11 @@ export default function RoomManagement () {
                         <Link to="/admin/moviemanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">movie</span>
                             <span>Phim</span>
+                        </Link>
+                        <Link to="/admin/accountmanagement"
+                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                            <span className="material-icons">account_circle</span>
+                            <span>Tài khoản</span>
                         </Link>
                         <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">confirmation_number</span>
@@ -476,6 +493,7 @@ export default function RoomManagement () {
                                     </th>
                                     <th className="p-3 text-center">Tên phòng</th>
                                     <th className="p-3 text-center">Sức chứa</th>
+                                    <th className="p-3 text-center">Loại màn hình</th>
                                     <th className="p-3 text-center">Trạng thái</th>
                                     <th className="p-3 text-center">Thao tác</th>
                                 </tr>
@@ -491,6 +509,7 @@ export default function RoomManagement () {
                                         </td>
                                         <td className="p-3 font-medium text-center">{room.name}</td>
                                         <td className="p-3 text-center">{room.seatCount}</td>
+                                        <td className="p-3 text-center">{room.screenType}</td>
                                         <td className="p-3 text-center">
                                             <div className="flex justify-center">
                                                 <label className="relative inline-flex items-center cursor-pointer">
@@ -523,10 +542,12 @@ export default function RoomManagement () {
                                             </button>
 
                                             {isDeleteModalOpen && (
-                                                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                                                <div
+                                                    className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
                                                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
-                                                        <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này không?</p>
+                                                        <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này
+                                                            không?</p>
                                                         <div className="flex justify-end gap-4">
                                                             <button
                                                                 onClick={handleCloseModal}
@@ -664,7 +685,54 @@ export default function RoomManagement () {
                                     required
                                 />
                             </div>
+                            <div className="flex space-x-4">
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Số cột ghế
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="numberOfcolumns"
+                                        name="numberOfcolumns"
+                                        value={editingRoom.numberOfcolumns}
+                                        onChange={handleInputChangeEdit}
+                                        placeholder="Nhập số cột ghế"
+                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Số dòng ghế
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="numberOfrows"
+                                        name="numberOfrows"
+                                        value={editingRoom.numberOfrows}
+                                        onChange={handleInputChangeEdit}
+                                        placeholder="Nhập số dòng ghế"
+                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        required
+                                    />
+                                </div>
+                            </div>
 
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tên màn hình máy chiếu
+                                </label>
+                                <input
+                                    type="text"
+                                    id="screenType"
+                                    name="screenType"
+                                    value={editingRoom.screenType}
+                                    onChange={handleInputChangeEdit}
+                                    placeholder="Nhập loại màn hình chiếu"
+                                    className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                    required
+                                />
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Trạng thái
@@ -676,7 +744,7 @@ export default function RoomManagement () {
                                             name="status"
                                             value="ACTIVE"
                                             checked={editingRoom.status === 'ACTIVE'}
-                                            onChange={() => setEditingRoom({ ...editingRoom, status: 'ACTIVE' })}
+                                            onChange={() => setEditingRoom({...editingRoom, status: 'ACTIVE'})}
                                             className="absolute opacity-0 cursor-pointer"
                                         />
                                         <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
@@ -695,7 +763,7 @@ export default function RoomManagement () {
                                             name="status"
                                             value="INACTIVE"
                                             checked={editingRoom.status === 'INACTIVE'}
-                                            onChange={() => setEditingRoom({ ...editingRoom, status: 'INACTIVE' })}
+                                            onChange={() => setEditingRoom({...editingRoom, status: 'INACTIVE'})}
                                             className="absolute opacity-0 cursor-pointer"
                                         />
                                         <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
@@ -730,7 +798,7 @@ export default function RoomManagement () {
                     </div>
                 </div>
             )}
-            
+
             {/* Add Room Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -779,6 +847,54 @@ export default function RoomManagement () {
                                 />
                             </div>
 
+                            <div className="flex space-x-4">
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Số cột ghế
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="numberOfcolumns"
+                                        name="numberOfcolumns"
+                                        value={newRoom.numberOfcolumns}
+                                        onChange={handleInputChange}
+                                        placeholder="Nhập số cột ghế"
+                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Số dòng ghế
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="numberOfrows"
+                                        name="numberOfrows"
+                                        value={newRoom.numberOfrows}
+                                        onChange={handleInputChange}
+                                        placeholder="Nhập số dòng ghế"
+                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tên màn hình máy chiếu
+                                </label>
+                                <input
+                                    type="text"
+                                    id="screenType"
+                                    name="screenType"
+                                    value={newRoom.screenType}
+                                    onChange={handleInputChange}
+                                    placeholder="Nhập loại màn hình chiếu"
+                                    className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                    required
+                                />
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Trạng thái
@@ -835,7 +951,7 @@ export default function RoomManagement () {
                             </button>
                             <button
                                 onClick={handleAddRoom}
-                                    className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                                className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
                                 disabled={!newRoom.name || newRoom.seatCount <= 0}
                             >
                                 Thêm phòng

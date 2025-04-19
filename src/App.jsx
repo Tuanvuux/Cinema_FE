@@ -5,6 +5,7 @@ import RegisterPage from "./pages/public/RegisterPage";
 import Payment from "./components/Payment";
 import SeatSelection from "./components/SeatSelection";
 import MovieDetail from "./components/MovieDetail";
+import AdminRoutes from "./routes/AdminRoutes";
 // import PrivateRoute from "./routes/PrivateRoute";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/seat-selection" element={<SeatSelection />} />
         <Route path="/movie-detail" element={<MovieDetail />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
       </Routes>
     </Router>
   );
