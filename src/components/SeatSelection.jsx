@@ -1,63 +1,59 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Stomp from "stompjs";
+import SockJS from "sockjs-client";
 
-const rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
-const cols = 22;
-const vipRows = ["E", "F", "G"];
-const bookedSeats = ["F6", "F7", "F8", "K5"];
+const SeatSelection = ({ showtimeId }) => {
+  const [socket, setSocket] = useState(null);
+  const [messages, setMessages] = useState([]);
 
-export default function SeatSelection() {
-  const [selectedSeats, setSelectedSeats] = useState([]);
+  useEffect(() => {
+    const sock = new SockJS("/ws");
+    const stompClient = Stomp.over(sock);
+    stompClient.connect({}, () => {
+      stompClient.subscribe(`/topic/seats/${showtimeId}`, (message) => {
+        setMessages((prevMessages) => [...prevMessages, message.body]);
+      });
+    });
+    setSocket(stompClient);
 
-  const toggleSeat = (seat) => {
-    if (bookedSeats.includes(seat)) return;
-    setSelectedSeats((prev) =>
-      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
-    );
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [showtimeId]);
+
+  const handleSelectSeat = (seatId) => {
+    fetch("/seats/select", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ showtimeId, seatId }),
+    });
+  };
+
+  const handleReleaseSeat = (seatId) => {
+    fetch("/seats/release", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ showtimeId, seatId }),
+    });
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Chọn ghế</h2>
-      <div className="border rounded-lg p-4 inline-block bg-gray-100">
-        <div className="text-center font-bold mb-2">MÀN HÌNH</div>
-        <div className="grid grid-cols-22 gap-2">
-          {rows.map((row) => (
-            <div key={row} className="flex gap-2 justify-center">
-              {Array.from({ length: cols }, (_, i) => {
-                const seat = `${row}${i + 1}`;
-                return (
-                  <button
-                    key={seat}
-                    className={`w-10 h-10 text-sm border rounded-md flex items-center justify-center 
-                      ${
-                        selectedSeats.includes(seat)
-                          ? "bg-green-500 text-white"
-                          : ""
-                      }
-                      ${
-                        bookedSeats.includes(seat)
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : ""
-                      }
-                      ${
-                        vipRows.includes(row)
-                          ? "border-yellow-500"
-                          : "border-gray-500"
-                      }
-                    `}
-                    onClick={() => toggleSeat(seat)}
-                  >
-                    {seat}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+    <div>
+      <h3>Select or Release Seats for Showtime {showtimeId}</h3>
+      <div>
+        <button onClick={() => handleSelectSeat("A1")}>Select Seat A1</button>
+        <button onClick={() => handleReleaseSeat("A1")}>Release Seat A1</button>
       </div>
-      <div className="mt-4">
-        <p>Ghế đã chọn: {selectedSeats.join(", ") || "Chưa có ghế nào"}</p>
+      <div>
+        <h4>Messages</h4>
+        {messages.map((msg, index) => (
+          <p key={index}>{msg}</p>
+        ))}
       </div>
     </div>
   );
-}
+};
+
+export default SeatSelection;

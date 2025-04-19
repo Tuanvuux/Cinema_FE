@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getShowtimes } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useShowtime } from "../contexts/ShowtimeContext";
 
 const getWeekday = (dateStr) => {
   const days = [
@@ -16,13 +16,13 @@ const getWeekday = (dateStr) => {
 };
 
 const Showtime = () => {
-  const [showtimes, setShowtimes] = useState([]); // Đổi thành mảng thay vì đối tượng
-  const [loading, setLoading] = useState(true);
+  const [showtime, setShowtime] = useState([]);
   const today = new Date();
+  const { showtimes, loading } = useShowtime(); // Lấy showtimes từ context
+  const { movieId } = useParams();
   const [selectedDate, setSelectedDate] = useState(
     today.toISOString().split("T")[0]
   );
-
   const navigate = useNavigate();
 
   const handleSelectShowtime = (showtimeId) => {
@@ -30,19 +30,14 @@ const Showtime = () => {
   };
 
   useEffect(() => {
-    const fetchShowtimes = async () => {
-      try {
-        const showtimeList = await getShowtimes();
-        setShowtimes(showtimeList); // Đảm bảo dữ liệu là mảng
-      } catch (error) {
-        console.error("Error fetching showtimes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Chỉ lọc từ showtimes trong context
+    const filtered = movieId
+      ? showtimes.filter((s) => s.movieId == movieId)
+      : showtimes;
+    setShowtime(filtered);
+  }, [movieId, showtimes]);
 
-    fetchShowtimes();
-  }, []);
+  if (loading) return <div>Đang tải lịch chiếu...</div>;
 
   // Lọc ngày để chọn các ngày trong tuần
   const dates = Array.from({ length: 7 }, (_, i) => {
@@ -51,7 +46,7 @@ const Showtime = () => {
     return date.toISOString().split("T")[0];
   });
 
-  const filteredShowtimes = showtimes.filter(
+  const filteredShowtimes = showtime.filter(
     (movie) =>
       Array.isArray(movie.showTimeList) &&
       movie.showTimeList.some((show) => show.showDate === selectedDate)

@@ -11,11 +11,12 @@ const PublicRoute = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/movieDetail" element={<MovieDetailPage />} />
+      <Route path="/movieDetail/:movieId" element={<MovieDetailPage />} />
       <Route path="/movie" element={<MoviePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/showtime" element={<ShowTimePage />} />
+      <Route path="/showtime/:movieId" element={<ShowTimePage />} />
       <Route path="/seat-selection" element={<SeatSelection />} />
       <Route path="/payment" element={<PaymentPage />} />
     </Routes>
