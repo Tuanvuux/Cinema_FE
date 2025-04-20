@@ -107,3 +107,12 @@ export const deleteShowtime = async (showtimeId) => {
   const response = await api.delete(`/showtime/${showtimeId}`);
   return response.data;
 };
+//Seat
+export const getSeatsByRoomId = async (roomId) => {
+  const response = await api.get(`/seats/${roomId}`);
+  return response.data;
+};
+export const getRoomById = async (roomId) => {
+  const response = await api.get(`/rooms/${roomId}`);
+  return response.data;
+};

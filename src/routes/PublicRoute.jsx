@@ -5,7 +5,7 @@ import MoviePage from "../pages/public/MoviePage";
 import LoginPage from "../pages/public/LoginPage";
 import RegisterPage from "../pages/public/RegisterPage";
 import ShowTimePage from "../pages/public/ShowtimePage";
-import SeatSelection from "../components/SeatSelection";
+import SeatSelectionPage from "../pages/public/SeatSelectionPage";
 import PaymentPage from "../pages/public/PaymentPage";
 const PublicRoute = () => {
   return (
@@ -17,7 +17,7 @@ const PublicRoute = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/showtime" element={<ShowTimePage />} />
       <Route path="/showtime/:movieId" element={<ShowTimePage />} />
-      <Route path="/seat-selection" element={<SeatSelection />} />
+      <Route path="/seats/:showtimeId" element={<SeatSelectionPage />} />
       <Route path="/payment" element={<PaymentPage />} />
     </Routes>
   );
