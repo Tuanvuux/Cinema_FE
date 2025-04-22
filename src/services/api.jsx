@@ -92,6 +92,10 @@ export const getShowtimes = async () => {
   const response = await api.get("/showtime");
   return response.data;
 };
+export const getShowtime = async () => {
+  const response = await api.get("/showtime/admin");
+  return response.data;
+};
 
 export const addShowtime = async (ShowtimeData) => {
   const response = await api.post("/showtime", ShowtimeData);
