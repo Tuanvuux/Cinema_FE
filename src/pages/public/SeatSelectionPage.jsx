@@ -2,7 +2,7 @@ import Navbar from "@/components/layout/Navbar";
 import SeatSelection from "@/components/SeatSelection";
 import Footer from "@/components/layout/Footer";
 
-export default function RegisterPage() {
+export default function SeatSelectionPage() {
   return (
     <div className="">
       <div className="">

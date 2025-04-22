@@ -36,7 +36,7 @@ export default function MovieSlider() {
         className="w-full max-w-5xl"
       >
         {movies.map((movie) => (
-          <SwiperSlide key={movie.id} className="relative">
+          <SwiperSlide key={movie.movieId} className="relative">
             <img
               src={movie.posterUrl}
               alt={movie.title}

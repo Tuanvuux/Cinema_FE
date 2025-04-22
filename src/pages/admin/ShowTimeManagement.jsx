@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  getShowtimes,
+  getShowtime,
   deleteShowtime,
   getMovies,
   getRooms,
@@ -53,7 +53,7 @@ export default function ShowtimeManagement() {
   useEffect(() => {
     getMovies().then(setMovies);
     getRooms().then(setRooms);
-    getShowtimes().then(setShowtime);
+    getShowtime().then(setShowtime);
   }, []);
 
   const handleEditShowtime = (showtime) => {
@@ -175,7 +175,7 @@ export default function ShowtimeManagement() {
 
       setshowAddModal(false);
 
-      await getShowtimes().then((data) => {
+      await getShowtime().then((data) => {
         setShowtime(data);
         setToast({
           show: true,
@@ -297,7 +297,7 @@ export default function ShowtimeManagement() {
       const updatedShowtime = await updateShowtime(editingShowtime.showtimeId, {
         movie: {
           movieId: editingShowtime.movieId,
-          name: selectedMovie.name,
+          name: selectedMovie.movieName,
         },
         showDate: editingShowtime.showDate,
         startTime: formattedStartTime,
@@ -437,7 +437,7 @@ export default function ShowtimeManagement() {
     const fetchShowtime = async () => {
       try {
         setLoading(true);
-        const data = await getShowtimes();
+        const data = await getShowtime();
         setShowtime(data);
         setLoading(false);
       } catch (err) {
@@ -474,7 +474,7 @@ export default function ShowtimeManagement() {
 
   // Filter Showtime based on search term and status
   const filteredShowtime = Showtime.filter((showtime) => {
-    const matchesSearch = showtime.movie.name
+    const matchesSearch = showtime.movieName
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     return matchesSearch;
@@ -683,9 +683,9 @@ export default function ShowtimeManagement() {
                         />
                       </td>
                       <td className="p-3 font-medium text-center">
-                        {Showtime.movie.name}
+                        {Showtime.movieName}
                       </td>
-                      <td className="p-3 text-center">{Showtime.room.name}</td>
+                      <td className="p-3 text-center">{Showtime.roomName}</td>
                       <td className="p-3 text-center">{Showtime.showDate}</td>
                       <td className="p-3 text-center">{Showtime.startTime}</td>
                       <td className="p-3 text-center">{Showtime.endTime}</td>
@@ -796,7 +796,7 @@ export default function ShowtimeManagement() {
                   <option value="">Chọn phim</option>
                   {movies.map((movie) => (
                     <option key={movie.movieId} value={movie.movieId}>
-                      {movie.name}
+                      {movie.movieName}
                     </option>
                   ))}
                 </select>
@@ -870,7 +870,7 @@ export default function ShowtimeManagement() {
                   <option value="">Chọn phim</option>
                   {movies.map((movie) => (
                     <option key={movie.movieId} value={movie.movieId}>
-                      {movie.name}
+                      {movie.movieName}
                     </option>
                   ))}
                 </select>

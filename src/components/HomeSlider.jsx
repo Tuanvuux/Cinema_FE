@@ -29,7 +29,7 @@ export default function s() {
         className="w-full max-w-4xl h-[400px]"
       >
         {movies.map((movie) => (
-          <SwiperSlide key={movie.id}>
+          <SwiperSlide key={movie.movieId}>
             <img
               src={movie.bannerUrl}
               alt="Movie"
@@ -46,8 +46,6 @@ export default function s() {
         slidesPerView={5}
         spaceBetween={10}
         loop={true}
-        loopAdditionalSlides={movies.length} // ✅ Fix lỗi kéo ngược
-        loopedSlides={movies.length} // ✅ Đảm bảo lặp mượt
         className="w-full max-w-4xl mt-4"
       >
         {movies.map((movie) => (
