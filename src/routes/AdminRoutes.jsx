@@ -6,7 +6,7 @@ import ShowTimeManagement from "@/pages/admin/ShowTimeManagement.jsx";
 import MovieManagement from "@/pages/admin/MovieManagement.jsx";
 import AdminPage from "../pages/admin/AdminPage.jsx";
 import AccountManagement from "@/pages/admin/AccountManagement.jsx";
-
+import SeatManagement from "@/pages/admin/SeatManagement.jsx";
 
 const AdminRoutes = () => {
   return (
@@ -18,6 +18,7 @@ const AdminRoutes = () => {
       <Route path="showtimemanagement" element={<ShowTimeManagement />} />
       <Route path="moviemanagement" element={<MovieManagement />} />
         <Route path="accountmanagement" element={<AccountManagement/>}/>
+        <Route path="seatmanagement" element={<SeatManagement/>}/>
     </Routes>
   );
 };

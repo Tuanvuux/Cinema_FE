@@ -16,6 +16,7 @@ const AccountManagement = () => {
     const [showAddModal, setShowAddModal] = useState(false);
 
     const [selectedAccount, setSelectedAccount] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
     const [detailAccount, setDetailAccount] = useState(null);
 
     const [selectedAccountIds, setSelectedAccountIds] = useState([]);
@@ -76,16 +77,30 @@ const AccountManagement = () => {
     const currentAccount = filteredAccount.slice(indexOfFirst, indexOfLast);
     const totalPages = Math.ceil(filteredAccount.length / itemsPerPage);
 
-    // const selectedAccountsData = currentAccount.filter(acc => selectedAccount.includes(acc.userId));
-    //
-    // const allSelectedAreActive = selectedAccountsData.every(acc => acc.isActive === true);
-    // const allSelectedAreInactive = selectedAccountsData.every(acc => acc.isActive === false);
+    // Hàm tạo danh sách số trang hiển thị động
+    const getPageNumbers = () => {
+        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const half = Math.floor(totalNumbers / 2);
+
+        let start = Math.max(1, currentPage - half);
+        let end = Math.min(totalPages, currentPage + half);
+
+        if (currentPage <= half) {
+            end = Math.min(totalPages, totalNumbers);
+        } else if (currentPage + half >= totalPages) {
+            start = Math.max(1, totalPages - totalNumbers + 1);
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
 
     const handleSelectAll = (e) => {
         const isChecked = e.target.checked;
+        setSelectAll(isChecked);
         if (isChecked) {
-            const currentPageIds = currentAccount.map(account => account.userId);
-            setSelectedAccount(currentPageIds);
+            const allAccountIds = filteredAccount.map(account => account.userId);
+            setSelectedAccount(allAccountIds);
         } else {
             setSelectedAccount([]);
         }
@@ -369,7 +384,11 @@ const AccountManagement = () => {
                             <span className="material-icons">account_circle</span>
                             <span>Tài khoản</span>
                         </Link>
-
+                        <Link to="/admin/seatmanagement"
+                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                            <span className="material-icons">event_seat</span>
+                            <span>Ghế ngồi</span>
+                        </Link>
                         <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">confirmation_number</span>
                             <span>Quản lý vé đặt</span>
@@ -399,8 +418,7 @@ const AccountManagement = () => {
                             <div className="flex items-center">
                                 <div className="ml-4 flex items-center">
                                     <span className="font-medium mr-2">ADMIN</span>
-                                    <img src="/avatar.png" alt="Admin Avatar"
-                                         className="h-8 w-8 rounded-full bg-gray-300"/>
+                                    <span className="material-icons">person</span>
                                 </div>
                             </div>
                         </div>
@@ -440,7 +458,7 @@ const AccountManagement = () => {
                                 <tr className="bg-gray-100 border-b">
                                     <th className="p-3 text-left w-12">
                                         <input type="checkbox" className="form-checkbox h-5 w-5"
-                                               checked={selectedAccount.length === currentAccount.length && currentAccount.length > 0}
+                                               checked={selectAll || (currentAccount.length > 0 && currentAccount.every(account => selectedAccount.includes(account.userId)))}
                                                onChange={handleSelectAll}
                                         />
                                     </th>
@@ -704,24 +722,25 @@ const AccountManagement = () => {
                                 &lt;
                             </button>
 
-                            {Array.from({length: Math.min(5, totalPages)}, (_, i) => {
-                                const pageNumber = i + 1;
-                                return (
-                                    <button
-                                        key={pageNumber}
-                                        onClick={() => setCurrentPage(pageNumber)}
-                                        className={`mx-1 px-3 py-1 rounded ${
-                                            currentPage === pageNumber
-                                                ? 'bg-gray-900 text-white'
-                                                : 'border'
-                                        }`}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                );
-                            })}
+                            {currentPage > 3 && totalPages > 5 && (
+                                <span className="mx-1 px-3 py-1">...</span>
+                            )}
 
-                            {totalPages > 5 && (
+                            {getPageNumbers().map(pageNumber => (
+                                <button
+                                    key={pageNumber}
+                                    onClick={() => setCurrentPage(pageNumber)}
+                                    className={`mx-1 px-3 py-1 rounded ${
+                                        currentPage === pageNumber
+                                            ? 'bg-gray-900 text-white'
+                                            : 'border'
+                                    }`}
+                                >
+                                    {pageNumber}
+                                </button>
+                            ))}
+
+                            {currentPage < totalPages - 2 && totalPages > 5 && (
                                 <span className="mx-1 px-3 py-1">...</span>
                             )}
 

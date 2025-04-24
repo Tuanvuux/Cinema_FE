@@ -116,4 +116,25 @@ export const deleteShowtime = async (showtimeId) => {
   return response.data;
 };
 
+//Seat
+export const getSeats = async () => {
+  const response = await api.get("/seats");
+  return response.data;
+};
+
+export const addSeat = async (seatData) => {
+  const response = await api.post("/seats", seatData);
+  return response.data;
+};
+
+export const updateSeat = async (seatId, seatData) => {
+  const response = await api.put(`/seats/${seatId}`, seatData);
+  return response.data;
+};
+
+
+export const deleteSeat = async (seatId) => {
+  const response = await api.delete(`/seats/${seatId}`);
+  return response.data;
+};
 

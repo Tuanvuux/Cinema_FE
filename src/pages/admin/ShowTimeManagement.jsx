@@ -23,6 +23,7 @@ export default function ShowtimeManagement () {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [selectedShowtime, setSelectedShowtime] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
 
     const [editingShowtime, setEditingShowtime] = useState({showtimeId: '', nameMovie: '', showDate: '', startTime: '', endTime: '', nameRoom: ''});
     const [selectedShowtimeId, setSelectedShowtimeId] = useState(null);
@@ -88,15 +89,6 @@ export default function ShowtimeManagement () {
         }
     };
 
-
-
-    // const handleStartTimeChange = (e) => {
-    //     setStartTime(e.target.value);
-    //     if (selectedMovie) {
-    //         const movieDuration = movies.find(m => m.movieId === selectedMovie)?.duration;
-    //         setEndTime(format(addMinutes(new Date(`2023-01-01T${e.target.value}`), movieDuration), 'HH:mm:ss'));
-    //     }
-    // };
 
     const handleStartTimeChange = (e) => {
         const timeValue = e.target.value;
@@ -221,14 +213,6 @@ export default function ShowtimeManagement () {
         });
     };
 
-    // const isRoomDisabledEdit = (roomId) => {
-    //     return Showtime.some(showtime =>
-    //         showtime.room.id === roomId &&
-    //         showtime.showDate === editingShowtime.showDate &&
-    //         showtime.id !== editingShowtime.showtimeId &&
-    //         isSameMinute(new Date(`2023-01-01T${showtime.startTime}`), new Date(`2023-01-01T${editingShowtime.startTime}`))
-    //     );
-    // };
 
     const handleEditSubmit = async () => {
         try {
@@ -288,9 +272,12 @@ export default function ShowtimeManagement () {
     // Handle select all Showtime
     const handleSelectAllShowtime = (e) => {
         const isChecked = e.target.checked;
+        setSelectAll(isChecked);
         if (isChecked) {
-            const currentPageShowtimeIds = currentShowtime.map(Showtime => Showtime.showtimeId);
-            setSelectedShowtime(currentPageShowtimeIds);
+            // const currentPageShowtimeIds = currentShowtime.map(Showtime => Showtime.showtimeId);
+            // setSelectedShowtime(currentPageShowtimeIds);
+            const allShowtimeIds = filteredShowtime.map(showtime => showtime.showtimeId);
+            setSelectedShowtime(allShowtimeIds);
         } else {
             setSelectedShowtime([]);
         }
@@ -439,6 +426,23 @@ export default function ShowtimeManagement () {
     const currentShowtime = filteredShowtime.slice(indexOfFirstShowtime, indexOfLastShowtime);
     const totalPages = Math.ceil(filteredShowtime.length / itemsPerPage);
 
+    // Hàm tạo danh sách số trang hiển thị động
+    const getPageNumbers = () => {
+        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const half = Math.floor(totalNumbers / 2);
+
+        let start = Math.max(1, currentPage - half);
+        let end = Math.min(totalPages, currentPage + half);
+
+        if (currentPage <= half) {
+            end = Math.min(totalPages, totalNumbers);
+        } else if (currentPage + half >= totalPages) {
+            start = Math.max(1, totalPages - totalNumbers + 1);
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
 
     const handleOpenDeleteModal = (showtimeId) => {
         setSelectedShowtimeId(showtimeId);
@@ -515,6 +519,11 @@ export default function ShowtimeManagement () {
                             <span className="material-icons">account_circle</span>
                             <span>Tài khoản</span>
                         </Link>
+                        <Link to="/admin/seatmanagement"
+                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                            <span className="material-icons">event_seat</span>
+                            <span>Ghế ngồi</span>
+                        </Link>
                         <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">confirmation_number</span>
                             <span>Quản lý vé đặt</span>
@@ -544,8 +553,7 @@ export default function ShowtimeManagement () {
                             <div className="flex items-center">
                                 <div className="ml-4 flex items-center">
                                     <span className="font-medium mr-2">ADMIN</span>
-                                    <img src="/avatar.png" alt="Admin Avatar"
-                                         className="h-8 w-8 rounded-full bg-gray-300"/>
+                                    <span className="material-icons">person</span>
                                 </div>
                             </div>
                         </div>
@@ -582,7 +590,7 @@ export default function ShowtimeManagement () {
                                 <tr className="bg-gray-100 border-b">
                                     <th className="p-3 text-left w-12">
                                         <input type="checkbox" className="form-checkbox h-5 w-5"
-                                               checked={selectedShowtime.length === currentShowtime.length && currentShowtime.length > 0}
+                                               checked={selectAll || (currentShowtime.length > 0 && currentShowtime.every(showtime => selectedShowtime.includes(showtime.showtimeId)))}
                                                onChange={handleSelectAllShowtime}
                                         />
                                     </th>
@@ -837,24 +845,25 @@ export default function ShowtimeManagement () {
                                 &lt;
                             </button>
 
-                            {Array.from({length: Math.min(5, totalPages)}, (_, i) => {
-                                const pageNumber = i + 1;
-                                return (
-                                    <button
-                                        key={pageNumber}
-                                        onClick={() => setCurrentPage(pageNumber)}
-                                        className={`mx-1 px-3 py-1 rounded ${
-                                            currentPage === pageNumber
-                                                ? 'bg-gray-900 text-white'
-                                                : 'border'
-                                        }`}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                );
-                            })}
+                            {currentPage > 3 && totalPages > 5 && (
+                                <span className="mx-1 px-3 py-1">...</span>
+                            )}
 
-                            {totalPages > 5 && (
+                            {getPageNumbers().map(pageNumber => (
+                                <button
+                                    key={pageNumber}
+                                    onClick={() => setCurrentPage(pageNumber)}
+                                    className={`mx-1 px-3 py-1 rounded ${
+                                        currentPage === pageNumber
+                                            ? 'bg-gray-900 text-white'
+                                            : 'border'
+                                    }`}
+                                >
+                                    {pageNumber}
+                                </button>
+                            ))}
+
+                            {currentPage < totalPages - 2 && totalPages > 5 && (
                                 <span className="mx-1 px-3 py-1">...</span>
                             )}
 

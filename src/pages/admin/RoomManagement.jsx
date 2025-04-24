@@ -5,12 +5,15 @@ import {Link} from "react-router-dom";
 export default function RoomManagement () {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showFilter, setShowFilter] = useState(false);
     const [error, setError] = useState(null);
     // const [selectedRoom, setSelectedRoom] = useState(null);
     const [newRoom, setNewRoom] = useState({
         name: '',
         seatCount: 0,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        numberOfColumns: 0,
+        numberOfRows: 0
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -18,11 +21,11 @@ export default function RoomManagement () {
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedRooms, setSelectedRooms] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingRoom, setEditingRoom] = useState({ id: '', name: '', seatCount: '',numberOfcolumns: '',
-                                                                    numberOfrows:'',
-                                                                    screenType: '', status: '' });
+    const [editingRoom, setEditingRoom] = useState({ id: '', name: '', seatCount: '',numberOfColumns: '',
+                                                                    numberOfRows:'', status: '' , createdAt: ''});
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedRoomId, setSelectedRoomId] = useState(null);
 
@@ -85,9 +88,8 @@ export default function RoomManagement () {
             const updatedRoom = await updateRoom(editingRoom.id, {
                 name: editingRoom.name,
                 seatCount: editingRoom.seatCount,
-                numberOfcolumns: editingRoom.numberOfcolumns,
-                numberOfrows: editingRoom.numberOfrows,
-                screenType: editingRoom.screenType,
+                numberOfColumns: editingRoom.numberOfColumns,
+                numberOfRows: editingRoom.numberOfRows,
                 status: editingRoom.status,
             });
 
@@ -125,10 +127,11 @@ export default function RoomManagement () {
     // Handle select all rooms
     const handleSelectAllRooms = (e) => {
         const isChecked = e.target.checked;
+        setSelectAll(isChecked);
         if (isChecked) {
             // Select all rooms on the current page
-            const currentPageRoomIds = currentRooms.map(room => room.id);
-            setSelectedRooms(currentPageRoomIds);
+            const allRoomIds = filteredRooms.map(room => room.id);
+            setSelectedRooms(allRoomIds);
         } else {
             // Deselect all rooms
             setSelectedRooms([]);
@@ -316,11 +319,17 @@ export default function RoomManagement () {
     //     return matchesSearch && matchesStatus;
     // });
 
-    const filteredRooms = rooms.filter(room =>
-        Object.values(room).some(value =>
+    const filteredRooms = rooms.filter(room => {
+        const matchesSearch = Object.values(room).some(value =>
             value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
+        );
+
+        const matchesStatus = statusFilter === 'all' ||
+                (statusFilter === 'active' && room.status === 'ACTIVE') ||
+                (statusFilter === 'inactive' && room.status === 'INACTIVE');
+
+        return matchesSearch && matchesStatus;
+    });
 
 
     // Calculate pagination
@@ -328,6 +337,23 @@ export default function RoomManagement () {
     const indexOfFirstRoom = indexOfLastRoom - itemsPerPage;
     const currentRooms = filteredRooms.slice(indexOfFirstRoom, indexOfLastRoom);
     const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
+
+    // Hàm tạo danh sách số trang hiển thị động
+    const getPageNumbers = () => {
+        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const half = Math.floor(totalNumbers / 2);
+
+        let start = Math.max(1, currentPage - half);
+        let end = Math.min(totalPages, currentPage + half);
+
+        if (currentPage <= half) {
+            end = Math.min(totalPages, totalNumbers);
+        } else if (currentPage + half >= totalPages) {
+            start = Math.max(1, totalPages - totalNumbers + 1);
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
 
     const handleInputChangeEdit = (e) => {
         setEditingRoom({ ...editingRoom, [e.target.name]: e.target.value });
@@ -376,6 +402,11 @@ export default function RoomManagement () {
                             <span className="material-icons">account_circle</span>
                             <span>Tài khoản</span>
                         </Link>
+                        <Link to="/admin/seatmanagement"
+                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                            <span className="material-icons">event_seat</span>
+                            <span>Ghế ngồi</span>
+                        </Link>
                         <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">confirmation_number</span>
                             <span>Quản lý vé đặt</span>
@@ -405,54 +436,60 @@ export default function RoomManagement () {
                             <div className="flex items-center">
                                 <div className="ml-4 flex items-center">
                                     <span className="font-medium mr-2">ADMIN</span>
-                                    <img src="/avatar.png" alt="Admin Avatar"
-                                         className="h-8 w-8 rounded-full bg-gray-300"/>
+                                    <span className="material-icons">person</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Filters and Add Button */}
-                    <div className="flex justify-between mb-6">
+                    <div className="flex justify-between mb-6 relative">
                         <div className="flex items-center">
-                            <button className="mr-2 p-2 border rounded hover:bg-gray-100">
+                            <button className="mr-2 p-2 border rounded hover:bg-gray-100"
+                                    onClick={() => setShowFilter(!showFilter)}>
                                 <span className="material-icons">filter_list</span>
                             </button>
-                            <div className="flex space-x-2">
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="status"
-                                        value="all"
-                                        checked={statusFilter === 'all'}
-                                        onChange={() => setStatusFilter('all')}
-                                        className="mr-1"
-                                    />
-                                    <span>Tất cả</span>
-                                </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="status"
-                                        value="active"
-                                        checked={statusFilter === 'active'}
-                                        onChange={() => setStatusFilter('active')}
-                                        className="mr-1"
-                                    />
-                                    <span>Mở</span>
-                                </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="status"
-                                        value="inactive"
-                                        checked={statusFilter === 'inactive'}
-                                        onChange={() => setStatusFilter('inactive')}
-                                        className="mr-1"
-                                    />
-                                    <span>Khóa</span>
-                                </label>
-                            </div>
+                            {/* Dropdown filter */}
+                            {showFilter && (
+                                <div className="absolute z-10 bg-white border rounded shadow-md p-3 top-12 left-0 w-64">
+                                    <div className="flex flex-col space-x-2">
+                                        <label className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                value="all"
+                                                checked={statusFilter === 'all'}
+                                                onChange={() => setStatusFilter('all')}
+                                                className="mr-1"
+                                            />
+                                            <span>Tất cả</span>
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                value="active"
+                                                checked={statusFilter === 'active'}
+                                                onChange={() => setStatusFilter('active')}
+                                                className="mr-1"
+                                            />
+                                            <span>Mở</span>
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                value="inactive"
+                                                checked={statusFilter === 'inactive'}
+                                                onChange={() => setStatusFilter('inactive')}
+                                                className="mr-1"
+                                            />
+                                            <span>Khóa</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
 
                     </div>
@@ -487,13 +524,14 @@ export default function RoomManagement () {
                                 <tr className="bg-gray-100 border-b">
                                     <th className="p-3 text-left w-12">
                                         <input type="checkbox" className="form-checkbox h-5 w-5"
-                                               checked={selectedRooms.length === currentRooms.length && currentRooms.length > 0}
+                                               checked={selectAll || (currentRooms.length > 0 && currentRooms.every(room => currentRooms.includes(room.id)))}
                                                onChange={handleSelectAllRooms}
                                         />
                                     </th>
                                     <th className="p-3 text-center">Tên phòng</th>
                                     <th className="p-3 text-center">Sức chứa</th>
-                                    <th className="p-3 text-center">Loại màn hình</th>
+                                    <th className="p-3 text-center">Số cột</th>
+                                    <th className="p-3 text-center">Số hàng</th>
                                     <th className="p-3 text-center">Trạng thái</th>
                                     <th className="p-3 text-center">Thao tác</th>
                                 </tr>
@@ -509,7 +547,8 @@ export default function RoomManagement () {
                                         </td>
                                         <td className="p-3 font-medium text-center">{room.name}</td>
                                         <td className="p-3 text-center">{room.seatCount}</td>
-                                        <td className="p-3 text-center">{room.screenType}</td>
+                                        <td className="p-3 text-center">{room.numberOfColumns}</td>
+                                        <td className="p-3 text-center">{room.numberOfRows}</td>
                                         <td className="p-3 text-center">
                                             <div className="flex justify-center">
                                                 <label className="relative inline-flex items-center cursor-pointer">
@@ -584,24 +623,25 @@ export default function RoomManagement () {
                                 &lt;
                             </button>
 
-                            {Array.from({length: Math.min(5, totalPages)}, (_, i) => {
-                                const pageNumber = i + 1;
-                                return (
-                                    <button
-                                        key={pageNumber}
-                                        onClick={() => setCurrentPage(pageNumber)}
-                                        className={`mx-1 px-3 py-1 rounded ${
-                                            currentPage === pageNumber
-                                                ? 'bg-gray-900 text-white'
-                                                : 'border'
-                                        }`}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                );
-                            })}
+                            {currentPage > 3 && totalPages > 5 && (
+                                <span className="mx-1 px-3 py-1">...</span>
+                            )}
 
-                            {totalPages > 5 && (
+                            {getPageNumbers().map(pageNumber => (
+                                <button
+                                    key={pageNumber}
+                                    onClick={() => setCurrentPage(pageNumber)}
+                                    className={`mx-1 px-3 py-1 rounded ${
+                                        currentPage === pageNumber
+                                            ? 'bg-gray-900 text-white'
+                                            : 'border'
+                                    }`}
+                                >
+                                    {pageNumber}
+                                </button>
+                            ))}
+
+                            {currentPage < totalPages - 2 && totalPages > 5 && (
                                 <span className="mx-1 px-3 py-1">...</span>
                             )}
 
@@ -622,7 +662,8 @@ export default function RoomManagement () {
                 <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
-                        <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu đã chọn không?</p>
+                        <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu đã chọn
+                            không?</p>
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => setBulkDeleteModalOpen(false)}
@@ -640,7 +681,7 @@ export default function RoomManagement () {
                     </div>
                 </div>
             )}
-            
+
             {showEditModal && (
                 <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
@@ -687,14 +728,14 @@ export default function RoomManagement () {
                             </div>
                             <div className="flex space-x-4">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="numberOfColumns" className="block text-sm font-medium text-gray-700 mb-1">
                                         Số cột ghế
                                     </label>
                                     <input
                                         type="number"
-                                        id="numberOfcolumns"
-                                        name="numberOfcolumns"
-                                        value={editingRoom.numberOfcolumns}
+                                        id="numberOfColumns"
+                                        name="numberOfColumns"
+                                        value={editingRoom.numberOfColumns}
                                         onChange={handleInputChangeEdit}
                                         placeholder="Nhập số cột ghế"
                                         className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
@@ -702,14 +743,14 @@ export default function RoomManagement () {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="numberOfRows" className="block text-sm font-medium text-gray-700 mb-1">
                                         Số dòng ghế
                                     </label>
                                     <input
                                         type="number"
-                                        id="numberOfrows"
-                                        name="numberOfrows"
-                                        value={editingRoom.numberOfrows}
+                                        id="numberOfRows"
+                                        name="numberOfRows"
+                                        value={editingRoom.numberOfRows}
                                         onChange={handleInputChangeEdit}
                                         placeholder="Nhập số dòng ghế"
                                         className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
@@ -719,18 +760,18 @@ export default function RoomManagement () {
                             </div>
 
                             <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tên màn hình máy chiếu
+                                <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Ngày tạo
                                 </label>
                                 <input
                                     type="text"
-                                    id="screenType"
-                                    name="screenType"
-                                    value={editingRoom.screenType}
-                                    onChange={handleInputChangeEdit}
+                                    id="createdAt"
+                                    name="createdAt"
+                                    value={editingRoom.createdAt}
                                     placeholder="Nhập loại màn hình chiếu"
                                     className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
                                     required
+                                    readOnly
                                 />
                             </div>
                             <div>
@@ -849,14 +890,14 @@ export default function RoomManagement () {
 
                             <div className="flex space-x-4">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="numberOfColumns" className="block text-sm font-medium text-gray-700 mb-1">
                                         Số cột ghế
                                     </label>
                                     <input
                                         type="number"
-                                        id="numberOfcolumns"
-                                        name="numberOfcolumns"
-                                        value={newRoom.numberOfcolumns}
+                                        id="numberOfColumns"
+                                        name="numberOfColumns"
+                                        value={newRoom.numberOfColumns}
                                         onChange={handleInputChange}
                                         placeholder="Nhập số cột ghế"
                                         className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
@@ -864,14 +905,14 @@ export default function RoomManagement () {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="numberOfRows" className="block text-sm font-medium text-gray-700 mb-1">
                                         Số dòng ghế
                                     </label>
                                     <input
                                         type="number"
-                                        id="numberOfrows"
-                                        name="numberOfrows"
-                                        value={newRoom.numberOfrows}
+                                        id="numberOfRows"
+                                        name="numberOfRows"
+                                        value={newRoom.numberOfRows}
                                         onChange={handleInputChange}
                                         placeholder="Nhập số dòng ghế"
                                         className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
@@ -880,21 +921,21 @@ export default function RoomManagement () {
                                 </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tên màn hình máy chiếu
-                                </label>
-                                <input
-                                    type="text"
-                                    id="screenType"
-                                    name="screenType"
-                                    value={newRoom.screenType}
-                                    onChange={handleInputChange}
-                                    placeholder="Nhập loại màn hình chiếu"
-                                    className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                                    required
-                                />
-                            </div>
+                            {/*<div>*/}
+                            {/*    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">*/}
+                            {/*        Tên màn hình máy chiếu*/}
+                            {/*    </label>*/}
+                            {/*    <input*/}
+                            {/*        type="text"*/}
+                            {/*        id="screenType"*/}
+                            {/*        name="screenType"*/}
+                            {/*        value={newRoom.screenType}*/}
+                            {/*        onChange={handleInputChange}*/}
+                            {/*        placeholder="Nhập loại màn hình chiếu"*/}
+                            {/*        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"*/}
+                            {/*        required*/}
+                            {/*    />*/}
+                            {/*</div>*/}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Trạng thái
