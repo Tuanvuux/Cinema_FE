@@ -44,6 +44,21 @@ export const login = async ({ username, password }) => {
   return response.data;
 };
 
+export const getUser = async () => {
+  const response = await api.get("/accounts");
+  return response.data;
+};
+
+export const getUserById = async (userId) => {
+  const response = await api.get(`/accounts/${userId}`);
+  return response.data;
+};
+
+export const toggleDeleteUser = async (userId, isActive) => {
+  const response = await api.patch(`/accounts/${userId}/toggle-delete`, { isActive: isActive });
+  return response.data;
+};
+
 export const updateMovie = async (movieId, movieData) => {
   const response = await api.put(`/movies/${movieId}`, movieData);
   return response.data;
@@ -55,9 +70,7 @@ export const deleteMovie = async (movieId) => {
 };
 
 export const toggleDeleteStatus = async (movieId, isDelete) => {
-  const response = await api.patch(`/movies/${movieId}/toggle-delete`, {
-    isDelete: isDelete,
-  });
+  const response = await api.patch(`/movies/${movieId}/toggle-delete`, { isDelete: isDelete });
   return response.data;
 };
 
@@ -120,3 +133,26 @@ export const getRoomById = async (roomId) => {
   const response = await api.get(`/rooms/${roomId}`);
   return response.data;
 };
+
+//Seat
+export const getSeats = async () => {
+  const response = await api.get("/seats");
+  return response.data;
+};
+
+export const addSeat = async (seatData) => {
+  const response = await api.post("/seats", seatData);
+  return response.data;
+};
+
+export const updateSeat = async (seatId, seatData) => {
+  const response = await api.put(`/seats/${seatId}`, seatData);
+  return response.data;
+};
+
+
+export const deleteSeat = async (seatId) => {
+  const response = await api.delete(`/seats/${seatId}`);
+  return response.data;
+};
+
