@@ -102,7 +102,7 @@ export const getRoomByRoomId = async (roomId) => {
 
 // Showtime
 export const getShowtimes = async () => {
-  const response = await api.get("/showtime");
+  const response = await api.get("/showtime/all");
   return response.data;
 };
 export const getShowtime = async () => {
