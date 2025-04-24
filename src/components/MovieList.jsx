@@ -1,29 +1,14 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // 👈 import navigate
 import { Card, CardContent } from "./ui/card";
 import Badge from "./ui/badge";
 import Button from "./ui/button";
 import { Medal } from "lucide-react";
-import { getMovies } from "../services/api"; // Import API function
-
+import { getMovies } from "../services/api";
+import { useMovies } from "../contexts/MovieContext";
 const MovieList = () => {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const data = await getMovies(); // Gọi API từ hàm getMovies
-        setMovies(data);
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách phim:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMovies();
-  }, []);
-
+  const navigate = useNavigate(); // 👈 dùng navigate
+  const { movies, loading } = useMovies();
   if (loading) {
     return (
       <p className="text-center text-gray-500">Đang tải danh sách phim...</p>
@@ -34,7 +19,6 @@ const MovieList = () => {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
       {movies.map((movie, index) => (
         <Card key={movie.movieId} className="relative group">
-          {/* Huy chương top 3 */}
           {index < 3 && (
             <div className="absolute top-2 right-2 flex items-center gap-1 bg-white px-2 py-1 rounded-full shadow-md">
               <Medal
@@ -56,7 +40,7 @@ const MovieList = () => {
             className="w-full h-72 object-cover rounded-t-lg"
           />
 
-          <CardContent className="bg-black p-4 text-center">
+          <CardContent className="bg-black p-4 text-center text-white">
             <h3 className="text-lg font-bold truncate">{movie.name}</h3>
             <p className="text-sm text-gray-500 truncate">
               {movie.category?.name}
@@ -68,7 +52,12 @@ const MovieList = () => {
             <p className="text-sm text-gray-600">
               Khởi chiếu: {movie.releaseDate}
             </p>
-            <Button className="mt-3 w-full">Đặt Vé</Button>
+            <Button
+              className="mt-3 w-full"
+              onClick={() => navigate(`/showtime/${movie.movieId}`)} // 👈 điều hướng
+            >
+              Đặt Vé
+            </Button>
           </CardContent>
         </Card>
       ))}

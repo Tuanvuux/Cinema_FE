@@ -95,9 +95,18 @@ export const deleteRoom = async (roomId) => {
   return response.data;
 };
 
+export const getRoomByRoomId = async (roomId) => {
+  const response = await api.get(`/rooms/${roomId}`);
+  return response.data;
+};
+
 // Showtime
 export const getShowtimes = async () => {
   const response = await api.get("/showtime");
+  return response.data;
+};
+export const getShowtime = async () => {
+  const response = await api.get("/showtime/admin");
   return response.data;
 };
 
@@ -113,6 +122,15 @@ export const updateShowtime = async (ShowtimeId, ShowtimeData) => {
 
 export const deleteShowtime = async (showtimeId) => {
   const response = await api.delete(`/showtime/${showtimeId}`);
+  return response.data;
+};
+//Seat
+export const getSeatsByRoomId = async (roomId) => {
+  const response = await api.get(`/seats/${roomId}`);
+  return response.data;
+};
+export const getRoomById = async (roomId) => {
+  const response = await api.get(`/rooms/${roomId}`);
   return response.data;
 };
 

@@ -1,28 +1,26 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getMovieById } from "../services/api";
+import { useMovies } from "../contexts/MovieContext";
 
 const MovieDetailPage = () => {
   const { movieId } = useParams();
   const [movie, setMovie] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { movies, loading } = useMovies();
 
   useEffect(() => {
-    const fetchMovie = async () => {
-      try {
-        const data = await getMovieById(1);
-        setMovie(data);
-      } catch (err) {
-        setError("Không thể tải dữ liệu phim.");
-        console.error("Lỗi khi lấy phim:", err);
-      } finally {
-        setLoading(false);
+    if (!loading && movies.length > 0) {
+      const foundMovie = movies.find(
+        (m) => m.movieId === parseInt(movieId) // 👈 convert vì movieId trong URL là string
+      );
+      if (foundMovie) {
+        setMovie(foundMovie);
+      } else {
+        setError("Không tìm thấy phim.");
       }
-    };
-
-    fetchMovie();
-  }, [movieId]);
+    }
+  }, [loading, movies, movieId]);
 
   if (loading) return <p className="text-center">Đang tải...</p>;
   if (error) return <p className="text-red-500 text-center">{error}</p>;
@@ -98,7 +96,10 @@ const MovieDetailPage = () => {
 
       {/* Nút đặt vé ở cuối */}
       <div className="flex justify-center mt-6">
-        <button className="bg-[#0D1B2A] text-white px-6 py-2 rounded-lg font-bold">
+        <button
+          className="bg-[#0D1B2A] text-white px-6 py-2 rounded-lg font-bold"
+          onClick={() => navigate(`/showtime/${movie.movieId}`)}
+        >
           ĐẶT VÉ
         </button>
       </div>
