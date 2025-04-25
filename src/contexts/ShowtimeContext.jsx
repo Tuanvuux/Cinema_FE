@@ -1,6 +1,6 @@
 // src/contexts/MovieContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
-import { getShowtimes } from "../services/api";
+import { getShowtime } from "../services/api";
 
 const ShowtimeContext = createContext();
 
@@ -13,7 +13,7 @@ export const ShowtimeProvider = ({ children }) => {
   useEffect(() => {
     const fetchShowtimes = async () => {
       try {
-        const data = await getShowtimes(); // chỉ gọi 1 lần duy nhất
+        const data = await getShowtime(); // chỉ gọi 1 lần duy nhất
         setShowtimes(data);
       } catch (error) {
         console.error("Lỗi khi tải danh sách phim:", error);
