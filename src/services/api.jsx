@@ -55,7 +55,9 @@ export const getUserById = async (userId) => {
 };
 
 export const toggleDeleteUser = async (userId, isActive) => {
-  const response = await api.patch(`/accounts/${userId}/toggle-delete`, { isActive: isActive });
+  const response = await api.patch(`/accounts/${userId}/toggle-delete`, {
+    isActive: isActive,
+  });
   return response.data;
 };
 
@@ -70,7 +72,9 @@ export const deleteMovie = async (movieId) => {
 };
 
 export const toggleDeleteStatus = async (movieId, isDelete) => {
-  const response = await api.patch(`/movies/${movieId}/toggle-delete`, { isDelete: isDelete });
+  const response = await api.patch(`/movies/${movieId}/toggle-delete`, {
+    isDelete: isDelete,
+  });
   return response.data;
 };
 
@@ -101,12 +105,14 @@ export const getRoomByRoomId = async (roomId) => {
 };
 
 // Showtime
+//admin
 export const getShowtimes = async () => {
   const response = await api.get("/showtime/all");
   return response.data;
 };
+//user
 export const getShowtime = async () => {
-  const response = await api.get("/showtime/admin");
+  const response = await api.get("/showtime");
   return response.data;
 };
 
@@ -150,9 +156,7 @@ export const updateSeat = async (seatId, seatData) => {
   return response.data;
 };
 
-
 export const deleteSeat = async (seatId) => {
   const response = await api.delete(`/seats/${seatId}`);
   return response.data;
 };
-
