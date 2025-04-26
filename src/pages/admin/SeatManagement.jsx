@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {getSeats, addSeat, updateSeat, deleteSeat, getRooms} from "../../services/api.jsx";
+import {getSeats, addSeat, updateSeat, deleteSeat, getRooms} from "../../services/apiadmin.jsx";
 import {Link} from "react-router-dom";
 
 export default function SeatManagement () {

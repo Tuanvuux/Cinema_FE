@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import {getUser, toggleDeleteUser} from "@/services/api.jsx";
+import {getUser, toggleDeleteUser} from "@/services/apiadmin.jsx";
 
 const AccountManagement = () => {
 
@@ -124,7 +124,6 @@ const AccountManagement = () => {
         setDetailAccount(account);
         setShowDetailModal(true);
     };
-
 
     const handleToggleDeleteStatus = async (account) => {
 

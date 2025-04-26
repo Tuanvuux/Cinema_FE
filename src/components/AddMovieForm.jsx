@@ -4,7 +4,7 @@ import {
   uploadImageToCloudinary,
   uploadVideoToCloudinary,
 } from "../services/cloudinary";
-import { addMovie, getCategories } from "@/services/api.jsx";
+import { addMovie, getCategories } from "@/services/apiadmin.jsx";
 
 export default function AddMovieForm() {
   const { register, handleSubmit, reset, setValue } = useForm();

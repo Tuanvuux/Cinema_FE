@@ -1,7 +1,15 @@
 import {Link} from "react-router-dom";
 import { useForm } from "react-hook-form";
 import React, {useEffect, useState} from "react";
-import {deleteMovie, getMovies,addMovie,getCategories,updateMovie,toggleDeleteStatus} from "@/services/api.jsx";
+import {
+    deleteMovie,
+    addMovie,
+    getCategories,
+    updateMovie,
+    toggleDeleteStatus
+} from "@/services/apiadmin.jsx";
+
+import {getMovies} from "@/services/api.jsx";
 import {
     uploadImageToCloudinary,
     uploadVideoToCloudinary,

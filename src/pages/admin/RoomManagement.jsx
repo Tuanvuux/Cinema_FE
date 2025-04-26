@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/api.jsx";
+import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
 import {Link} from "react-router-dom";
 
 export default function RoomManagement () {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getShowtimes,deleteShowtime, getMovies,getRooms,addShowtime, updateShowtime } from "../../services/api.jsx";
+import { getShowtimes,deleteShowtime,getRooms,addShowtime, updateShowtime } from "../../services/apiadmin.jsx";
+import {getMovies } from "../../services/api.jsx";
 import {Link} from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
 import showtime from "@/components/Showtime.jsx";
