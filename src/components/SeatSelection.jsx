@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useShowtime } from "../contexts/ShowtimeContext";
-import { getRoomById } from "../services/api";
+import { getRoomById, getSeatsLock } from "../services/api";
 import { getShowtimeById } from "../utils/showtimeUtils";
+import useSeatSocket from "../hooks/useSeatSocket"; // Import hook WebSocket
 
 const SeatSelection = () => {
   const [seatMatrix, setSeatMatrix] = useState([]);
@@ -10,7 +11,9 @@ const SeatSelection = () => {
   const { showtimeId } = useParams();
   const { showtimes, loading } = useShowtime();
 
-  // Sử dụng useRef để lưu trữ giá trị roomId đã tính toán
+  const { sendSeatAction } = useSeatSocket(showtimeId); // Hook WebSocket
+
+  // Store the roomId in a ref to avoid unnecessary re-renders
   const roomIdRef = useRef(null);
 
   const showtime = useMemo(() => {
@@ -19,11 +22,12 @@ const SeatSelection = () => {
 
   const roomId = showtime?.room?.id ?? null;
   const movie = showtime?.movie ?? {};
+
   useEffect(() => {
     if (roomId !== roomIdRef.current) {
-      roomIdRef.current = roomId; // Cập nhật lại giá trị roomId trong ref
+      roomIdRef.current = roomId; // Update the stored roomId
     }
-  }, [roomId]); // Chạy khi roomId thay đổi
+  }, [roomId]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -31,16 +35,29 @@ const SeatSelection = () => {
     const fetchSeats = async () => {
       try {
         setIsLoading(true);
-        const roomData = await getRoomById(roomId);
+
+        // Gọi đồng thời cả 2 API
+        const [roomData, lockedSeatIds] = await Promise.all([
+          getRoomById(roomId),
+          getSeatsLock(showtimeId),
+        ]);
+
         const { numberOfRows, numberOfColumns, seats } = roomData;
 
+        // Gắn isLocked = true vào những ghế bị khóa
+        const seatsWithLock = seats.map((seat) => ({
+          ...seat,
+          isLocked: lockedSeatIds.includes(seat.seatId),
+        }));
+
+        // Tạo ma trận ghế
         const rowLabels = Array.from(
-          new Set(seats.map((seat) => seat.rowLabel))
+          new Set(seatsWithLock.map((seat) => seat.rowLabel))
         ).sort();
 
         const matrix = rowLabels.map((row) => {
           const rowSeats = Array(numberOfColumns).fill(null);
-          seats
+          seatsWithLock
             .filter((seat) => seat.rowLabel === row)
             .forEach((seat) => {
               rowSeats[seat.columnNumber - 1] = seat;
@@ -50,7 +67,7 @@ const SeatSelection = () => {
 
         setSeatMatrix(matrix);
       } catch (error) {
-        console.error("Lỗi khi tải danh sách ghế:", error);
+        console.error("Error loading seats:", error);
       } finally {
         setIsLoading(false);
       }
@@ -58,15 +75,53 @@ const SeatSelection = () => {
 
     fetchSeats();
   }, [roomId]);
-
   const handleSelectSeat = (seatId) => {
-    console.log("Select seat", seatId);
-    // TODO: gửi chọn ghế qua WebSocket
+    console.log("Selected seat", seatId);
+    const userId = 1;
+    sendSeatAction(seatId, "SELECT", userId);
+
+    setSeatMatrix((prevMatrix) =>
+      prevMatrix.map((row) =>
+        row.map((seat) =>
+          seat && seat.seatId === seatId
+            ? { ...seat, status: "SELECTED" } // Cập nhật status local
+            : seat
+        )
+      )
+    );
   };
 
   const handleReleaseSeat = (seatId) => {
-    console.log("Release seat", seatId);
-    // TODO: gửi huỷ chọn ghế qua WebSocket
+    console.log("Released seat", seatId);
+    const userId = 1;
+    sendSeatAction(seatId, "SELECTED", userId);
+
+    setSeatMatrix((prevMatrix) =>
+      prevMatrix.map((row) =>
+        row.map((seat) =>
+          seat && seat.seatId === seatId
+            ? { ...seat, status: "AVAILABLE" } // Cập nhật status local
+            : seat
+        )
+      )
+    );
+  };
+
+  const handleSeatUpdate = (seatStatus) => {
+    setSeatMatrix((prevMatrix) => {
+      return prevMatrix.map((row) =>
+        row.map((seat) => {
+          if (seat && seat.seatId === seatStatus.seatId) {
+            return {
+              ...seat,
+              status: seatStatus.status, // Cập nhật trạng thái mới
+              isLocked: seatStatus.isLocked ?? seat.isLocked, // Nếu có thêm isLocked từ server
+            };
+          }
+          return seat;
+        })
+      );
+    });
   };
 
   if (loading || isLoading) {
@@ -83,7 +138,7 @@ const SeatSelection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         {/* Seat Selection Section */}
         <div>
-          <div className="w-3/4 h-9 bg-red-300 text-center content-center m-auto">
+          <div className="w-3/4 h-9 bg-red-300 text-center m-auto">
             Màn hình
           </div>
           <div className="seat-container grid gap-4 mt-7">
@@ -97,25 +152,31 @@ const SeatSelection = () => {
                     <button
                       key={seat.seatId}
                       className={`
-                        w-8 h-8 rounded-lg text-black border-2
-                      ${
-                        seat.status === "AVAILABLE"
-                          ? "bg-white hover:bg-blue-900"
-                          : "bg-black cursor-not-allowed"
-                      }
-                  ${seat.seatType === "COUPLE" ? "border-pink-400 w-16" : ""}
-                      ${
-                        seat.seatType == "VIP"
-                          ? "border-yellow-300 w-8"
-                          : "border-gray-300"
-                      }
-                    `}
-                      onClick={() =>
-                        seat.status === "AVAILABLE"
-                          ? handleSelectSeat(seat.seatId)
-                          : handleReleaseSeat(seat.seatId)
-                      }
-                      disabled={seat.status !== "AVAILABLE"}
+                        w-${seat.seatType === "COUPLE" ? "16" : "8"}
+                        h-8 rounded-lg text-black border-2
+                        ${
+                          seat.status === "AVAILABLE"
+                            ? "bg-white hover:bg-blue-900"
+                            : seat.status === "SELECTED"
+                            ? "bg-blue-900"
+                            : "bg-black cursor-not-allowed"
+                        }
+                        ${
+                          seat.seatType === "VIP"
+                            ? "border-yellow-300 w-16"
+                            : seat.seatType === "COUPLE"
+                            ? "border-pink-400"
+                            : "border-gray-300"
+                        }
+                      `}
+                      onClick={() => {
+                        if (seat.status === "AVAILABLE") {
+                          handleSelectSeat(seat.seatId);
+                        } else if (seat.status === "SELECTED") {
+                          handleReleaseSeat(seat.seatId);
+                        }
+                      }}
+                      disabled={seat.status === "BOOKED" || seat.isLocked}
                     >
                       {seat.seatName}
                     </button>
@@ -126,6 +187,8 @@ const SeatSelection = () => {
               </div>
             ))}
           </div>
+
+          {/* Legend */}
           <div className="my-4">Chú thích: </div>
           <div className="flex items-start">
             <div className="space-y-2">

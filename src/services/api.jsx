@@ -139,6 +139,11 @@ export const getRoomById = async (roomId) => {
   const response = await api.get(`/rooms/${roomId}`);
   return response.data;
 };
+//GET SEATS LOCK
+export const getSeatsLock = async (showtimeId) => {
+  const response = await api.get(`/seats/with-lock/${showtimeId}`);
+  return response.data;
+};
 
 //Seat
 export const getSeats = async () => {
