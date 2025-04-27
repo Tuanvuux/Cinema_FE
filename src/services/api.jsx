@@ -38,8 +38,9 @@ export const registerAccount = async (formData) => {
   return response.data;
 };
 export const login = async ({ username, password }) => {
-  const response = await api.post("/login", null, {
-    params: { username, password },
+  const response = await api.post("api/auth/login", {
+    username,
+    password,
   });
   return response.data;
 };
