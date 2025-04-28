@@ -1,20 +1,42 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useShowtime } from "../contexts/ShowtimeContext";
 import { getRoomById, getSeatsLock } from "../services/api";
 import { getShowtimeById } from "../utils/showtimeUtils";
 import useSeatSocket from "../hooks/useSeatSocket"; // Import hook WebSocket
+import MovieInfo from "./MovieInfo";
+import SeatLegend from "./SeatLegend";
 
 const SeatSelection = () => {
   const [seatMatrix, setSeatMatrix] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const navigate = useNavigate();
   const { showtimeId } = useParams();
   const { showtimes, loading } = useShowtime();
 
-  const { sendSeatAction } = useSeatSocket(showtimeId); // Hook WebSocket
-
-  // Store the roomId in a ref to avoid unnecessary re-renders
   const roomIdRef = useRef(null);
+
+  // 💥 Move handleSeatUpdate lên đây trước khi dùng
+  const handleSeatUpdate = (seatStatus) => {
+    setSeatMatrix((prevMatrix) => {
+      return prevMatrix.map((row) =>
+        row.map((seat) => {
+          if (seat && seat.seatId === seatStatus.seatId) {
+            return {
+              ...seat,
+              status: seatStatus.status,
+              isLocked: seatStatus.isLocked ?? seat.isLocked,
+            };
+          }
+          return seat;
+        })
+      );
+    });
+  };
+
+  const { sendSeatAction } = useSeatSocket(showtimeId, handleSeatUpdate); // Hook WebSocket
 
   const showtime = useMemo(() => {
     return getShowtimeById(showtimeId, showtimes);
@@ -25,7 +47,7 @@ const SeatSelection = () => {
 
   useEffect(() => {
     if (roomId !== roomIdRef.current) {
-      roomIdRef.current = roomId; // Update the stored roomId
+      roomIdRef.current = roomId;
     }
   }, [roomId]);
 
@@ -36,7 +58,6 @@ const SeatSelection = () => {
       try {
         setIsLoading(true);
 
-        // Gọi đồng thời cả 2 API
         const [roomData, lockedSeatIds] = await Promise.all([
           getRoomById(roomId),
           getSeatsLock(showtimeId),
@@ -44,13 +65,11 @@ const SeatSelection = () => {
 
         const { numberOfRows, numberOfColumns, seats } = roomData;
 
-        // Gắn isLocked = true vào những ghế bị khóa
         const seatsWithLock = seats.map((seat) => ({
           ...seat,
           isLocked: lockedSeatIds.includes(seat.seatId),
         }));
 
-        // Tạo ma trận ghế
         const rowLabels = Array.from(
           new Set(seatsWithLock.map((seat) => seat.rowLabel))
         ).sort();
@@ -75,8 +94,11 @@ const SeatSelection = () => {
 
     fetchSeats();
   }, [roomId]);
-  const handleSelectSeat = (seatId) => {
-    console.log("Selected seat", seatId);
+
+  const handleSelectSeat = (seatId, seatName) => {
+    if (!selectedSeats.includes(seatId)) {
+      setSelectedSeats((prev) => [...prev, seatId]);
+    }
     const userId = 1;
     sendSeatAction(seatId, "SELECT", userId);
 
@@ -84,15 +106,20 @@ const SeatSelection = () => {
       prevMatrix.map((row) =>
         row.map((seat) =>
           seat && seat.seatId === seatId
-            ? { ...seat, status: "SELECTED" } // Cập nhật status local
+            ? { ...seat, status: "SELECTED" }
             : seat
         )
       )
     );
+
+    const seat = seatMatrix.flat().find((seat) => seat.seatId === seatId);
+    if (seat) {
+      setTotalPrice((prevTotal) => prevTotal + seat.seatInfo.price);
+    }
   };
 
-  const handleReleaseSeat = (seatId) => {
-    console.log("Released seat", seatId);
+  const handleReleaseSeat = (seatId, seatName) => {
+    setSelectedSeats((prev) => prev.filter((id) => id !== seatId));
     const userId = 1;
     sendSeatAction(seatId, "SELECTED", userId);
 
@@ -100,28 +127,20 @@ const SeatSelection = () => {
       prevMatrix.map((row) =>
         row.map((seat) =>
           seat && seat.seatId === seatId
-            ? { ...seat, status: "AVAILABLE" } // Cập nhật status local
+            ? { ...seat, status: "AVAILABLE" }
             : seat
         )
       )
     );
+
+    const seat = seatMatrix.flat().find((seat) => seat.seatId === seatId);
+    if (seat) {
+      setTotalPrice((prevTotal) => prevTotal - seat.seatInfo.price);
+    }
   };
 
-  const handleSeatUpdate = (seatStatus) => {
-    setSeatMatrix((prevMatrix) => {
-      return prevMatrix.map((row) =>
-        row.map((seat) => {
-          if (seat && seat.seatId === seatStatus.seatId) {
-            return {
-              ...seat,
-              status: seatStatus.status, // Cập nhật trạng thái mới
-              isLocked: seatStatus.isLocked ?? seat.isLocked, // Nếu có thêm isLocked từ server
-            };
-          }
-          return seat;
-        })
-      );
-    });
+  const handlePayment = () => {
+    navigate("/payment");
   };
 
   if (loading || isLoading) {
@@ -136,7 +155,6 @@ const SeatSelection = () => {
     <div className="max-w-6xl mx-auto p-4">
       <div className="text-2xl max-w-3xs">Chọn ghế</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-        {/* Seat Selection Section */}
         <div>
           <div className="w-3/4 h-9 bg-red-300 text-center m-auto">
             Màn hình
@@ -151,29 +169,30 @@ const SeatSelection = () => {
                   seat ? (
                     <button
                       key={seat.seatId}
-                      className={`
-                        w-${seat.seatType === "COUPLE" ? "16" : "8"}
-                        h-8 rounded-lg text-black border-2
-                        ${
-                          seat.status === "AVAILABLE"
-                            ? "bg-white hover:bg-blue-900"
-                            : seat.status === "SELECTED"
-                            ? "bg-blue-900"
-                            : "bg-black cursor-not-allowed"
-                        }
-                        ${
-                          seat.seatType === "VIP"
-                            ? "border-yellow-300 w-16"
-                            : seat.seatType === "COUPLE"
-                            ? "border-pink-400"
-                            : "border-gray-300"
-                        }
-                      `}
+                      className={`w-${
+                        seat.seatInfo.name === "COUPLE" ? "16" : "8"
+                      } h-8 rounded-lg text-black border-2 ${
+                        seat.isLocked
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : seat.status === "AVAILABLE"
+                          ? "bg-white hover:bg-blue-900"
+                          : seat.status === "SELECTED"
+                          ? "bg-blue-900 text-white"
+                          : seat.status === "BOOKED"
+                          ? "bg-black text-white cursor-not-allowed"
+                          : "bg-black cursor-not-allowed"
+                      } ${
+                        seat.seatInfo.name === "VIP"
+                          ? "border-yellow-300"
+                          : seat.seatInfo.name === "COUPLE"
+                          ? "border-pink-400"
+                          : "border-gray-300"
+                      }`}
                       onClick={() => {
                         if (seat.status === "AVAILABLE") {
-                          handleSelectSeat(seat.seatId);
+                          handleSelectSeat(seat.seatId, seat.seatName);
                         } else if (seat.status === "SELECTED") {
-                          handleReleaseSeat(seat.seatId);
+                          handleReleaseSeat(seat.seatId, seat.seatName);
                         }
                       }}
                       disabled={seat.status === "BOOKED" || seat.isLocked}
@@ -181,72 +200,37 @@ const SeatSelection = () => {
                       {seat.seatName}
                     </button>
                   ) : (
-                    <div key={colIndex} className="w-12 h-12" />
+                    <div key={colIndex} />
                   )
                 )}
               </div>
             ))}
           </div>
-
-          {/* Legend */}
-          <div className="my-4">Chú thích: </div>
-          <div className="flex items-start">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg border-2 border-gray-300"></div>
-                <p className="m-0">Ghế thường</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg border-2 border-yellow-300"></div>
-                <p className="m-0">Ghế VIP</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg border-2 bg-black"></div>
-                <p className="m-0">Ghế đã đặt</p>
-              </div>
-            </div>
-
-            <div className="space-y-2 ml-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg border-2 bg-blue-900"></div>
-                <p className="m-0">Ghế đang chọn</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg border-2 border-pink-400"></div>
-                <p className="m-0">Ghế đôi</p>
-              </div>
-            </div>
-          </div>
+          <SeatLegend />
         </div>
-
-        {/* Movie Information Section */}
-        <div className="max-w-max bg-white rounded-lg shadow-lg">
-          <h1 className="text-3xl text-center">
-            {movie.name} (T{movie.ageLimit})
-          </h1>
-          <div className="relative overflow-hidden rounded-lg mb-4">
-            <img
-              src={movie.posterUrl}
-              alt={movie.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">{movie.title}</h2>
-          <div className="space-y-2 text-gray-600">
+        <div>
+          <MovieInfo movie={movie} />
+          <div>
+            <p>Ngày: {showtime.showDate} </p>
+            <p>Giờ: {showtime.startTime}</p>
             <p>
-              <span className="font-semibold">Thời lượng:</span>{" "}
-              {movie.duration} phút
+              Ghế:{" "}
+              {selectedSeats
+                .map(
+                  (seatId) =>
+                    seatMatrix.flat().find((seat) => seat.seatId === seatId)
+                      ?.seatName
+                )
+                .join(", ")}
             </p>
-            <p>
-              <span className="font-semibold">Thể loại:</span>{" "}
-              {movie.category?.name}
-            </p>
-            <p>
-              <span className="font-semibold">Ngôn ngữ:</span> {movie.caption}
-            </p>
-            <p>
-              <span className="font-semibold">Rated:</span> {movie.ageLimit}
-            </p>
+            <p>Số vé: {selectedSeats.length}</p>
+            <p>Tổng tiền: {totalPrice} VNĐ</p>
+            <button
+              className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+              onClick={handlePayment}
+            >
+              Thanh toán
+            </button>
           </div>
         </div>
       </div>

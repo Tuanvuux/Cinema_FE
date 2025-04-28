@@ -21,15 +21,16 @@ const Login = () => {
     try {
       const response = await login({ username, password });
 
-      if (!response) {
+      if (response && response.token) {
+        localStorage.setItem("token", response.token);
+        alert(`Đăng nhập thành công!`);
+        // Định tuyến hoặc thực hiện hành động sau khi login thành công
+        // window.location.href = "/dashboard"; // Ví dụ
+      } else {
         throw new Error("Có lỗi xảy ra, vui lòng thử lại!");
       }
-      localStorage.setItem("token", response.token);
-      alert(`Đăng nhập thành công!`);
-      // localStorage.setItem("user", JSON.stringify(user));
-      // window.location.href = "/dashboard";
     } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(error.response?.data || error.message);
     } finally {
       setIsLoading(false);
     }
