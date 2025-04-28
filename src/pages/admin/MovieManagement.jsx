@@ -223,14 +223,6 @@ export default function MovieManagement() {
         setConfirmModalOpen(true);
     };
 
-    // const handleConfirmAction = () => {
-    //     if (selectedMovieForAction) {
-    //         handleToggleDeleteStatus(selectedMovieForAction);
-    //     }
-    //     setConfirmModalOpen(false);
-    //     setSelectedMovieForAction(null);
-    // };
-
     // Thêm hàm để toggle trạng thái xóa
     const handleToggleDeleteStatus = async (movie) => {
 
@@ -631,6 +623,10 @@ export default function MovieManagement() {
                         </h1>
 
                         <nav className="space-y-4 flex-grow">
+                            <Link to="/admin/dashboard" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                                <span className="material-icons">assessment</span>
+                                <span>Báo cáo</span>
+                            </Link>
                             <Link to="/admin/roommanagement"
                                   className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                                 <span className="material-icons">meeting_room</span>
@@ -659,10 +655,6 @@ export default function MovieManagement() {
                             <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                                 <span className="material-icons">confirmation_number</span>
                                 <span>Quản lý vé đặt</span>
-                            </Link>
-                            <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                                <span className="material-icons">assessment</span>
-                                <span>Báo cáo</span>
                             </Link>
                         </nav>
                     </div>
@@ -773,13 +765,6 @@ export default function MovieManagement() {
                                                 >
                                                     <span className="material-icons">edit</span>
                                                 </button>
-                                                {/*<button*/}
-                                                {/*   onClick={() => handleOpenDeleteModal(movie.movieId)}*/}
-                                                {/*    onClick={() => handleOpenConfirmModal(movie, 'delete')}*/}
-                                                {/*    className="text-gray-600 hover:text-gray-800"*/}
-                                                {/*>*/}
-                                                {/*    <span className="material-icons">delete</span>*/}
-                                                {/*</button>*/}
 
                                                 {!movie.isDelete ? (
                                                     <button

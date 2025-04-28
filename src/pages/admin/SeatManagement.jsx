@@ -416,6 +416,10 @@ export default function SeatManagement () {
                     </h1>
 
                     <nav className="space-y-4 flex-grow">
+                        <Link to="/admin/dashboard" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                            <span className="material-icons">assessment</span>
+                            <span>Báo cáo</span>
+                        </Link>
                         <Link to="/admin/roommanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">meeting_room</span>
                             <span>Phòng chiếu</span>
@@ -440,10 +444,6 @@ export default function SeatManagement () {
                         <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">confirmation_number</span>
                             <span>Quản lý vé đặt</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">assessment</span>
-                            <span>Báo cáo</span>
                         </Link>
                     </nav>
                 </div>
@@ -573,8 +573,8 @@ export default function SeatManagement () {
                                     </th>
                                     <th className="p-3 text-center">Tên ghế</th>
                                     <th className="p-3 text-center">Phòng</th>
-                                    <th className="p-3 text-center">Tên cột</th>
-                                    <th className="p-3 text-center">Số cột</th>
+                                    <th className="p-3 text-center">Tên hàng ghế</th>
+                                    <th className="p-3 text-center">Số cột ghế</th>
                                     <th className="p-3 text-center">Trạng thái</th>
                                     <th className="p-3 text-center">Loại ghế</th>
                                     <th className="p-3 text-center">Thao tác</th>
@@ -1039,7 +1039,7 @@ export default function SeatManagement () {
                             <div className="flex space-x-4">
                                 <div>
                                     <label htmlFor="rowLabel" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Tên cột
+                                        Tên hàng ghế
                                     </label>
                                     <input
                                         type="text"
@@ -1053,8 +1053,9 @@ export default function SeatManagement () {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="columnNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Số dòng ghế
+                                    <label htmlFor="columnNumber"
+                                           className="block text-sm font-medium text-gray-700 mb-1">
+                                        Số cột ghế
                                     </label>
                                     <input
                                         type="number"
@@ -1067,72 +1068,9 @@ export default function SeatManagement () {
                                         required
                                     />
                                 </div>
+
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Trạng thái
-                                </label>
-                                <div className="flex items-center space-x-4">
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="AVAILABLE"
-                                            checked={newSeat.status === 'AVAILABLE'}
-                                            onChange={() => setNewSeat({...newSeat, status: 'AVAILABLE'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.status === 'AVAILABLE'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.status === 'AVAILABLE' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>Chưa đặt</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="SELECTED"
-                                            checked={newSeat.status === 'SELECTED'}
-                                            onChange={() => setNewSeat({...newSeat, status: 'SELECTED'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.status === 'SELECTED'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.status === 'SELECTED' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>Đã chọn</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="BOOKED"
-                                            checked={newSeat.status === 'BOOKED'}
-                                            onChange={() => setNewSeat({...newSeat, status: 'BOOKED'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.status === 'BOOKED'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.status === 'BOOKED' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>Đã đặt</span>
-                                    </label>
-                                </div>
-                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Loại ghế
@@ -1195,43 +1133,6 @@ export default function SeatManagement () {
                                         </div>
                                         <span>COUPLE</span>
                                     </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="seatType"
-                                            value="PREMIUM"
-                                            checked={newSeat.seatType === 'PREMIUM'}
-                                            onChange={() => setNewSeat({...newSeat, seatType: 'PREMIUM'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.seatType === 'PREMIUM'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.seatType === 'PREMIUM' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>PREMIUM</span>
-                                    </label><label className="inline-flex items-center relative cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="seatType"
-                                        value="BED"
-                                        checked={newSeat.seatType === 'BED'}
-                                        onChange={() => setNewSeat({...newSeat, seatType: 'BED'})}
-                                        className="absolute opacity-0 cursor-pointer"
-                                    />
-                                    <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.seatType === 'BED'
-                                        ? 'bg-gray-900 border-gray-900'
-                                        : 'bg-white border-gray-300'}`}>
-                                        {newSeat.seatType === 'BED' && (
-                                            <span className="text-white text-xs">✓</span>
-                                        )}
-                                    </div>
-                                    <span>BED</span>
-                                </label>
                                 </div>
                             </div>
                         </div>

@@ -503,6 +503,10 @@ export default function ShowtimeManagement () {
                     </h1>
 
                     <nav className="space-y-4 flex-grow">
+                        <Link to="/admin/dashboard" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
+                            <span className="material-icons">assessment</span>
+                            <span>Báo cáo</span>
+                        </Link>
                         <Link to="/admin/roommanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">meeting_room</span>
                             <span>Phòng chiếu</span>
@@ -528,10 +532,6 @@ export default function ShowtimeManagement () {
                         <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
                             <span className="material-icons">confirmation_number</span>
                             <span>Quản lý vé đặt</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">assessment</span>
-                            <span>Báo cáo</span>
                         </Link>
                     </nav>
                 </div>

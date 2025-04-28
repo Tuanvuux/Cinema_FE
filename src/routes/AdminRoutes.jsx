@@ -7,6 +7,7 @@ import MovieManagement from "@/pages/admin/MovieManagement.jsx";
 import AdminPage from "../pages/admin/AdminPage.jsx";
 import AccountManagement from "@/pages/admin/AccountManagement.jsx";
 import SeatManagement from "@/pages/admin/SeatManagement.jsx";
+import DashBoard from "@/pages/admin/DashBoard.jsx"
 
 const AdminRoutes = () => {
   return (
@@ -19,6 +20,7 @@ const AdminRoutes = () => {
       <Route path="moviemanagement" element={<MovieManagement />} />
         <Route path="accountmanagement" element={<AccountManagement/>}/>
         <Route path="seatmanagement" element={<SeatManagement/>}/>
+        <Route path="dashboard" element={<DashBoard/>}/>
     </Routes>
   );
 };
