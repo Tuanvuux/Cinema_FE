@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Navbar() {
+  const { user, logout } = useAuth(); // Lấy thông tin user và logout từ context
+  console.log("user", user);
   return (
     <nav className="bg-gray-900 text-white py-4">
       <div className="container mx-auto flex justify-between items-center px-6">
@@ -33,10 +36,45 @@ export default function Navbar() {
               Thành viên
             </Link>
           </li>
+
+          {/* Hiển thị mục "Trang quản lý" nếu người dùng có role "ADMIN" */}
+          {user && user.role === "ADMIN" && (
+            <li>
+              <Link
+                to="/admin/showtimemanagement"
+                className="hover:text-yellow-400"
+              >
+                Trang quản lý
+              </Link>
+            </li>
+          )}
         </ul>
-        <div>
-          <Link to="/login">Đăng nhập</Link> /{" "}
-          <Link to="/register">Đăng ký</Link>
+
+        <div className="text-lg">
+          {user ? (
+            <div className="flex items-center text-white">
+              <Link
+                to="/userInfor"
+                className="hover:text-yellow-400 font-semibold mx-1"
+              >
+                {user.fullName}
+              </Link>
+              <span className="mx-1">/</span>
+              <button onClick={logout} className="hover:text-yellow-400 mx-1">
+                Đăng xuất
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center text-white">
+              <Link to="/login" className="hover:text-yellow-400 mx-1">
+                Đăng nhập
+              </Link>
+              <span className="mx-1">/</span>
+              <Link to="/register" className="hover:text-yellow-400 mx-1">
+                Đăng ký
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>
