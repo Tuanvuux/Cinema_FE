@@ -1,8 +1,13 @@
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 export default function DashBoard() {
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+
     useEffect(() => {
-        document.title = 'Báo cáo';
+        document.title = 'Báo cáo doanh thu';
     }, []);
     const [toast, setToast] = useState({
         account: false,
@@ -82,7 +87,22 @@ export default function DashBoard() {
                         </Link>
 
                     </nav>
+
                 </div>
+                <div className="flex-1 p-6 overflow-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-2xl font-bold">BÁO CÁO DOANH THU</h1>
+                        <div className="flex items-center">
+                            <div className="flex items-center">
+                                <div className="ml-4 flex items-center">
+                                    <span className="font-medium mr-2">ADMIN</span>
+                                    <span className="material-icons">person</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     )

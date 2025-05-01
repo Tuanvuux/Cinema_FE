@@ -97,6 +97,18 @@ export const deleteShowtime = async (showtimeId) => {
     return response.data;
 };
 
+export const getAvailableRooms = async (showDate, startTime, endTime) => {
+    const response = await api.get(`/showtime/admin/availablerooms`, {
+        params: {
+            showDate,
+            startTime,
+            endTime
+        }
+    });
+    return response.data;
+};
+
+
 //Seat
 export const getSeats = async () => {
     const response = await api.get("/seats/admin");
@@ -105,6 +117,10 @@ export const getSeats = async () => {
 
 export const addSeat = async (seatData) => {
     const response = await api.post("/seats/admin", seatData);
+    return response.data;
+};
+export const getSeatInfo = async () => {
+    const response = await api.get("/seatinfo/admin");
     return response.data;
 };
 
@@ -117,3 +133,21 @@ export const deleteSeat = async (seatId) => {
     const response = await api.delete(`/seats/admin/${seatId}`);
     return response.data;
 };
+
+//SeatInfo
+
+export const addSeatInfo = async (seatInfoData) => {
+    const response = await api.post("/seatinfo/admin", seatInfoData);
+    return response.data;
+};
+
+export const updateSeatInfo = async (seatInfoId, seatInfoData) => {
+    const response = await api.put(`/seatinfo/admin/${seatInfoId}`, seatInfoData);
+    return response.data;
+};
+
+export const deleteSeatInfo = async (seatInfoId) => {
+    const response = await api.delete(`/seatinfo/admin/${seatInfoId}`);
+    return response.data;
+};
+

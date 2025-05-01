@@ -79,7 +79,7 @@ const AccountManagement = () => {
 
     // Hàm tạo danh sách số trang hiển thị động
     const getPageNumbers = () => {
-        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const totalNumbers = 3; // Số lượng nút trang muốn hiển thị
         const half = Math.floor(totalNumbers / 2);
 
         let start = Math.max(1, currentPage - half);
@@ -711,9 +711,20 @@ const AccountManagement = () => {
 
 
 
-                    {/* Pagination */}
+                    {/* Pagination.jsx */}
                     <div className="flex justify-center mt-6">
-                        <div className="flex">
+                        <div className="flex items-center">
+                            {/* Nút về trang đầu tiên */}
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang đầu"
+                            >
+                                &laquo;
+                            </button>
+
+                            {/* Nút trang trước */}
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
@@ -722,10 +733,22 @@ const AccountManagement = () => {
                                 &lt;
                             </button>
 
-                            {currentPage > 3 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang đầu tiên khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[0] > 1 && (
+                                <>
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        1
+                                    </button>
+                                    {getPageNumbers()[0] > 2 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                </>
                             )}
 
+                            {/* Các nút trang ở giữa */}
                             {getPageNumbers().map(pageNumber => (
                                 <button
                                     key={pageNumber}
@@ -740,16 +763,38 @@ const AccountManagement = () => {
                                 </button>
                             ))}
 
-                            {currentPage < totalPages - 2 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang cuối cùng khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
+                                <>
+                                    {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        {totalPages}
+                                    </button>
+                                </>
                             )}
 
+                            {/* Nút trang tiếp theo */}
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
                             >
                                 &gt;
+                            </button>
+
+                            {/* Nút tới trang cuối cùng */}
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang cuối"
+                            >
+                                &raquo;
                             </button>
                         </div>
                     </div>

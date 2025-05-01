@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import {getSeats, addSeat, updateSeat, deleteSeat, getRooms} from "../../services/apiadmin.jsx";
+import {
+    getSeats,
+    addSeat,
+    updateSeat,
+    deleteSeat,
+    getRooms,
+    getSeatInfo,
+    updateSeatInfo
+} from "../../services/apiadmin.jsx";
 import {Link} from "react-router-dom";
 
 export default function SeatManagement () {
@@ -7,6 +15,7 @@ export default function SeatManagement () {
     const [loading, setLoading] = useState(true);
     const [showFilter, setShowFilter] = useState(false);
     const [rooms, setRooms] = useState([]);
+    const [seatInfo,setSeatInfos] = useState([]);
     const [error, setError] = useState(null);
     // const [selectedSeat, setSelectedSeat] = useState(null);
     const [newSeat, setNewSeat] = useState({
@@ -15,19 +24,21 @@ export default function SeatManagement () {
         rowLabel:'',
         columnNumber: 0,
         status: 'AVAILABLE',
-        seatType: 'REGULAR'
+        seatInfoId: ''
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [statusFilter, setStatusFilter] = useState('all');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditPriceModal, setShowEditPriceModal] = useState(false);
     const [selectedSeats, setSelectedSeats] = useState([]);
     const [selectAll, setSelectAll] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingSeat, setEditingSeat] = useState({ seatId: '', seatName: '', roomId: '',rowLabel: '',
-        columnNumber:'', status: '' , seatType: ''});
+        columnNumber:'', status: '' , seatInfoId: ''});
+    const [editSeatInfo, setEditSeatInfo] = useState({ id: '', name: '', price: 0});
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedSeatId, setSelectedSeatId] = useState(null);
 
@@ -46,6 +57,19 @@ export default function SeatManagement () {
     };
     useEffect(() => {
         getRooms().then(setRooms);
+    }, []);
+
+    useEffect(() => {
+        getSeatInfo().then(data => {
+            setSeatInfos(data);
+            // Set the first seat info as default if available
+            if (data && data.length > 0) {
+                setNewSeat(prev => ({
+                    ...prev,
+                    seatInfoId: data[0].id
+                }));
+            }
+        });
     }, []);
 
     const handleDeleteSeat = async (SeatId) =>  {
@@ -81,12 +105,11 @@ export default function SeatManagement () {
         setEditingSeat({
             seatId: Seat.seatId,
             seatName: Seat.seatName,
-            // Store room ID instead of the whole room object
             room: Seat.roomId || (Seat.room ? Seat.room.id : ''),
             rowLabel: Seat.rowLabel,
             columnNumber: Seat.columnNumber,
             status: Seat.status,
-            seatType: Seat.seatType
+            seatInfoId: Seat.seatInfoId
         });
         // setSelectedSeat(Seat);
         setShowEditModal(true);
@@ -104,7 +127,7 @@ export default function SeatManagement () {
                 roomId: editingSeat.roomId,
                 columnNumber: editingSeat.columnNumber,
                 status: editingSeat.status,
-                seatType: editingSeat.seatType,
+                seatInfoId: editingSeat.seatInfoId,
             });
 
             // Cập nhật danh sách phòng mà không cần tải lại trang
@@ -133,6 +156,44 @@ export default function SeatManagement () {
         }
 
         setShowEditModal(false);
+        setTimeout(() => {
+            setToast({show: false, message: '', type: 'success'});
+        }, 3000);
+    };
+
+    const handleSaveEditSeatInfo = async () => {
+        try {
+            const updatedSeatInfo = await updateSeatInfo(editSeatInfo.id, {
+                name: editSeatInfo.name,
+                price: editSeatInfo.price
+            });
+
+            // Cập nhật danh sách phòng mà không cần tải lại trang
+            setSeatInfos((prevSeatsInfo) =>
+                prevSeatsInfo.map((SeatInfo) => (SeatInfo.id === updatedSeatInfo.id ? updatedSeatInfo : SeatInfo))
+            );
+            setToast({
+                show: true,
+                message: 'Sửa giá ghế thành công!',
+                type: 'success'
+            });
+            setShowEditPriceModal(false);
+            setTimeout(() => {
+                setToast({ show: false, message: '', type: 'success' });
+            }, 3000);
+        } catch (error) {
+            setToast({
+                show: true,
+                message: 'Cập nhật giá ghế thất bại!',
+                type: 'error'
+            })
+            console.error("Lỗi khi cập nhật giá ghế:", error);
+            setTimeout(() => {
+                setToast({ show: false, message: '', type: 'success' });
+            }, 3000);
+        }
+
+        setShowEditPriceModal(false);
         setTimeout(() => {
             setToast({show: false, message: '', type: 'success'});
         }, 3000);
@@ -253,7 +314,8 @@ export default function SeatManagement () {
                         rowLabel: seat.rowLabel || '',
                         columnNumber: seat.columnNumber || 0,
                         status: seat.status || 'UNKNOWN',
-                        seatType: seat.seatType || 'REGULAR'
+                        seatInfoId: seat.seatInfoId || null,
+                        seatInfoName: seat.seatInfoName || 'UNKNOWN'
                     };
                 }).filter(Boolean);
 
@@ -274,27 +336,49 @@ export default function SeatManagement () {
     // Handle adding a new Seat
     const handleAddSeat = async () => {
         try {
-            const addedSeat = await addSeat(newSeat);
+            // Ensure the seat has all required data
+            if (!newSeat.seatName || !newSeat.roomId || !newSeat.rowLabel || !newSeat.seatInfoId) {
+                setToast({
+                    show: true,
+                    message: 'Vui lòng điền đầy đủ thông tin!',
+                    type: 'error'
+                });
+                return;
+            }
+
+            // Prepare data to send to backend
+            const seatData = {
+                ...newSeat,
+                status: 'AVAILABLE' // Set default status
+            };
+
+            console.log("Sending seat data:", seatData); // For debugging
+
+            const addedSeat = await addSeat(seatData);
             setSeats([...seats, addedSeat]);
+
             // Show success toast
             setToast({
                 show: true,
                 message: 'Thêm ghế thành công!',
                 type: 'success'
             });
+
             // Reset form and close modal
             setNewSeat({
                 seatName: '',
                 roomId: '',
-                rowLabel:'',
+                rowLabel: '',
                 columnNumber: 0,
                 status: 'AVAILABLE',
-                seatType: 'REGULAR'
+                seatInfoId: seatInfo.length > 0 ? seatInfo[0].id : '' // Reset to default
             });
+
             setShowAddModal(false);
+
             // Automatically hide toast after 3 seconds
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: '' });
             }, 3000);
         } catch (err) {
             // Show error toast
@@ -302,12 +386,12 @@ export default function SeatManagement () {
                 show: true,
                 message: 'Thêm ghế thất bại!',
                 type: 'error'
-            })
+            });
 
-            console.error(err);
+            console.error("Error adding seat:", err);
 
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: '' });
             }, 3000);
         }
     };
@@ -325,7 +409,8 @@ export default function SeatManagement () {
             <div
                 className={`fixed top-4 right-4 z-50 px-4 py-2 text-white rounded-md shadow-lg transition-all duration-300 ${typeStyles[type]}`}
                 style={{
-                    animation: 'fadeInOut 3s ease-in-out',
+                    animation: 'fadeInOut 3s ' +
+                        'ease-in-out',
                     opacity: show ? 1 : 0
                 }}
             >
@@ -334,30 +419,11 @@ export default function SeatManagement () {
         );
     };
 
-    // Handle updating a Seat's status
-    const handleStatusChange = async (SeatId, status) => {
-        try {
-            const SeatToUpdate = seats.find(Seat => Seat.id === SeatId);
-            if (SeatToUpdate) {
-                const updatedSeat = { ...SeatToUpdate, status };
-                await updateSeat(SeatId, updatedSeat);
-
-                // Update local state
-                setSeats(seats.map(Seat => Seat.id === SeatId ? { ...Seat, status } : Seat));
-            }
-        } catch (err) {
-            setError('Failed to update Seat status');
-            console.error(err);
-        }
-    };
-
     const filteredSeats = seats.filter(seat => {
         const matchesSearch = Object.values(seat).some(value =>
             value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
         );
-
         const matchesStatus = statusFilter === 'all' || seat.status === statusFilter;
-
         return matchesSearch
             && matchesStatus;
     });
@@ -371,7 +437,7 @@ export default function SeatManagement () {
 
     // Hàm tạo danh sách số trang hiển thị động
     const getPageNumbers = () => {
-        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const totalNumbers = 3; // Số lượng nút trang muốn hiển thị
         const half = Math.floor(totalNumbers / 2);
 
         let start = Math.max(1, currentPage - half);
@@ -388,6 +454,27 @@ export default function SeatManagement () {
 
     const handleInputChangeEdit = (e) => {
         setEditingSeat({ ...editingSeat, [e.target.name]: e.target.value });
+    };
+    const handleInputChangeEditSeatInfo = (e) => {
+        const { name, value } = e.target;
+
+        if (name === "id") {
+            // When seat type is selected, find and update price automatically
+            const selectedSeatInfo = seatInfo.find(seatInfo => seatInfo.id === parseInt(value));
+            if (selectedSeatInfo) {
+                setEditSeatInfo({
+                    id: selectedSeatInfo.id,
+                    name: selectedSeatInfo.name,
+                    price: selectedSeatInfo.price
+                });
+            }
+        } else {
+            // For other fields like manually changing the price
+            setEditSeatInfo(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     // Handle input change for new Seat form
@@ -537,13 +624,24 @@ export default function SeatManagement () {
 
                     </div>
                     <div className="flex justify-between mb-6">
-                        <button
-                            className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
-                            onClick={() => setShowAddModal(true)}
-                        >
-                            <span className="material-icons mr-1">add</span>
-                            Thêm ghế
-                        </button>
+                        <div className="flex gap-4">
+                            <button
+                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
+                                onClick={() => setShowAddModal(true)}
+                            >
+                                <span className="material-icons mr-1">add</span>
+                                Thêm ghế
+                            </button>
+
+                            <button
+                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
+                                onClick={() => setShowEditPriceModal(true)}
+                            >
+                                <span className="material-icons mr-1">edit</span>
+                                Sửa giá ghế
+                            </button>
+                        </div>
+
 
                         <button
                             className={`${selectedSeats.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
@@ -594,7 +692,7 @@ export default function SeatManagement () {
                                         <td className="p-3 text-center">{Seat.rowLabel}</td>
                                         <td className="p-3 text-center">{Seat.columnNumber}</td>
                                         <td className="p-3 text-center">{Seat.status}</td>
-                                        <td className="p-3 text-center">{Seat.seatType}</td>
+                                        <td className="p-3 text-center">{Seat.seatInfoName}</td>
                                         <td className="p-3 text-center">
                                             <button
                                                 onClick={() => handleEditSeat(Seat)}
@@ -641,9 +739,20 @@ export default function SeatManagement () {
                         </div>
                     )}
 
-                    {/* Pagination */}
-                    <div className="flex justify-center mt-6"   >
-                        <div className="flex">
+                    {/* Pagination.jsx */}
+                    <div className="flex justify-center mt-6">
+                        <div className="flex items-center">
+                            {/* Nút về trang đầu tiên */}
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang đầu"
+                            >
+                                &laquo;
+                            </button>
+
+                            {/* Nút trang trước */}
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
@@ -652,10 +761,22 @@ export default function SeatManagement () {
                                 &lt;
                             </button>
 
-                            {currentPage > 3 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang đầu tiên khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[0] > 1 && (
+                                <>
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        1
+                                    </button>
+                                    {getPageNumbers()[0] > 2 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                </>
                             )}
 
+                            {/* Các nút trang ở giữa */}
                             {getPageNumbers().map(pageNumber => (
                                 <button
                                     key={pageNumber}
@@ -670,10 +791,22 @@ export default function SeatManagement () {
                                 </button>
                             ))}
 
-                            {currentPage < totalPages - 2 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang cuối cùng khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
+                                <>
+                                    {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        {totalPages}
+                                    </button>
+                                </>
                             )}
 
+                            {/* Nút trang tiếp theo */}
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
@@ -681,9 +814,18 @@ export default function SeatManagement () {
                             >
                                 &gt;
                             </button>
+
+                            {/* Nút tới trang cuối cùng */}
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang cuối"
+                            >
+                                &raquo;
+                            </button>
                         </div>
                     </div>
-
                 </div>
             </div>
 
@@ -858,107 +1000,31 @@ export default function SeatManagement () {
                             </div>
 
                             <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Loại ghế
                                 </label>
                                 <div className="flex items-center space-x-4">
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="REGULAR"
-                                            checked={editingSeat.seatType === 'REGULAR'}
-                                            onChange={() => setEditingSeat({...editingSeat, seatType: 'REGULAR'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.seatType === 'REGULAR'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.seatType === 'REGULAR' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>REGULAR</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="VIP"
-                                            checked={editingSeat.seatType === 'VIP'}
-                                            onChange={() => setEditingSeat({...editingSeat, seatType: 'VIP'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.seatType === 'VIP'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.seatType === 'VIP' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>VIP</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="COUPLE"
-                                            checked={editingSeat.seatType === 'COUPLE'}
-                                            onChange={() => setEditingSeat({...editingSeat, seatType: 'COUPLE'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.seatType === 'COUPLE'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.seatType === 'COUPLE' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>COUPLE</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="COUPLE"
-                                            checked={editingSeat.seatType === 'PREMIUM'}
-                                            onChange={() => setEditingSeat({...editingSeat, seatType: 'PREMIUM'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.seatType === 'PREMIUM'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.seatType === 'PREMIUM' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>PREMIUM</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="BED"
-                                            checked={editingSeat.seatType === 'BED'}
-                                            onChange={() => setEditingSeat({...editingSeat, seatType: 'BED'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.seatType === 'BED'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.seatType === 'BED' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>BED</span>
-                                    </label>
+                                    {seatInfo.map((info) => (
+                                        <label key={info.id}
+                                               className="inline-flex items-center relative cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="seatInfoId"
+                                                value={info.id}
+                                                checked={editingSeat.seatInfoId === info.id}
+                                                onChange={() => setEditingSeat({...editingSeat, seatInfoId: info.id})}
+                                                className="absolute opacity-0 cursor-pointer"
+                                            />
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
+                    ${editingSeat.seatInfoId === info.id ? 'bg-gray-900 border-gray-900' : 'bg-white border-gray-300'}`}>
+                                                {editingSeat.seatInfoId === info.id && (
+                                                    <span className="text-white text-xs">✓</span>
+                                                )}
+                                            </div>
+                                            <span>{info.name}</span>
+                                        </label>
+                                    ))}
                                 </div>
-
                             </div>
                         </div>
 
@@ -998,7 +1064,7 @@ export default function SeatManagement () {
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="seatName" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tên Ghế
+                                Tên Ghế
                                 </label>
                                 <input
                                     type="text"
@@ -1070,71 +1136,6 @@ export default function SeatManagement () {
                                 </div>
 
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Loại ghế
-                                </label>
-                                <div className="flex items-center space-x-4">
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="seatType"
-                                            value="REGULAR"
-                                            checked={newSeat.seatType === 'REGULAR'}
-                                            onChange={() => setNewSeat({...newSeat, seatType: 'REGULAR'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.seatType === 'REGULAR'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.seatType === 'REGULAR' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>REGULAR</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="seatType"
-                                            value="VIP"
-                                            checked={newSeat.seatType === 'VIP'}
-                                            onChange={() => setNewSeat({...newSeat, seatType: 'VIP'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.seatType === 'VIP'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.seatType === 'VIP' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>VIP</span>
-                                    </label>
-                                    <label className="inline-flex items-center relative cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="seatType"
-                                            value="COUPLE"
-                                            checked={newSeat.seatType === 'COUPLE'}
-                                            onChange={() => setNewSeat({...newSeat, seatType: 'COUPLE'})}
-                                            className="absolute opacity-0 cursor-pointer"
-                                        />
-                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                            ${newSeat.seatType === 'COUPLE'
-                                            ? 'bg-gray-900 border-gray-900'
-                                            : 'bg-white border-gray-300'}`}>
-                                            {newSeat.seatType === 'COUPLE' && (
-                                                <span className="text-white text-xs">✓</span>
-                                            )}
-                                        </div>
-                                        <span>COUPLE</span>
-                                    </label>
-                                </div>
-                            </div>
                         </div>
 
                         <div className="flex justify-end mt-6 gap-3">
@@ -1149,6 +1150,79 @@ export default function SeatManagement () {
                                 className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
                             >
                                 Thêm ghế
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showEditPriceModal && (
+                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg max-w-xl p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Sửa giá ghế</h2>
+                            <button
+                                onClick={() => setShowEditPriceModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <span className="material-icons">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex space-x-4">
+                                <div>
+                                    <label htmlFor="id" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Tên loại ghế
+                                    </label>
+                                    <select
+                                        id="id"
+                                        name="id"
+                                        value={editSeatInfo.id}
+                                        onChange={handleInputChangeEditSeatInfo}
+                                        className="w-full p-2 mb-3 border rounded"
+                                    >
+                                        <option value="">Chọn loại ghế</option>
+                                        {seatInfo.map(seatinfo => (
+                                            <option key={seatinfo.id} value={seatinfo.id}>
+                                                {seatinfo.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label htmlFor="price"
+                                           className="block text-sm font-medium text-gray-700 mb-1">
+                                        Giá loại ghế
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="price"
+                                        name="price"
+                                        value={editSeatInfo.price}
+                                        onChange={handleInputChangeEditSeatInfo}
+                                        placeholder="Nhập giá ghế"
+                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end mt-6 gap-3">
+                            <button
+                                onClick={() => setShowEditPriceModal(false)}
+                                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleSaveEditSeatInfo}
+                                className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                            >
+                                Lưu thay đổi
                             </button>
                         </div>
                     </div>
