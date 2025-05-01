@@ -26,7 +26,7 @@ const Showtime = () => {
   const navigate = useNavigate();
 
   const handleSelectShowtime = (showtimeId) => {
-    navigate(`/seats/${showtimeId}`);
+    navigate(`/user/seats/${showtimeId}`);
   };
 
   useEffect(() => {

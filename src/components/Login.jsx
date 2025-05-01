@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { login } from "../services/api";
+import { loginApi } from "../services/api";
+import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth(); // ✅ login từ context
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,13 +22,27 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await login({ username, password });
+      const response = await loginApi({ username, password });
 
       if (response && response.token) {
+        // Lưu token
         localStorage.setItem("token", response.token);
-        alert(`Đăng nhập thành công!`);
-        // Định tuyến hoặc thực hiện hành động sau khi login thành công
-        // window.location.href = "/dashboard"; // Ví dụ
+
+        // Lưu thông tin người dùng
+        const userInfo = {
+          userId: response.userId,
+          username: response.username,
+          fullName: response.fullName,
+          email: response.email,
+          role: response.role,
+          gender: response.gender,
+        };
+
+        // Gọi context login để lưu vào app state
+        login(userInfo); // login từ AuthContext
+
+        alert("Đăng nhập thành công!");
+        // Ví dụ: navigate("/");
       } else {
         throw new Error("Có lỗi xảy ra, vui lòng thử lại!");
       }
@@ -56,7 +73,6 @@ const Login = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
               className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
@@ -68,18 +84,17 @@ const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
           <button
             type="submit"
+            disabled={isLoading}
             className={`w-full p-2 rounded-md flex justify-center items-center ${
               isLoading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
-            disabled={isLoading}
           >
             {isLoading ? (
               <svg
@@ -95,12 +110,12 @@ const Login = () => {
                   r="10"
                   stroke="currentColor"
                   strokeWidth="4"
-                ></circle>
+                />
                 <path
                   className="opacity-75"
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8v8H4z"
-                ></path>
+                />
               </svg>
             ) : (
               "Đăng Nhập"

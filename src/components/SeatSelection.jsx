@@ -15,7 +15,8 @@ const SeatSelection = () => {
   const navigate = useNavigate();
   const { showtimeId } = useParams();
   const { showtimes, loading } = useShowtime();
-
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.userId;
   const roomIdRef = useRef(null);
 
   // 💥 Move handleSeatUpdate lên đây trước khi dùng
@@ -99,7 +100,6 @@ const SeatSelection = () => {
     if (!selectedSeats.includes(seatId)) {
       setSelectedSeats((prev) => [...prev, seatId]);
     }
-    const userId = 1;
     sendSeatAction(seatId, "SELECT", userId);
 
     setSeatMatrix((prevMatrix) =>
@@ -120,7 +120,6 @@ const SeatSelection = () => {
 
   const handleReleaseSeat = (seatId, seatName) => {
     setSelectedSeats((prev) => prev.filter((id) => id !== seatId));
-    const userId = 1;
     sendSeatAction(seatId, "SELECTED", userId);
 
     setSeatMatrix((prevMatrix) =>
@@ -140,7 +139,7 @@ const SeatSelection = () => {
   };
 
   const handlePayment = () => {
-    navigate("/payment");
+    navigate("/user/payment");
   };
 
   if (loading || isLoading) {
@@ -185,7 +184,7 @@ const SeatSelection = () => {
                         seat.seatInfo.name === "VIP"
                           ? "border-yellow-300"
                           : seat.seatInfo.name === "COUPLE"
-                          ? "border-pink-400"
+                          ? "border-pink-400 w-16"
                           : "border-gray-300"
                       }`}
                       onClick={() => {
