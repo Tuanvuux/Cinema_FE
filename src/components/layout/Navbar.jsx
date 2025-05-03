@@ -41,7 +41,7 @@ export default function Navbar() {
           {user && user.role === "ADMIN" && (
             <li>
               <Link
-                to="/admin/showtimemanagement"
+                to="/admin"
                 className="hover:text-yellow-400"
               >
                 Trang quản lý

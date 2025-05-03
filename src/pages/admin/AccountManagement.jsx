@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import {getUser, toggleDeleteUser} from "@/services/api.jsx";
+import {getUser, toggleDeleteUser} from "@/services/apiadmin.jsx";
+import NavbarAdmin from "@/components/layout/NavbarAdmin";
+
 
 const AccountManagement = () => {
 
@@ -79,7 +81,7 @@ const AccountManagement = () => {
 
     // Hàm tạo danh sách số trang hiển thị động
     const getPageNumbers = () => {
-        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const totalNumbers = 3; // Số lượng nút trang muốn hiển thị
         const half = Math.floor(totalNumbers / 2);
 
         let start = Math.max(1, currentPage - half);
@@ -124,7 +126,6 @@ const AccountManagement = () => {
         setDetailAccount(account);
         setShowDetailModal(true);
     };
-
 
     const handleToggleDeleteStatus = async (account) => {
 
@@ -358,54 +359,13 @@ const AccountManagement = () => {
             />
 
             <div className="flex h-full">
-                <div className="w-64 bg-gray-900 text-white p-4 flex flex-col">
-                    <h1 className="text-2xl font-bold mb-4 ">
-                        <Link to="/">Cinema Booking</Link>
-                    </h1>
-
-                    <nav className="space-y-4 flex-grow">
-                        <Link to="/admin/roommanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">meeting_room</span>
-                            <span>Phòng chiếu</span>
-                        </Link>
-                        <Link to="/admin/showtimemanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">calendar_month</span>
-                            <span>Lịch chiếu</span>
-                        </Link>
-                        <Link to="/admin/moviemanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">movie</span>
-                            <span>Phim</span>
-                        </Link>
-                        <Link to="/admin/accountmanagement"
-                              className="flex items-center gap-2 py-2 px-3 bg-gray-800 rounded">
-                            <span className="material-icons">account_circle</span>
-                            <span>Tài khoản</span>
-                        </Link>
-                        <Link to="/admin/seatmanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">event_seat</span>
-                            <span>Ghế ngồi</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">confirmation_number</span>
-                            <span>Quản lý vé đặt</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">assessment</span>
-                            <span>Báo cáo</span>
-                        </Link>
-                    </nav>
-                </div>
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
                         <div className="flex items-center">
-                            <div className="relative mr-4">
+                        <div className="relative mr-4">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm tài khoản"
@@ -462,9 +422,9 @@ const AccountManagement = () => {
                                                onChange={handleSelectAll}
                                         />
                                     </th>
-                                    <th className="p-3 text-center">Tên tài khoản</th>
-                                    <th className="p-3 text-center">Họ tên</th>
-                                    <th className="p-3 text-center">Email</th>
+                                    <th className="p-3 text-left">Tên tài khoản</th>
+                                    <th className="p-3 text-left">Họ tên</th>
+                                    <th className="p-3 text-left">Email</th>
                                     <th className="p-3 text-center">Ngày sinh</th>
                                     <th className="p-3 text-center">Giới tính</th>
                                     <th className="p-3 text-center">Thao tác</th>
@@ -479,13 +439,13 @@ const AccountManagement = () => {
                                                    onChange={() => handleSelect(account.userId)}
                                             />
                                         </td>
-                                        <td className="p-3 font-medium text-center">
+                                        <td className="p-3 font-medium text-left">
                                             {account.username}
                                             {!account.isActive &&
                                                 <span className="ml-2 text-xs text-red-500">(đã khóa)</span>}
                                         </td>
-                                        <td className="p-3 text-center">{account.fullName}</td>
-                                        <td className="p-3 text-center">{account.email}</td>
+                                        <td className="p-3 text-left">{account.fullName}</td>
+                                        <td className="p-3 text-left">{account.email}</td>
                                         <td className="p-3 text-center">{account.birthday}</td>
                                         <td className="p-3 text-center">{account.gender}</td>
                                         <td className="p-3 text-center">
@@ -711,9 +671,20 @@ const AccountManagement = () => {
 
 
 
-                    {/* Pagination */}
+                    {/* Pagination.jsx */}
                     <div className="flex justify-center mt-6">
-                        <div className="flex">
+                        <div className="flex items-center">
+                            {/* Nút về trang đầu tiên */}
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang đầu"
+                            >
+                                &laquo;
+                            </button>
+
+                            {/* Nút trang trước */}
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
@@ -722,10 +693,22 @@ const AccountManagement = () => {
                                 &lt;
                             </button>
 
-                            {currentPage > 3 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang đầu tiên khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[0] > 1 && (
+                                <>
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        1
+                                    </button>
+                                    {getPageNumbers()[0] > 2 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                </>
                             )}
 
+                            {/* Các nút trang ở giữa */}
                             {getPageNumbers().map(pageNumber => (
                                 <button
                                     key={pageNumber}
@@ -740,16 +723,38 @@ const AccountManagement = () => {
                                 </button>
                             ))}
 
-                            {currentPage < totalPages - 2 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang cuối cùng khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
+                                <>
+                                    {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        {totalPages}
+                                    </button>
+                                </>
                             )}
 
+                            {/* Nút trang tiếp theo */}
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
                             >
                                 &gt;
+                            </button>
+
+                            {/* Nút tới trang cuối cùng */}
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang cuối"
+                            >
+                                &raquo;
                             </button>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { addCategory } from "../services/api";
+import { addCategory } from "../services/apiadmin.jsx";
 import { uploadImageToCloudinary } from "../services/cloudinary";
 
 export default function AddCategoryForm() {

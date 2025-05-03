@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getShowtimes,deleteShowtime, getMovies,getRooms,addShowtime, updateShowtime } from "../../services/api.jsx";
+import { getShowtimes,deleteShowtime,getRooms,addShowtime, updateShowtime,getAvailableRooms } from "../../services/apiadmin.jsx";
+import {getMovies } from "../../services/api.jsx";
 import {Link} from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
 import showtime from "@/components/Showtime.jsx";
@@ -14,6 +15,7 @@ export default function ShowtimeManagement () {
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [selectedRoom, setSelectedRoom] = useState(null);
+    const [showPastShowtimes, setShowPastShowtimes] = useState(false);
 
 
     const [loading, setLoading] = useState(true);
@@ -45,6 +47,33 @@ export default function ShowtimeManagement () {
         getShowtimes().then(setShowtime);
     }, []);
 
+    // useEffect(() => {
+    //     if (editingShowtime.showDate    && editingShowtime.startTime && editingShowtime.endTime) {
+    //         getAvailableRooms(editingShowtime.showDate, editingShowtime.startTime, editingShowtime.endTime).then(setRooms);
+    //     }
+    //     else{
+    //         getRooms().then(setRooms);
+    //     }
+    // }, [editingShowtime.showDate, editingShowtime.startTime, editingShowtime.endTime]);
+    const isPastShowtime = (showDate) => {
+        const today = new Date();
+        const showDateObj = new Date(showDate);
+        return showDateObj < today.setHours(0, 0, 0, 0); // So sánh chỉ theo ngày, bỏ giờ
+    };
+
+
+    const fetchAvailableRooms = async (date, start, end) => {
+        if (!date || !start || !end) return;
+
+        try {
+            const res = await getAvailableRooms(date, start, end);
+            setRooms(res); // gán danh sách phòng trống
+        } catch (err) {
+            console.error("Lỗi khi lấy phòng trống:", err);
+        }
+    };
+
+
     const handleEditShowtime = (showtime) => {
         setEditingShowtime({
             showtimeId: showtime.showtimeId,
@@ -57,7 +86,6 @@ export default function ShowtimeManagement () {
         setSelectedShowtimeId(showtime.showtimeId);
         setshowEditModal(true);
 
-        // Also update the selected values for the dropdowns
         setSelectedMovie(showtime.movie.movieId);
         setSelectedRoom(showtime.room.id);
         setShowDate(showtime.showDate);
@@ -133,6 +161,11 @@ export default function ShowtimeManagement () {
             console.log("Kết quả:", response);
 
             setshowAddModal(false);
+            setSelectedMovie("");
+            setShowDate("");
+            setStartTime("");
+            setEndTime("");
+            setSelectedRoom("");
 
             await getShowtimes().then(data => {
                 setShowtime(data);
@@ -274,8 +307,6 @@ export default function ShowtimeManagement () {
         const isChecked = e.target.checked;
         setSelectAll(isChecked);
         if (isChecked) {
-            // const currentPageShowtimeIds = currentShowtime.map(Showtime => Showtime.showtimeId);
-            // setSelectedShowtime(currentPageShowtimeIds);
             const allShowtimeIds = filteredShowtime.map(showtime => showtime.showtimeId);
             setSelectedShowtime(allShowtimeIds);
         } else {
@@ -308,7 +339,6 @@ export default function ShowtimeManagement () {
         setBulkDeleteModalOpen(true);
     };
 
-// Add this function to perform the actual bulk deletion
     const confirmBulkDelete = async () => {
         try {
             // Delete each selected showtime
@@ -321,10 +351,8 @@ export default function ShowtimeManagement () {
                 prevShowtimes.filter(showtime => !selectedShowtime.includes(showtime.showtimeId))
             );
 
-            // Clear selection
             setSelectedShowtime([]);
 
-            // Show success notification
             setToast({
                 show: true,
                 message: `Đã xóa ${selectedShowtime.length} lịch chiếu thành công!`,
@@ -399,12 +427,6 @@ export default function ShowtimeManagement () {
         );
     };
 
-    // Filter Showtime based on search term and status
-    // const filteredShowtime = Showtime.filter(showtime => {
-    //     const matchesSearch = showtime.movie.name.toLowerCase().includes(searchTerm.toLowerCase());
-    //     return matchesSearch;
-    // });
-
     const filteredShowtime = Showtime.filter(showtime => {
         const search = searchTerm.toLowerCase();
 
@@ -428,7 +450,7 @@ export default function ShowtimeManagement () {
 
     // Hàm tạo danh sách số trang hiển thị động
     const getPageNumbers = () => {
-        const totalNumbers = 5; // Số lượng nút trang muốn hiển thị
+        const totalNumbers = 3; // Số lượng nút trang muốn hiển thị
         const half = Math.floor(totalNumbers / 2);
 
         let start = Math.max(1, currentPage - half);
@@ -496,51 +518,12 @@ export default function ShowtimeManagement () {
             />
 
             <div className="flex h-full">
-                <div className="w-64 bg-gray-900 text-white p-4 flex flex-col">
-                    <h1 className="text-2xl font-bold mb-4 ">
-                        <Link to="/">Cinema Booking</Link>
-                    </h1>
-
-                    <nav className="space-y-4 flex-grow">
-                        <Link to="/admin/roommanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">meeting_room</span>
-                            <span>Phòng chiếu</span>
-                        </Link>
-                        <Link to="/admin/showtimemanagement" className="flex items-center gap-2 py-2 px-3 bg-gray-800 rounded">
-                            <span className="material-icons">calendar_month</span>
-                            <span>Lịch chiếu</span>
-                        </Link>
-                        <Link to="/admin/moviemanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">movie</span>
-                            <span>Phim</span>
-                        </Link>
-                        <Link to="/admin/accountmanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">account_circle</span>
-                            <span>Tài khoản</span>
-                        </Link>
-                        <Link to="/admin/seatmanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">event_seat</span>
-                            <span>Ghế ngồi</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">confirmation_number</span>
-                            <span>Quản lý vé đặt</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">assessment</span>
-                            <span>Báo cáo</span>
-                        </Link>
-                    </nav>
-                </div>
-
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-bold">QUẢN LÝ LỊCH CHIẾU</h1>
                         <div className="flex items-center">
-                            <div className="relative mr-4">
+                        <div className="relative mr-4">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm lịch chiếu"
@@ -567,6 +550,13 @@ export default function ShowtimeManagement () {
                             <span className="material-icons mr-1">add</span>
                             Thêm lịch chiếu
                         </button>
+                        <button
+                            className={`ml-4 px-4 py-2 rounded-md border ${showPastShowtimes ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}
+                            onClick={() => setShowPastShowtimes(!showPastShowtimes)}
+                        >
+                            {showPastShowtimes ? ' Xem lịch chiếu hiện tại' : 'Xem lịch chiếu đã qua'}
+                        </button>
+
 
                         <button
                             className={`${selectedShowtime.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
@@ -585,7 +575,7 @@ export default function ShowtimeManagement () {
                         <div className="text-center py-10 text-red-500">{error}</div>
                     ) : (
                         <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white border">
+                            <table className="min-w-full bg-white border">
                                 <thead>
                                 <tr className="bg-gray-100 border-b">
                                     <th className="p-3 text-left w-12">
@@ -603,59 +593,74 @@ export default function ShowtimeManagement () {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {currentShowtime.map((Showtime) => (
-                                    <tr key={Showtime.showtimeId} className="border-b hover:bg-gray-50">
-                                        <td className="p-3">
-                                            <input type="checkbox" className="form-checkbox h-5 w-5"
-                                                   checked={selectedShowtime.includes(Showtime.showtimeId)}
-                                                   onChange={() => handleShowtimeSelect(Showtime.showtimeId)}
-                                            />
-                                        </td>
-                                        <td className="p-3 font-medium text-center">{Showtime.movie.name}</td>
-                                        <td className="p-3 text-center">{Showtime.room.name}</td>
-                                        <td className="p-3 text-center">{Showtime.showDate}</td>
-                                        <td className="p-3 text-center">{Showtime.startTime}</td>
-                                        <td className="p-3 text-center">{Showtime.endTime}</td>
-                                        <td className="p-3 text-center">
-                                            <button
-                                                onClick={() => handleEditShowtime(Showtime)}
-                                                className="text-gray-600 hover:text-gray-800"
-                                            >
-                                                <span className="material-icons">edit</span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleOpenDeleteModal(Showtime.showtimeId)}
-                                                className="text-gray-600 hover:text-gray-800"
-                                            >
-                                                <span className="material-icons">delete</span>
-                                            </button>
+                                {currentShowtime
+                                    .filter(showtime => {
+                                        const isPast = isPastShowtime(showtime.showDate);
+                                        return showPastShowtimes ? isPast : !isPast;
+                                    })
+                                    .map((Showtime) => {
+                                        const isPast = isPastShowtime(Showtime.showDate);
+                                        return (
+                                        <tr key={Showtime.showtimeId}
+                                            className={`border-b hover:bg-gray-50 ${isPast ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                            <td className="p-3">
+                                                <input
+                                                    type="checkbox"
+                                                    className="form-checkbox h-5 w-5"
+                                                    checked={selectedShowtime.includes(Showtime.showtimeId)}
+                                                    onChange={() => handleShowtimeSelect(Showtime.showtimeId)}
+                                                    disabled={isPast}
+                                                />
+                                            </td>
+                                            <td className="p-3 font-medium text-center">{Showtime.movie.name}</td>
+                                            <td className="p-3 text-center">{Showtime.room.name}</td>
+                                            <td className="p-3 text-center">{Showtime.showDate}</td>
+                                            <td className="p-3 text-center">{Showtime.startTime}</td>
+                                            <td className="p-3 text-center">{Showtime.endTime}</td>
+                                            <td className="p-3 text-center">
+                                                <button
+                                                    onClick={() => handleEditShowtime(Showtime)}
+                                                    className="text-gray-600 hover:text-gray-800"
+                                                    disabled={isPast}
+                                                >
+                                                    <span className="material-icons">edit</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleOpenDeleteModal(Showtime.showtimeId)}
+                                                    className="text-gray-600 hover:text-gray-800"
+                                                    disabled={isPast}
+                                                >
+                                                    <span className="material-icons">delete</span>
+                                                </button>
 
-                                            {/* Modal Xác Nhận Xóa */}
-                                            {isDeleteModalOpen && (
-                                                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-                                                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                        <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
-                                                        <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này không?</p>
-                                                        <div className="flex justify-end gap-4">
-                                                            <button
-                                                                onClick={handleCloseModal}
-                                                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                            >
-                                                                Hủy
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteShowtime(Showtime.showtimeId)}
-                                                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                                                            >
-                                                                Xóa
-                                                            </button>
+                                                {/* Modal xác nhận xóa */}
+                                                {isDeleteModalOpen && (
+                                                    <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                                                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                                            <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
+                                                            <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này không?</p>
+                                                            <div className="flex justify-end gap-4">
+                                                                <button
+                                                                    onClick={handleCloseModal}
+                                                                    className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                                                >
+                                                                    Hủy
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteShowtime(Showtime.showtimeId)}
+                                                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                                                >
+                                                                    Xóa
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+
                                 </tbody>
                             </table>
                         </div>
@@ -727,11 +732,7 @@ export default function ShowtimeManagement () {
                                 >
                                     <option value="">Chọn phòng</option>
                                     {rooms.map(room => (
-                                        <option
-                                            key={room.id}
-                                            value={room.id}
-                                            disabled={isRoomDisabled(room.id)}
-                                        >
+                                        <option key={room.id} value={room.id} disabled={isRoomDisabled(room.id)}>
                                             {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
                                         </option>
                                     ))}
@@ -786,7 +787,7 @@ export default function ShowtimeManagement () {
                                            if (newStartTime && editingShowtime.movieId) {
                                                const movie = movies.find(m => m.movieId === editingShowtime.movieId);
                                                if (movie) {
-                                                   const startDate = new Date(`2023-01-01T${newStartTime}`);
+                                                   const startDate = new Date(`1970-01-01T${newStartTime}:00`);
                                                    const endDate = addMinutes(startDate, movie.duration);
                                                    const newEndTime = format(endDate, 'HH:mm:ss');
 
@@ -816,7 +817,7 @@ export default function ShowtimeManagement () {
                                     <option value="">Chọn phòng</option>
                                     {rooms.map(room => (
                                         <option key={room.id} value={room.id} disabled={isRoomDisabledEdit(room.id)}>
-                                            {room.name}
+                                            {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
                                         </option>
                                     ))}
                                 </select>
@@ -834,9 +835,20 @@ export default function ShowtimeManagement () {
                         </div>
                     )}
 
-                    {/* Pagination */}
+                    {/* Pagination.jsx */}
                     <div className="flex justify-center mt-6">
-                        <div className="flex">
+                        <div className="flex items-center">
+                            {/* Nút về trang đầu tiên */}
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang đầu"
+                            >
+                                &laquo;
+                            </button>
+
+                            {/* Nút trang trước */}
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
@@ -845,10 +857,22 @@ export default function ShowtimeManagement () {
                                 &lt;
                             </button>
 
-                            {currentPage > 3 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang đầu tiên khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[0] > 1 && (
+                                <>
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        1
+                                    </button>
+                                    {getPageNumbers()[0] > 2 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                </>
                             )}
 
+                            {/* Các nút trang ở giữa */}
                             {getPageNumbers().map(pageNumber => (
                                 <button
                                     key={pageNumber}
@@ -863,16 +887,38 @@ export default function ShowtimeManagement () {
                                 </button>
                             ))}
 
-                            {currentPage < totalPages - 2 && totalPages > 5 && (
-                                <span className="mx-1 px-3 py-1">...</span>
+                            {/* Hiển thị nút trang cuối cùng khi không nằm trong danh sách trang hiện tại */}
+                            {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
+                                <>
+                                    {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
+                                        <span className="mx-1 px-3 py-1">...</span>
+                                    )}
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        className="mx-1 px-3 py-1 rounded border"
+                                    >
+                                        {totalPages}
+                                    </button>
+                                </>
                             )}
 
+                            {/* Nút trang tiếp theo */}
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
                             >
                                 &gt;
+                            </button>
+
+                            {/* Nút tới trang cuối cùng */}
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                title="Trang cuối"
+                            >
+                                &raquo;
                             </button>
                         </div>
                     </div>
