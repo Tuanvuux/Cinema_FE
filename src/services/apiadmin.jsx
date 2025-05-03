@@ -35,7 +35,7 @@ export const deleteMovie = async (movieId) => {
 };
 
 export const toggleDeleteStatus = async (movieId, isDelete) => {
-    const response = await api.patch(`/movies/admin/${movieId}/toggle-delete`, {
+    const response = await api.put(`/movies/admin/${movieId}/toggle-delete`, {
         isDelete: isDelete,
     });
     return response.data;
@@ -49,7 +49,7 @@ export const getUser = async () => {
 
 
 export const toggleDeleteUser = async (userId, isActive) => {
-    const response = await api.patch(`/accounts/admin/${userId}/toggle-delete`, {
+    const response = await api.put(`/accounts/admin/${userId}/toggle-delete`, {
         isActive: isActive,
     });
     return response.data;

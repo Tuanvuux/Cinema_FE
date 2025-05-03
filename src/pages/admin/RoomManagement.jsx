@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
 import {Link} from "react-router-dom";
+import NavbarAdmin from "@/components/layout/NavbarAdmin";
 
 export default function RoomManagement () {
     const [rooms, setRooms] = useState([]);
@@ -379,44 +380,6 @@ export default function RoomManagement () {
             />
 
             <div className="flex h-full">
-                <div className="w-64 bg-gray-900 text-white p-4 flex flex-col">
-                    <h1 className="text-2xl font-bold mb-4 ">
-                        <Link to="/">Cinema Booking</Link>
-                    </h1>
-
-                    <nav className="space-y-4 flex-grow">
-                        <Link to="/admin/dashboard" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">assessment</span>
-                            <span>Báo cáo</span>
-                        </Link>
-                        <Link to="/admin/roommanagement" className="flex items-center gap-2 py-2 px-3 bg-gray-800 rounded">
-                            <span className="material-icons">meeting_room</span>
-                            <span>Phòng chiếu</span>
-                        </Link>
-                        <Link to="/admin/showtimemanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">calendar_month</span>
-                            <span>Lịch chiếu</span>
-                        </Link>
-                        <Link to="/admin/moviemanagement" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">movie</span>
-                            <span>Phim</span>
-                        </Link>
-                        <Link to="/admin/accountmanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">account_circle</span>
-                            <span>Tài khoản</span>
-                        </Link>
-                        <Link to="/admin/seatmanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">event_seat</span>
-                            <span>Ghế ngồi</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">confirmation_number</span>
-                            <span>Quản lý vé đặt</span>
-                        </Link>
-                    </nav>
-                </div>
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">

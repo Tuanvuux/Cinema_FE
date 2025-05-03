@@ -2,6 +2,8 @@ import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {getUser, toggleDeleteUser} from "@/services/apiadmin.jsx";
+import NavbarAdmin from "@/components/layout/NavbarAdmin";
+
 
 const AccountManagement = () => {
 
@@ -357,55 +359,13 @@ const AccountManagement = () => {
             />
 
             <div className="flex h-full">
-                <div className="w-64 bg-gray-900 text-white p-4 flex flex-col">
-                    <h1 className="text-2xl font-bold mb-4 ">
-                        <Link to="/">Cinema Booking</Link>
-                    </h1>
-
-                    <nav className="space-y-4 flex-grow">
-                        <Link to="/admin/dashboard" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">assessment</span>
-                            <span>Báo cáo</span>
-                        </Link>
-                        <Link to="/admin/roommanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">meeting_room</span>
-                            <span>Phòng chiếu</span>
-                        </Link>
-                        <Link to="/admin/showtimemanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">calendar_month</span>
-                            <span>Lịch chiếu</span>
-                        </Link>
-                        <Link to="/admin/moviemanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">movie</span>
-                            <span>Phim</span>
-                        </Link>
-                        <Link to="/admin/accountmanagement"
-                              className="flex items-center gap-2 py-2 px-3 bg-gray-800 rounded">
-                            <span className="material-icons">account_circle</span>
-                            <span>Tài khoản</span>
-                        </Link>
-                        <Link to="/admin/seatmanagement"
-                              className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">event_seat</span>
-                            <span>Ghế ngồi</span>
-                        </Link>
-                        <Link to="#" className="flex items-center gap-2 py-2 px-3 hover:bg-gray-800 rounded">
-                            <span className="material-icons">confirmation_number</span>
-                            <span>Quản lý vé đặt</span>
-                        </Link>
-
-                    </nav>
-                </div>
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
                         <div className="flex items-center">
-                            <div className="relative mr-4">
+                        <div className="relative mr-4">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm tài khoản"
@@ -462,9 +422,9 @@ const AccountManagement = () => {
                                                onChange={handleSelectAll}
                                         />
                                     </th>
-                                    <th className="p-3 text-center">Tên tài khoản</th>
-                                    <th className="p-3 text-center">Họ tên</th>
-                                    <th className="p-3 text-center">Email</th>
+                                    <th className="p-3 text-left">Tên tài khoản</th>
+                                    <th className="p-3 text-left">Họ tên</th>
+                                    <th className="p-3 text-left">Email</th>
                                     <th className="p-3 text-center">Ngày sinh</th>
                                     <th className="p-3 text-center">Giới tính</th>
                                     <th className="p-3 text-center">Thao tác</th>
@@ -479,13 +439,13 @@ const AccountManagement = () => {
                                                    onChange={() => handleSelect(account.userId)}
                                             />
                                         </td>
-                                        <td className="p-3 font-medium text-center">
+                                        <td className="p-3 font-medium text-left">
                                             {account.username}
                                             {!account.isActive &&
                                                 <span className="ml-2 text-xs text-red-500">(đã khóa)</span>}
                                         </td>
-                                        <td className="p-3 text-center">{account.fullName}</td>
-                                        <td className="p-3 text-center">{account.email}</td>
+                                        <td className="p-3 text-left">{account.fullName}</td>
+                                        <td className="p-3 text-left">{account.email}</td>
                                         <td className="p-3 text-center">{account.birthday}</td>
                                         <td className="p-3 text-center">{account.gender}</td>
                                         <td className="p-3 text-center">
