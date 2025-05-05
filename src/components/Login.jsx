@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { loginApi } from "../services/api";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
+import Button from "./ui/button";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -57,7 +59,7 @@ const Login = () => {
     <div className="flex items-center justify-center h-screen bg-gray-200">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">
-          Đăng Nhập
+          Đăng nhập ngay!
         </h2>
         {errorMessage && (
           <div className="mb-4 text-red-600 text-sm text-center">
@@ -87,13 +89,12 @@ const Login = () => {
               className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
-          <button
+          <p>Quên mật khẩu?</p>
+          <Button
             type="submit"
             disabled={isLoading}
             className={`w-full p-2 rounded-md flex justify-center items-center ${
-              isLoading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white"
+              isLoading ? " cursor-not-allowed" : " "
             }`}
           >
             {isLoading ? (
@@ -120,7 +121,14 @@ const Login = () => {
             ) : (
               "Đăng Nhập"
             )}
-          </button>
+          </Button>
+          <p className="text-center">hoặc</p>
+          <p>
+            Chưa có tài khoản?{" "}
+            <Link to={`/register`} className="font-bold">
+              đăng ký ngay.
+            </Link>
+          </p>
         </form>
       </div>
     </div>

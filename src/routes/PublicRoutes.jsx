@@ -13,7 +13,7 @@ const PublicRoutes = () => {
       <Route path="/movie" element={<MoviePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/showtime" element={<ShowTimePage />} />
+      <Route path="/showtime/:movieId?" element={<ShowTimePage />} />
     </Routes>
   );
 };

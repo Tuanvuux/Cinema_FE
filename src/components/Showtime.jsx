@@ -18,7 +18,7 @@ const getWeekday = (dateStr) => {
 const Showtime = () => {
   const [showtime, setShowtime] = useState([]);
   const today = new Date();
-  const { showtimes, loading } = useShowtime(); // Lấy showtimes từ context
+  const { showtimes, loading } = useShowtime();
   const { movieId } = useParams();
   const [selectedDate, setSelectedDate] = useState(
     today.toISOString().split("T")[0]
@@ -30,7 +30,6 @@ const Showtime = () => {
   };
 
   useEffect(() => {
-    // Chỉ lọc từ showtimes trong context
     const filtered = movieId
       ? showtimes.filter((s) => s.movieId == movieId)
       : showtimes;
@@ -39,7 +38,6 @@ const Showtime = () => {
 
   if (loading) return <div>Đang tải lịch chiếu...</div>;
 
-  // Lọc ngày để chọn các ngày trong tuần
   const dates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
@@ -52,44 +50,52 @@ const Showtime = () => {
       movie.showTimeList.some((show) => show.showDate === selectedDate)
   );
 
-  // Hàm để cắt bớt giây
-  const formatTime = (time) => time.slice(0, 5); // Cắt bớt giây (giữ lại giờ và phút)
+  const formatTime = (time) => time.slice(0, 5);
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const weekday = getWeekday(dateStr);
+
+    return { weekday, day, month, year };
+  };
 
   return (
-    <div className="p-6 bg-black">
-      <h2 className="text-orange-500 text-2xl font-bold mb-4">Lịch chiếu</h2>
+    <div className="p-6 bg-white">
+      <h2 className="text-gray-900 text-2xl font-bold mb-4">Lịch chiếu</h2>
 
       {/* Chọn ngày */}
-      <div className="bg-orange-50 border-t-2 border-orange-500 p-4 rounded-lg">
-        <h3 className="text-lg text-black font-semibold mb-2">
-          Chọn ngày chiếu
-        </h3>
-        <div className="flex space-x-4">
-          {dates.map((date) => (
-            <button
-              key={date}
-              className={`p-2 rounded-full w-10 h-10 text-white font-bold ${
-                selectedDate === date ? "bg-orange-500" : "bg-gray-300"
-              }`}
-              onClick={() => setSelectedDate(date)}
-            >
-              {parseInt(date.split("-")[2])}
-            </button>
-          ))}
+      <div className=" p-4 rounded-lg">
+        <div className="flex flex-wrap gap-2">
+          {dates.map((date) => {
+            const { weekday, day, month, year } = formatDate(date);
+            return (
+              <button
+                key={date}
+                className={`p-2 rounded-lg text-gray-900 flex flex-col items-center border border-gray-900 ${
+                  selectedDate === date ? "bg-gray-900 text-white" : "bg-white"
+                }`}
+                onClick={() => setSelectedDate(date)}
+              >
+                <span>{weekday}</span>
+                <span>{`${day}/${month}/${year}`}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Danh sách phim */}
       <div className="mt-6">
-        <h3 className="text-lg font-semibold text-white">Chọn lịch chiếu</h3>
-
         {loading ? (
           <p className="text-white mt-4">Đang tải lịch chiếu...</p>
         ) : filteredShowtimes.length > 0 ? (
           filteredShowtimes.map((movie, index) => (
             <div
               key={index}
-              className="mt-4 flex space-x-4 bg-black rounded-lg p-4"
+              className="mt-4 flex space-x-4 bg-white rounded-lg p-4"
             >
               <img
                 src={movie.posterUrl}
@@ -104,7 +110,7 @@ const Showtime = () => {
                       .filter((show) => show.showDate === selectedDate)
                       .map((show, idx) => (
                         <button
-                          className="bg-orange-500 text-white border border-white cursor-pointer"
+                          className=" text-gray-900 border border-gray-900 cursor-pointer"
                           key={show.showtimeId}
                           onClick={() => handleSelectShowtime(show.showtimeId)}
                         >
@@ -113,7 +119,7 @@ const Showtime = () => {
                               {formatTime(show.startTime)} -{" "}
                               {formatTime(show.endTime)}
                             </div>
-                            <div className="border-t border-white p-1 text-sm">
+                            <div className="border-t border-gray-900 p-1 text-sm">
                               phòng chiếu:
                               <br /> {show.room.name}
                             </div>
