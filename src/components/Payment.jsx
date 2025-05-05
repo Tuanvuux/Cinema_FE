@@ -24,7 +24,7 @@ const Payment = () => {
             checked={paymentMethod === "metiz"}
             onChange={handlePaymentChange}
           />
-          <span>Thanh toán bằng thẻ Metiz</span>
+          <span>Thanh toán bằng Ví điện tử</span>
         </label>
 
         <label className="flex items-center space-x-2">
@@ -35,7 +35,7 @@ const Payment = () => {
             checked={paymentMethod === "helio"}
             onChange={handlePaymentChange}
           />
-          <span>Thanh toán bằng thẻ Helio</span>
+          <span>Thanh toán bằng Paypal</span>
         </label>
 
         <label className="flex items-center space-x-2">
@@ -75,7 +75,10 @@ const Payment = () => {
 
       {/* Nút tiếp tục */}
       <div className="mt-6 flex justify-center">
-        <button className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600">
+        <button className=" text-gray-900 px-6 py-2 rounded-full border-1 border-gray-900 hover:bg-gray-900 hover:text-white mr-2">
+          QUAY LẠI
+        </button>
+        <button className="text-gray-900 px-6 py-2 rounded-full border-1 border-gray-900 hover:bg-gray-900 hover:text-white ml-2">
           TIẾP TỤC
         </button>
       </div>

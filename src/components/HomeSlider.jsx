@@ -18,7 +18,7 @@ export default function s() {
   }
 
   return (
-    <div className=" bg-black w-full flex flex-col items-center">
+    <div className=" bg-white w-full flex flex-col items-center mt-5">
       {/* Slider chính */}
       <Swiper
         modules={[Navigation, Thumbs, Autoplay]}
@@ -26,7 +26,7 @@ export default function s() {
         thumbs={{ swiper: thumbsSwiper }}
         autoplay={{ delay: 3000, disableOnInteraction: false }}
         loop
-        className="w-full max-w-4xl h-[400px]"
+        className="w-full max-w-6xl h-[500px]"
       >
         {movies.map((movie) => (
           <SwiperSlide key={movie.movieId}>
@@ -46,14 +46,14 @@ export default function s() {
         slidesPerView={5}
         spaceBetween={10}
         loop={true}
-        className="w-full max-w-4xl mt-4"
+        className="w-full max-w-6xl mt-4"
       >
         {movies.map((movie) => (
           <SwiperSlide key={movie.movieId} className="cursor-pointer">
             <img
               src={movie.bannerUrl}
               alt="Movie"
-              className="w-full h-24 object-cover rounded-md opacity-70 hover:opacity-100 transition"
+              className="w-full h-28 object-cover rounded-md opacity-70 hover:opacity-100 transition"
             />
           </SwiperSlide>
         ))}
