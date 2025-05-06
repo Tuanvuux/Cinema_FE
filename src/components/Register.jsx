@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { registerAccount } from "../services/api";
+import Button from "./ui/button";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -63,7 +64,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
+    <div className="flex items-center justify-center bg-gray-100 mt-5 mb-5">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
           Đăng Ký
@@ -160,7 +161,7 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Địa chỉ:
             </label>
@@ -172,8 +173,8 @@ const Register = () => {
               required
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:ring-blue-500 focus:border-blue-500"
             />
-          </div>
-          <div className="mb-4">
+          </div> */}
+          {/* <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Số điện thoại:
             </label>
@@ -185,7 +186,7 @@ const Register = () => {
               required
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:ring-blue-500 focus:border-blue-500"
             />
-          </div>
+          </div> */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Giới tính:
@@ -204,13 +205,13 @@ const Register = () => {
             </select>
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
+            className="w-full p-2 rounded-md"
             disabled={isLoading}
           >
             {isLoading ? "Đang xử lý..." : "Đăng Ký"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

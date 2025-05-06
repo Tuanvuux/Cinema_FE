@@ -155,8 +155,8 @@ const SeatSelection = () => {
       <div className="text-2xl max-w-3xs">Chọn ghế</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div>
-          <div className="w-3/4 h-9 bg-red-300 text-center m-auto">
-            Màn hình
+          <div className="w-3/4 h-9 bg-gray-500 text-white text-center m-auto">
+            MÀN HÌNH
           </div>
           <div className="seat-container grid gap-4 mt-7">
             {seatMatrix.map((row, rowIndex) => (
@@ -225,10 +225,16 @@ const SeatSelection = () => {
             <p>Số vé: {selectedSeats.length}</p>
             <p>Tổng tiền: {totalPrice} VNĐ</p>
             <button
-              className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+              className="mt-4 bg-white text-gray-900 border-1 border-gray-900 py-2 px-8 mr-4 rounded-full hover:text-white hover:bg-gray-900"
               onClick={handlePayment}
             >
-              Thanh toán
+              Hủy
+            </button>
+            <button
+              className="mt-4 bg-white text-gray-900 border-1 border-gray-900 py-2 px-6 rounded-full hover:text-white hover:bg-gray-900"
+              onClick={handlePayment}
+            >
+              Đặt vé
             </button>
           </div>
         </div>

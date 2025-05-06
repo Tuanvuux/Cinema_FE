@@ -5,10 +5,10 @@ export default function Navbar() {
   const { user, logout } = useAuth(); // Lấy thông tin user và logout từ context
   console.log("user", user);
   return (
-    <nav className="bg-gray-900 text-white py-4">
-      <div className="container mx-auto flex justify-between items-center px-6">
+    <nav className="bg-white text-gray-900 py-4">
+      <div className="container mx-auto flex justify-between items-center px-6 font-medium">
         <h1 className="text-2xl font-bold">
-          <Link to="/">Cinema Booking</Link>
+          <Link to="/">CineX Cinema</Link>
         </h1>
         <ul className="flex space-x-6 text-lg">
           <li>
@@ -40,10 +40,7 @@ export default function Navbar() {
           {/* Hiển thị mục "Trang quản lý" nếu người dùng có role "ADMIN" */}
           {user && user.role === "ADMIN" && (
             <li>
-              <Link
-                to="/admin"
-                className="hover:text-yellow-400"
-              >
+              <Link to="/admin" className="hover:text-yellow-400">
                 Trang quản lý
               </Link>
             </li>
@@ -52,7 +49,7 @@ export default function Navbar() {
 
         <div className="text-lg">
           {user ? (
-            <div className="flex items-center text-white">
+            <div className="flex items-center text-gray-900">
               <Link
                 to="/userInfor"
                 className="hover:text-yellow-400 font-semibold mx-1"
@@ -65,7 +62,7 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center text-white">
+            <div className="flex items-center text-gray-900">
               <Link to="/login" className="hover:text-yellow-400 mx-1">
                 Đăng nhập
               </Link>
@@ -77,6 +74,7 @@ export default function Navbar() {
           )}
         </div>
       </div>
+      <hr />
     </nav>
   );
 }
