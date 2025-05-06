@@ -4,6 +4,7 @@ import {getMovies } from "../../services/api.jsx";
 import {Link} from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
 import showtime from "@/components/Showtime.jsx";
+import UserInfo from "@/pages/admin/UserInfo.jsx";
 
 export default function ShowtimeManagement () {
     const [Showtime, setShowtime] = useState([]);
@@ -533,12 +534,7 @@ export default function ShowtimeManagement () {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 flex items-center">
-                                    <span className="font-medium mr-2">ADMIN</span>
-                                    <span className="material-icons">person</span>
-                                </div>
-                            </div>
+                            <UserInfo/>
                         </div>
                     </div>
                     {/*Add Button */}

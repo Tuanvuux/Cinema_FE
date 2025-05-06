@@ -54,6 +54,57 @@ export const toggleDeleteUser = async (userId, isActive) => {
     });
     return response.data;
 };
+api.interceptors.request.use(
+    config => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    error => {
+        return Promise.reject(error);
+    }
+);
+
+api.interceptors.response.use(
+    response => response,
+    error => {
+        // Xử lý lỗi phản hồi để trả về thông báo chi tiết
+        if (error.response) {
+            // Có phản hồi từ server với mã lỗi
+            return Promise.reject(error);
+        } else if (error.request) {
+            // Không nhận được phản hồi từ server
+            console.error("Không nhận được phản hồi từ máy chủ", error.request);
+            return Promise.reject({
+                response: {
+                    data: "Không thể kết nối đến máy chủ"
+                }
+            });
+        } else {
+            // Lỗi khi thiết lập request
+            console.error("Lỗi cấu hình request", error.message);
+            return Promise.reject({
+                response: {
+                    data: "Đã xảy ra lỗi khi gửi yêu cầu"
+                }
+            });
+        }
+    }
+);
+
+export const getUserByUsername = async (username) => {
+    const response = await api.get(`/accounts/admin/${username}`);
+    return response.data;
+};
+
+export const updateUserAdmin = async (id, userData) => {
+    const response = await api.put(`/accounts/admin/${id}`, userData);
+    return response.data;
+};
+
+
 
 //Room
 export const getRooms = async () => {

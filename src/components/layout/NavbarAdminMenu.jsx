@@ -8,7 +8,7 @@ const navItems = [
     { key: 'moviemanagement', icon: 'movie', label: 'Phim' },
     { key: 'accountmanagement', icon: 'account_circle', label: 'Tài khoản' },
     { key: 'seatmanagement', icon: 'event_seat', label: 'Ghế ngồi' },
-    { key: '#', icon: 'confirmation_number', label: 'Quản lý vé đặt' },
+    // { key: '#', icon: 'confirmation_number', label: 'Quản lý vé đặt' },
 ];
 
 const NavbarAdminMenu = ({ currentPage, onNavigate }) => {

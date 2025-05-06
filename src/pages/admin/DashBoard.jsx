@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import NavbarAdmin from "@/components/layout/NavbarAdmin";
+import UserInfo from "@/pages/admin/UserInfo.jsx";
 
 export default function DashBoard() {
 
@@ -51,12 +52,7 @@ export default function DashBoard() {
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-bold">BÁO CÁO DOANH THU</h1>
                         <div className="flex items-center">
-                            <div className="flex items-center">
-                                <div className="ml-4 flex items-center">
-                                    <span className="font-medium mr-2">ADMIN</span>
-                                    <span className="material-icons">person</span>
-                                </div>
-                            </div>
+                            <UserInfo/>
                         </div>
                     </div>
                 </div>

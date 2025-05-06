@@ -8,6 +8,7 @@ import {
     updateMovie,
     toggleDeleteStatus
 } from "@/services/apiadmin.jsx";
+import UserInfo from "@/pages/admin/UserInfo.jsx";
 
 import {getMovies} from "@/services/api.jsx";
 import {
@@ -633,12 +634,7 @@ export default function MovieManagement() {
                                     />
                                     <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                                 </div>
-                                <div className="flex items-center">
-                                    <div className="ml-4 flex items-center">
-                                        <span className="font-medium mr-2">ADMIN</span>
-                                        <span className="material-icons">person</span>
-                                    </div>
-                                </div>
+                                <UserInfo/>
                             </div>
                         </div>
                         {/*Add Button */}

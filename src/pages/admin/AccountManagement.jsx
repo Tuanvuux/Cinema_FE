@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {getUser, toggleDeleteUser} from "@/services/apiadmin.jsx";
+import UserInfo from "@/pages/admin/UserInfo.jsx";
 import NavbarAdmin from "@/components/layout/NavbarAdmin";
 
 
@@ -375,12 +376,7 @@ const AccountManagement = () => {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 flex items-center">
-                                    <span className="font-medium mr-2">ADMIN</span>
-                                    <span className="material-icons">person</span>
-                                </div>
-                            </div>
+                            <UserInfo/>
                         </div>
                     </div>
                     <div className="flex justify-end mb-6">
