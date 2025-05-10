@@ -7,7 +7,7 @@ const ProtectAdminRoute = ({ children }) => {
 
   if (loading) return <div>Loading...</div>;
 
-  if (!user || user.role !== "ADMIN") {
+  if (!user || (user.role !== "ADMIN" && user.role !== "EMPLOYEE")) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

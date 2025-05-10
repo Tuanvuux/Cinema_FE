@@ -38,7 +38,7 @@ export default function Navbar() {
           </li>
 
           {/* Hiển thị mục "Trang quản lý" nếu người dùng có role "ADMIN" */}
-          {user && user.role === "ADMIN" && (
+          {user && (user.role === "ADMIN" || user.role === "EMPLOYEE") && (
             <li>
               <Link to="/admin" className="hover:text-yellow-400">
                 Trang quản lý

@@ -57,6 +57,11 @@ export const getSumUserNotAdmin = async () => {
     return response.data;
 };
 
+export const addEmployee = async (request) => {
+    const response = await api.post("/auth/admin/create-employee", request);
+    return response.data;
+};
+
 export const toggleDeleteUser = async (userId, isActive) => {
     const response = await api.put(`/accounts/admin/${userId}/toggle-delete`, {
         isActive: isActive,
