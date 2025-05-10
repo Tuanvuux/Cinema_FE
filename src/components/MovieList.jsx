@@ -1,14 +1,28 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // 👈 import navigate
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "./ui/card";
 import Badge from "./ui/badge";
 import Button from "./ui/button";
 import { Medal } from "lucide-react";
-import { getMovies } from "../services/api";
 import { useMovies } from "../contexts/MovieContext";
+
 const MovieList = () => {
-  const navigate = useNavigate(); // 👈 dùng navigate
+  const navigate = useNavigate();
   const { movies, loading } = useMovies();
+  const [activeTab, setActiveTab] = useState("nowShowing"); // nowShowing | comingSoon
+
+  const now = new Date();
+
+  // Phân loại phim
+  const nowShowing = movies.filter(
+    (movie) => new Date(movie.releaseDate) <= now
+  );
+  const comingSoon = movies.filter(
+    (movie) => new Date(movie.releaseDate) > now
+  );
+
+  const displayedMovies = activeTab === "nowShowing" ? nowShowing : comingSoon;
+
   if (loading) {
     return (
       <p className="text-center text-gray-500">Đang tải danh sách phim...</p>
@@ -18,17 +32,32 @@ const MovieList = () => {
   return (
     <div>
       <div className="flex gap-4 mb-4 justify-center">
-        <button className="bg-gray-900 text-white px-6 py-2 rounded-full font-bold">
+        <button
+          className={`cursor-pointer px-6 py-2 rounded-full font-bold ${
+            activeTab === "nowShowing"
+              ? "bg-gray-900 text-white"
+              : "border-2 border-gray-900 text-gray-900"
+          }`}
+          onClick={() => setActiveTab("nowShowing")}
+        >
           PHIM ĐANG CHIẾU
         </button>
-        <button className="border-2 border-gray-900 text-gray-900 px-6 py-2 rounded-full font-bold">
+        <button
+          className={`cursor-pointer px-6 py-2 rounded-full font-bold ${
+            activeTab === "comingSoon"
+              ? "bg-gray-900 text-white"
+              : "border-2 border-gray-900 text-gray-900"
+          }`}
+          onClick={() => setActiveTab("comingSoon")}
+        >
           PHIM SẮP CHIẾU
         </button>
       </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mx-15">
-        {movies.map((movie, index) => (
+        {displayedMovies.map((movie, index) => (
           <Card key={movie.movieId} className="relative group w-3xs">
-            {index < 3 && (
+            {index < 3 && activeTab === "nowShowing" && (
               <div className="absolute top-2 right-2 flex items-center gap-1 bg-white px-2 py-1 rounded-full shadow-md">
                 <Medal
                   className={`w-5 h-5 ${
@@ -62,14 +91,14 @@ const MovieList = () => {
                 Khởi chiếu: {movie.releaseDate}
               </p>
               <Button
-                className="mt-3 mr-2 "
+                className="mt-3 mr-2"
                 onClick={() => navigate(`/movieDetail/${movie.movieId}`)}
               >
                 Chi tiết
               </Button>
               <Button
                 className="mt-3 ml-2"
-                onClick={() => navigate(`/showtime/${movie.movieId}`)} // 👈 điều hướng
+                onClick={() => navigate(`/showtime/${movie.movieId}`)}
               >
                 Đặt Vé
               </Button>

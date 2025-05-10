@@ -21,7 +21,7 @@ export const getMovies = async () => {
 
 //User
 export const registerAccount = async (formData) => {
-  const response = await api.post("/register", formData);
+  const response = await api.post("auth/register", formData);
   return response.data;
 };
 export const loginApi = async ({ username, password }) => {
@@ -63,4 +63,7 @@ export const getSeatsLock = async (showtimeId) => {
   const response = await api.get(`/seats/with-lock/${showtimeId}`);
   return response.data;
 };
-
+export const verifyAccount = async (data) => {
+  const response = await api.post(`/auth/verify`, data);
+  return response.data;
+};

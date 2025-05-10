@@ -30,32 +30,32 @@ const Login = () => {
     try {
       const response = await loginApi({ username, password });
 
-      if (response && response.token) {
-        // Lưu token
-        localStorage.setItem("token", response.token);
-
-        // Lưu thông tin người dùng
-        const userInfo = {
-          userId: response.userId,
-          username: response.username,
-          fullName: response.fullName,
-          email: response.email,
-          role: response.role,
-          gender: response.gender,
-        };
-
-        // Gọi context login để lưu vào app state
-        login(userInfo); // login từ AuthContext
-
-        alert("Đăng nhập thành công!");
-        navigate(from, { replace: true });
-
-        // Ví dụ: navigate("/");
-      } else {
-        throw new Error("Có lỗi xảy ra, vui lòng thử lại!");
+      if (!response || !response.token) {
+        throw new Error("Tên đăng nhập hoặc mật khẩu không đúng.");
       }
+
+      // Lưu token
+      localStorage.setItem("token", response.token);
+
+      // Lưu thông tin người dùng
+      const userInfo = {
+        userId: response.userId,
+        username: response.username,
+        fullName: response.fullName,
+        email: response.email,
+        role: response.role,
+        gender: response.gender,
+      };
+
+      // Gọi context login
+      login(userInfo);
+
+      alert("Đăng nhập thành công!");
+      navigate(from, { replace: true });
     } catch (error) {
-      setErrorMessage(error.response?.data || error.message);
+      const message =
+        error.response?.data?.message || error.message || "Đăng nhập thất bại!";
+      setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
