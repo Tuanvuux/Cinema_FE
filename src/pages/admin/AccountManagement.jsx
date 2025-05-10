@@ -404,7 +404,11 @@ const AccountManagement = () => {
 
                     {/*Table*/}
                     {loading ? (
-                        <div className="text-center py-10">Loading...</div>
+                        <div className="text-center py-10">
+                            <div
+                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="mt-2">Đang tải dữ liệu...</p>
+                        </div>
                     ) : error ? (
                         <div className="text-center py-10 text-red-500">{error}</div>
                     ) : (

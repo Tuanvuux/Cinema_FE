@@ -104,7 +104,7 @@ const Showtime = () => {
               />
               <div>
                 <h4 className="font-bold">{movie.movieName}</h4>
-                <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-8 gap-2">
                   {Array.isArray(movie.showTimeList) &&
                     movie.showTimeList
                       .filter((show) => show.showDate === selectedDate)

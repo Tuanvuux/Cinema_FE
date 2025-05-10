@@ -24,6 +24,11 @@ export const addMovie = async (movieData) => {
     return response.data;
 };
 
+export const getSumMovies = async () => {
+    const response = await api.get("/movies/admin/countmovie");
+    return response.data;
+};
+
 export const updateMovie = async (movieId, movieData) => {
     const response = await api.put(`/movies/admin/${movieId}`, movieData);
     return response.data;
@@ -47,6 +52,10 @@ export const getUser = async () => {
     return response.data;
 };
 
+export const getSumUserNotAdmin = async () => {
+    const response = await api.get("/accounts/admin/countuser");
+    return response.data;
+};
 
 export const toggleDeleteUser = async (userId, isActive) => {
     const response = await api.put(`/accounts/admin/${userId}/toggle-delete`, {
@@ -112,6 +121,11 @@ export const getRooms = async () => {
     return response.data;
 };
 
+export const getSumRooms = async () => {
+    const response = await api.get("/rooms/admin/countroom");
+    return response.data;
+};
+
 export const addRoom = async (roomData) => {
     const response = await api.post("/rooms/admin", roomData);
     return response.data;
@@ -166,6 +180,11 @@ export const getSeats = async () => {
     return response.data;
 };
 
+export const getSumSeats = async () => {
+    const response = await api.get("/seats/admin/countseat");
+    return response.data;
+};
+
 export const addSeat = async (seatData) => {
     const response = await api.post("/seats/admin", seatData);
     return response.data;
@@ -201,4 +220,51 @@ export const deleteSeatInfo = async (seatInfoId) => {
     const response = await api.delete(`/seatinfo/admin/${seatInfoId}`);
     return response.data;
 };
+
+//DashBoard
+export const getPayments = async () => {
+    const response = await api.get("/payments/admin");
+    return response.data;
+};
+
+export const getPaymentsByDateRange = async (startDate, endDate) => {
+    const response = await api.get(`/payments/admin/by-date-range`, {
+        params: {
+            startDate,
+            endDate
+        }
+    });
+    return response.data;
+};
+
+api.interceptors.request.use(request => {
+    console.log('API Request:', request);
+    return request;
+});
+
+api.interceptors.response.use(
+    response => {
+        console.log('API Response:', response);
+        return response;
+    },
+    error => {
+        console.error('API Error:', error.response || error);
+        return Promise.reject(error);
+    }
+);
+
+export const getPaymentDetails = async (paymentId) => {
+    try {
+        const response = await api.get(`/payments/admin/${paymentId}/details`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching payment details:', error);
+        throw error;
+    }
+};
+
+
+
+
+
 
