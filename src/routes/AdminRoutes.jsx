@@ -26,12 +26,12 @@ const AdminRoutes = () => {
         <Route path="/" element={<AdminPage />} />
         <Route path="addcategory" element={<AddCategory />} />
         <Route path="addmovie" element={<AddMovie />} />
-        <Route path="roommanagement" element={<RoomManagement />} />
-        <Route path="showtimemanagement" element={<ShowTimeManagement />} />
-        <Route path="moviemanagement" element={<MovieManagement />} />
-        <Route path="accountmanagement" element={<AccountManagement />} />
-        <Route path="seatmanagement" element={<SeatManagement />} />
-          <Route path="dashboard" element={<DashBoard />} />
+        {/*<Route path="roommanagement" element={<RoomManagement />} />*/}
+        {/*<Route path="showtimemanagement" element={<ShowTimeManagement />} />*/}
+        {/*<Route path="moviemanagement" element={<MovieManagement />} />*/}
+        {/*<Route path="accountmanagement" element={<AccountManagement />} />*/}
+        {/*<Route path="seatmanagement" element={<SeatManagement />} />*/}
+        {/*  <Route path="dashboard" element={<DashBoard />} />*/}
       </Route>
     </Routes>
   );

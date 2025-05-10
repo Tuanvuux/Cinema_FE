@@ -3,7 +3,8 @@ import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {getUser, toggleDeleteUser} from "@/services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
-import NavbarAdmin from "@/components/layout/NavbarAdmin";
+import EditUserModal from "@/pages/admin/EditUserModal.jsx";
+import CreateAccountForEmployeeModal from "@/pages/admin/CreateAccountForEmployeeModal.jsx";
 
 
 const AccountManagement = () => {
@@ -28,6 +29,7 @@ const AccountManagement = () => {
 
     const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [isOpenAddEm, setIsOpenAddEm] = useState(false);
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [bulkRestoreModalOpen, setBulkRestoreModalOpen] = useState(false);
@@ -46,6 +48,9 @@ const AccountManagement = () => {
         isActive: true
     });
 
+    const handleClick = () => {
+        setIsOpenAddEm(true);
+    };
     useEffect(() => {
         const fetchAccount = async () => {
             try {
@@ -379,10 +384,22 @@ const AccountManagement = () => {
                             <UserInfo/>
                         </div>
                     </div>
-                    <div className="flex justify-end mb-6">
+                    <div className="flex justify-between mb-6">
+                        <button
+                            className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
+                            onClick={handleClick}
+                        >
+                            <span className="material-icons mr-1">add</span>
+                            Thêm nhân viên
+                        </button>
+                        {isOpenAddEm && (
+                            <CreateAccountForEmployeeModal
+                                onClose={() => setIsOpenAddEm(false)}
+                            />
+                        )}
                         <div className="flex space-x-2">
                             <button
-                                className={`${selectedAccount.length >0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                                className={`${selectedAccount.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
                                 onClick={handleBulkDelete}
                                 disabled={selectedAccount.length === 0}
                             >
@@ -392,7 +409,7 @@ const AccountManagement = () => {
 
                             {/* Optional: Add a bulk restore button */}
                             <button
-                                className={`${selectedAccount.length >0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                                className={`${selectedAccount.length > 0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
                                 onClick={handleBulkRestore}
                                 disabled={selectedAccount.length === 0}
                             >

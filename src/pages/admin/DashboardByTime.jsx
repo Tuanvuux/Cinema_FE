@@ -3,6 +3,7 @@ import UserInfo from "@/pages/admin/UserInfo.jsx";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Bar } from "react-chartjs-2";
+import { Pie } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
