@@ -37,6 +37,7 @@ const EditUserModal = ({ userInfo, onClose }) => {
             getUserByUsername(username)
                 .then((data) => {
                     setForm(prevForm => ({
+                        ...prevForm,
                         ...data,
                         birthday: data.birthday ? new Date(data.birthday).toISOString().split("T")[0] : "",
                         currentPassword: "",
@@ -45,6 +46,7 @@ const EditUserModal = ({ userInfo, onClose }) => {
                     }));
                     setIsLoading(false);
                 })
+
                 .catch(error => {
                     console.error("Error fetching user data:", error);
                     setIsLoading(false);
@@ -184,8 +186,8 @@ const EditUserModal = ({ userInfo, onClose }) => {
                         <input
                             name="email"
                             value={form.email || ""}
+                            onChange={handleChange}
                             className="border p-2 w-full mb-3 rounded bg-gray-100"
-                            disabled
                         />
                     </div>
                     <div>
