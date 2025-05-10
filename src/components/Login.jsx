@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import Button from "./ui/button";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -11,6 +12,9 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth(); // ✅ login từ context
+  const location = useLocation();
+  const navigate = useNavigate();
+  const from = location.state?.from?.pathname || "/";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -44,6 +48,8 @@ const Login = () => {
         login(userInfo); // login từ AuthContext
 
         alert("Đăng nhập thành công!");
+        navigate(from, { replace: true });
+
         // Ví dụ: navigate("/");
       } else {
         throw new Error("Có lỗi xảy ra, vui lòng thử lại!");
