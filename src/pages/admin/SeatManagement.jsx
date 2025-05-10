@@ -8,6 +8,7 @@ import {
     getSeatInfo,
     updateSeatInfo
 } from "../../services/apiadmin.jsx";
+import UserInfo from "@/pages/admin/UserInfo.jsx";
 import {Link} from "react-router-dom";
 
 export default function SeatManagement () {
@@ -516,12 +517,7 @@ export default function SeatManagement () {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 flex items-center">
-                                    <span className="font-medium mr-2">ADMIN</span>
-                                    <span className="material-icons">person</span>
-                                </div>
-                            </div>
+                            <UserInfo/>
                         </div>
                     </div>
 
@@ -618,7 +614,11 @@ export default function SeatManagement () {
 
                     {/* Seat Table */}
                     {loading ? (
-                        <div className="text-center py-10">Loading...</div>
+                        <div className="text-center py-10">
+                            <div
+                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="mt-2">Đang tải dữ liệu...</p>
+                        </div>
                     ) : error ? (
                         <div className="text-center py-10 text-red-500">{error}</div>
                     ) : (
@@ -958,6 +958,25 @@ export default function SeatManagement () {
                                             )}
                                         </div>
                                         <span>Đã đặt</span>
+                                    </label>
+                                    <label className="inline-flex items-center relative cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="ISVALID"
+                                            checked={editingSeat.status === 'ISVALID'}
+                                            onChange={() => setEditingSeat({...editingSeat, status: 'ISVALID'})}
+                                            className="absolute opacity-0 cursor-pointer"
+                                        />
+                                        <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
+                                ${editingSeat.status === 'ISVALID'
+                                            ? 'bg-gray-900 border-gray-900'
+                                            : 'bg-white border-gray-300'}`}>
+                                            {editingSeat.status === 'ISVALID' && (
+                                                <span className="text-white text-xs">✓</span>
+                                            )}
+                                        </div>
+                                        <span>Vô hiệu hóa</span>
                                     </label>
                                 </div>
                             </div>

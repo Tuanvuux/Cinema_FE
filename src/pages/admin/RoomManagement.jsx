@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
-import {Link} from "react-router-dom";
-import NavbarAdmin from "@/components/layout/NavbarAdmin";
+import UserInfo from "@/pages/admin/UserInfo.jsx";
+
 
 export default function RoomManagement () {
     const [rooms, setRooms] = useState([]);
@@ -44,7 +44,6 @@ export default function RoomManagement () {
         setSelectedRoomId(null);
     };
 
-
     const handleDeleteRoom = async (roomId) => {
         try {
             await deleteRoom(roomId);
@@ -69,7 +68,7 @@ export default function RoomManagement () {
             handleCloseModal();
             console.error("Lỗi khi xóa phòng chiếu:", error);
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
     };
@@ -311,15 +310,6 @@ export default function RoomManagement () {
     };
 
 
-    // Filter rooms based on search term and status
-    // const filteredRooms = rooms.filter(room => {
-    //     const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase());
-    //     const matchesStatus = statusFilter === 'all' ||
-    //         (statusFilter === 'active' && room.status === 'ACTIVE') ||
-    //         (statusFilter === 'inactive' && room.status === 'INACTIVE');
-    //     return matchesSearch && matchesStatus;
-    // });
-
     const filteredRooms = rooms.filter(room => {
         const matchesSearch = Object.values(room).some(value =>
             value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
@@ -396,19 +386,14 @@ export default function RoomManagement () {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 flex items-center">
-                                    <span className="font-medium mr-2">ADMIN</span>
-                                    <span className="material-icons">person</span>
-                                </div>
-                            </div>
+                            <UserInfo/>
                         </div>
                     </div>
 
                     {/* Filters and Add Button */}
                     <div className="flex justify-between mb-6 relative">
                         <div className="flex items-center">
-                            <button className="mr-2 p-2 border rounded hover:bg-gray-100"
+                        <button className="mr-2 p-2 border rounded hover:bg-gray-100"
                                     onClick={() => setShowFilter(!showFilter)}>
                                 <span className="material-icons">filter_list</span>
                             </button>
@@ -477,7 +462,11 @@ export default function RoomManagement () {
 
                     {/* Room Table */}
                     {loading ? (
-                        <div className="text-center py-10">Loading...</div>
+                        <div className="text-center py-10">
+                            <div
+                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="mt-2">Đang tải dữ liệu...</p>
+                        </div>
                     ) : error ? (
                         <div className="text-center py-10 text-red-500">{error}</div>
                     ) : (
