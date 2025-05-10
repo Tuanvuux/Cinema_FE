@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import GradientText from "../ui/GradientText";
 
 export default function Navbar() {
   const { user, logout } = useAuth(); // Lấy thông tin user và logout từ context
@@ -8,7 +9,16 @@ export default function Navbar() {
     <nav className="bg-white text-gray-900 py-4">
       <div className="container mx-auto flex justify-between items-center px-6 font-medium">
         <h1 className="text-2xl font-bold">
-          <Link to="/">CineX Cinema</Link>
+          <Link to="/">
+            <GradientText
+              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+              animationSpeed={3}
+              showBorder={false}
+              className="custom-class"
+            >
+              CineX Cinema
+            </GradientText>
+          </Link>
         </h1>
         <ul className="flex space-x-6 text-lg">
           <li>
