@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../contexts/AuthContext";
+import GradientText from "@/components/ui/GradientText.jsx";
 
 const navItems = [
     {
@@ -63,12 +64,15 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
 
     return (
         <div className="w-60 bg-gray-900 text-white p-4 flex flex-col h-screen">
-            <h1 className="mb-4 cursor-pointer" onClick={() => navigate('/')}>
-                <img
-                    src="https://res.cloudinary.com/dbo5hvzdg/image/upload/v1746239645/f1ggme4jz1z10hyyclwc.png"
-                    alt="Cinema Booking"
-                    className="h-16 w-auto"
-                />
+            <h1 className="mb-4 cursor-pointer text-2xl" onClick={() => navigate('/')}>
+                <GradientText
+                    colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+                    animationSpeed={3}
+                    showBorder={false}
+                    className="custom-class"
+                >
+                    CineX Cinema
+                </GradientText>
             </h1>
 
             <nav className="space-y-2 flex-grow">

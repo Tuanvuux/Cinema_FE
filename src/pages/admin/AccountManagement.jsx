@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import {getUser, toggleDeleteUser} from "@/services/apiadmin.jsx";
+import {getUser, toggleDeleteUser, getListUser, getListEmployee} from "@/services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import EditUserModal from "@/pages/admin/EditUserModal.jsx";
 import CreateAccountForEmployeeModal from "@/pages/admin/CreateAccountForEmployeeModal.jsx";
@@ -34,39 +34,33 @@ const AccountManagement = () => {
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [bulkRestoreModalOpen, setBulkRestoreModalOpen] = useState(false);
 
-    const [editingAccount, setEditingAccount] = useState({
-        userId:'',
-        username:'',
-        fullName:'',
-        email:'',
-        password:'',
-        birthday:'',
-        address:'',
-        phone:'',
-        role:'',
-        gender:'',
-        isActive: true
-    });
+    const [viewType, setViewType] = useState('user');
 
     const handleClick = () => {
         setIsOpenAddEm(true);
     };
     useEffect(() => {
-        const fetchAccount = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
-                const data = await getUser();
-                setAccount(data);
+                if (viewType === 'user') {
+                    const data = await getListUser(); // Danh sách khách hàng
+                    setAccount(data);
+                } else if (viewType === 'employee') {
+                    const data = await getListEmployee(); // Danh sách nhân viên
+                    setAccount(data);
+                }
                 setLoading(false);
             } catch (err) {
-                setError('Failed to fetch Account');
+                setError('Không thể tải dữ liệu');
                 setLoading(false);
                 console.error(err);
             }
         };
 
-        fetchAccount();
-    }, []);
+        fetchData();
+    }, [viewType]); // <-- Chạy lại khi viewType thay đổi
+
     const [toast, setToast] = useState({
         account: false,
         message: '',
@@ -365,13 +359,18 @@ const AccountManagement = () => {
             />
 
             <div className="flex h-full">
+                {isOpenAddEm && (
+                    <CreateAccountForEmployeeModal
+                        onClose={() => setIsOpenAddEm(false)}
+                    />
+                )}
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
                         <div className="flex items-center">
-                        <div className="relative mr-4">
+                            <div className="relative mr-4">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm tài khoản"
@@ -384,19 +383,63 @@ const AccountManagement = () => {
                             <UserInfo/>
                         </div>
                     </div>
-                    <div className="flex justify-between mb-6">
-                        <button
-                            className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
-                            onClick={handleClick}
-                        >
-                            <span className="material-icons mr-1">add</span>
-                            Thêm nhân viên
-                        </button>
-                        {isOpenAddEm && (
-                            <CreateAccountForEmployeeModal
-                                onClose={() => setIsOpenAddEm(false)}
+                    <div className="flex items-center space-x-4 justify-center mb-6">
+                        <label className="flex items-center cursor-pointer">
+                            <input
+                                type="radio"
+                                name="viewType"
+                                value="table"
+                                checked={viewType === 'user'}
+                                onChange={() => setViewType('user')}
+                                className="hidden"
                             />
+                            <span
+                                className={`flex items-center ${viewType === 'user' ? 'text-gray-800' : 'text-gray-500'}`}>
+                                    <span
+                                        className="relative inline-block w-5 h-5 mr-2 rounded-full border border-gray-400">
+                                        {viewType === 'user' && (
+                                            <span className="absolute inset-1 rounded-full bg-indigo-900"></span>
+                                        )}
+                                    </span>
+                                    Khách hàng
+                                </span>
+                        </label>
+
+                        <label className="flex items-center cursor-pointer">
+                            <input
+                                type="radio"
+                                name="viewType"
+                                value="chart"
+                                checked={viewType === 'employee'}
+                                onChange={() => setViewType('employee')}
+                                className="hidden"
+                            />
+                            <span
+                                className={`flex items-center ${viewType === 'employee' ? 'text-gray-800' : 'text-gray-500'}`}>
+                                    <span
+                                        className="relative inline-block w-5 h-5 mr-2 rounded-full border border-gray-400">
+                                        {viewType === 'employee' && (
+                                            <span className="absolute inset-1 rounded-full bg-indigo-900"></span>
+                                        )}
+                                    </span>
+                                    Nhân viên
+                                </span>
+                        </label>
+                    </div>
+
+                    <div className="flex justify-between mb-6">
+                        {viewType === 'employee' ? (
+                            <button
+                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
+                                onClick={handleClick}
+                            >
+                                <span className="material-icons mr-1">add</span>
+                                Thêm nhân viên
+                            </button>
+                        ) : (
+                            <div className="px-4 py-2 invisible">Placeholder</div>
                         )}
+
                         <div className="flex space-x-2">
                             <button
                                 className={`${selectedAccount.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
@@ -407,7 +450,6 @@ const AccountManagement = () => {
                                 Khóa tài khoản đã chọn ({selectedAccount.length})
                             </button>
 
-                            {/* Optional: Add a bulk restore button */}
                             <button
                                 className={`${selectedAccount.length > 0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
                                 onClick={handleBulkRestore}
@@ -418,6 +460,7 @@ const AccountManagement = () => {
                             </button>
                         </div>
                     </div>
+
 
                     {/*Table*/}
                     {loading ? (
@@ -492,7 +535,7 @@ const AccountManagement = () => {
                                             {/* Modal Xác Nhận Xóa/Khôi phục */}
                                             {isConfirmModalOpen && (
                                                 <div
-                                                    className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
                                                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                                         <h2 className="text-lg font-semibold mb-4">
                                                             {actionType === 'delete' ? 'Xác nhận xóa' : 'Xác nhận khôi phục'}
@@ -524,20 +567,25 @@ const AccountManagement = () => {
                                             )}
 
                                             {showDetailModal && (
-                                                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-                                                    <div className="p-6 max-w-2xl w-full bg-white rounded-lg shadow-md relative">
-                                                        <h2 className="text-2xl font-semibold text-black-600 mb-6">Chi tiết tài khoản</h2>
+                                                <div
+                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
+                                                    <div
+                                                        className="p-6 max-w-2xl w-full bg-white rounded-lg shadow-lg w-96">
+                                                        <h2 className="text-2xl font-semibold text-black-600 mb-6">Chi
+                                                            tiết tài khoản</h2>
 
                                                         <form className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Họ và tên</label>
+                                                                    className="block text-sm font-medium text-gray-600">Họ
+                                                                    và tên</label>
                                                                 <input value={account.fullName || ""} disabled
                                                                        className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Tên đăng nhập</label>
+                                                                    className="block text-sm font-medium text-gray-600">Tên
+                                                                    đăng nhập</label>
                                                                 <input value={account.username || ""} disabled
                                                                        className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
@@ -549,19 +597,22 @@ const AccountManagement = () => {
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Số điện thoại</label>
+                                                                    className="block text-sm font-medium text-gray-600">Số
+                                                                    điện thoại</label>
                                                                 <input value={account.phone || ""} disabled
                                                                        className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Giới tính</label>
+                                                                    className="block text-sm font-medium text-gray-600">Giới
+                                                                    tính</label>
                                                                 <input value={account.gender || ""} disabled
                                                                        className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Ngày sinh</label>
+                                                                    className="block text-sm font-medium text-gray-600">Ngày
+                                                                    sinh</label>
                                                                 <input value={account.birthday || ""} disabled
                                                                        className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
@@ -573,7 +624,8 @@ const AccountManagement = () => {
                                                             {/*</div>*/}
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Trạng thái</label>
+                                                                    className="block text-sm font-medium text-gray-600">Trạng
+                                                                    thái</label>
                                                                 <input
                                                                     value={account.isActive ? "Hoạt động" : "Không hoạt động"}
                                                                     disabled
@@ -582,15 +634,17 @@ const AccountManagement = () => {
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Ngày tạo</label>
+                                                                    className="block text-sm font-medium text-gray-600">Ngày
+                                                                    tạo</label>
                                                                 <input value={account.createdAt || ""} disabled
                                                                        className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
                                                             <div className="md:col-span-2">
                                                                 <label
-                                                                    className="block text-sm font-medium text-gray-600">Địa chỉ</label>
+                                                                    className="block text-sm font-medium text-gray-600">Địa
+                                                                    chỉ</label>
                                                                 <textarea value={account.address || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
+                                                                          className="w-full p-2 border rounded-md bg-gray-100"/>
                                                             </div>
                                                         </form>
 
@@ -606,7 +660,8 @@ const AccountManagement = () => {
                                                                 <button
                                                                     onClick={() => {
                                                                         setShowDetailModal(false);
-                                                                        handleOpenConfirmModal(account, 'delete')}}
+                                                                        handleOpenConfirmModal(account, 'delete')
+                                                                    }}
                                                                     className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
                                                                     title="Khóa tài khoản"
                                                                 >
@@ -616,11 +671,12 @@ const AccountManagement = () => {
                                                                 <button
                                                                     onClick={() => {
                                                                         setShowDetailModal(false);
-                                                                        handleOpenConfirmModal(account, 'restore')}}
+                                                                        handleOpenConfirmModal(account, 'restore')
+                                                                    }}
                                                                     className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
                                                                     title="Khôi phục tài khoản"
                                                                 >
-                                                                        Khôi phục
+                                                                    Khôi phục
                                                                 </button>
                                                             )}
                                                         </div>
@@ -638,7 +694,7 @@ const AccountManagement = () => {
                     {/* Bulk Delete Confirmation Modal */}
                     {bulkDeleteModalOpen && (
                         <div
-                            className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                            className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                                 <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedAccount.length} tài khoản đã chọn
@@ -663,7 +719,7 @@ const AccountManagement = () => {
 
                     {bulkRestoreModalOpen && (
                         <div
-                            className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                            className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận khôi phục hàng loạt</h2>
                                 <p className="mb-6">Bạn có chắc chắn muốn khôi phục {selectedAccount.length} tài khoản
@@ -685,7 +741,6 @@ const AccountManagement = () => {
                             </div>
                         </div>
                     )}
-
 
 
                     {/* Pagination.jsx */}

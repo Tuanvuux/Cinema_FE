@@ -52,8 +52,23 @@ export const getUser = async () => {
     return response.data;
 };
 
-export const getSumUserNotAdmin = async () => {
+export const getListUser = async () => {
+    const response = await api.get("/accounts/admin/getuser");
+    return response.data;
+};
+
+export const getListEmployee = async () => {
+    const response = await api.get("/accounts/admin/getemployee");
+    return response.data;
+};
+
+export const getSumUser = async () => {
     const response = await api.get("/accounts/admin/countuser");
+    return response.data;
+};
+
+export const getSumEmployee = async () => {
+    const response = await api.get("/accounts/admin/countemployee");
     return response.data;
 };
 
@@ -227,6 +242,8 @@ export const deleteSeatInfo = async (seatInfoId) => {
 };
 
 //DashBoard
+
+//By Time
 export const getPayments = async () => {
     const response = await api.get("/payments/admin");
     return response.data;
@@ -267,6 +284,29 @@ export const getPaymentDetails = async (paymentId) => {
         throw error;
     }
 };
+
+//By Movie
+export const getMovieRevenueReport = async (startDate, endDate) => {
+    const response = await api.get(`/payments/admin/movies-revenue`, {
+        params: { startDate, endDate }
+    });
+    return response.data;
+};
+
+export const getMovieViewsReport = async (startDate, endDate) => {
+    const response = await api.get(`/payments/admin/movies-views`, {
+        params: { startDate, endDate }
+    });
+    return response.data;
+};
+
+export const getMovieDetailReport = async (startDate, endDate) => {
+    const response = await api.get(`/payments/admin/movies-details`, {
+        params: { startDate, endDate }
+    });
+    return response.data;
+};
+
 
 
 
