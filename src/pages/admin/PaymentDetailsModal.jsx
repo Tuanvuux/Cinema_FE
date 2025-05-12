@@ -13,7 +13,7 @@ const PaymentDetailsModal = ({ payment, onClose, isOpen }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="border-b p-4 flex justify-between items-center bg-gray-50 rounded-t-lg">

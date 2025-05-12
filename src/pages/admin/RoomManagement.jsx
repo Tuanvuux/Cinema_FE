@@ -525,16 +525,16 @@ export default function RoomManagement () {
                                             >
                                                 <span className="material-icons">edit</span>
                                             </button>
-                                            <button
-                                                onClick={() => handleOpenDeleteModal(room.id)}
-                                                className="text-gray-600 hover:text-gray-800"
-                                            >
-                                                <span className="material-icons">delete</span>
-                                            </button>
+                                            {/*<button*/}
+                                            {/*    onClick={() => handleOpenDeleteModal(room.id)}*/}
+                                            {/*    className="text-gray-600 hover:text-gray-800"*/}
+                                            {/*>*/}
+                                            {/*    <span className="material-icons">delete</span>*/}
+                                            {/*</button>*/}
 
                                             {isDeleteModalOpen && (
                                                 <div
-                                                    className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
                                                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
                                                         <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này
@@ -656,7 +656,7 @@ export default function RoomManagement () {
 
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteModalOpen && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                         <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu đã chọn
@@ -680,7 +680,7 @@ export default function RoomManagement () {
             )}
 
             {showEditModal && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Chỉnh sửa phòng chiếu</h2>
@@ -839,7 +839,7 @@ export default function RoomManagement () {
 
             {/* Add Room Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Thêm phòng chiếu mới</h2>
