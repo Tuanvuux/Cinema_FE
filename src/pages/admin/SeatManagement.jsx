@@ -654,7 +654,16 @@ export default function SeatManagement () {
                                         <td className="p-3 text-center">{Seat.roomName || 'N/A'}</td>
                                         <td className="p-3 text-center">{Seat.rowLabel}</td>
                                         <td className="p-3 text-center">{Seat.columnNumber}</td>
-                                        <td className="p-3 text-center">{Seat.status}</td>
+                                        <td className="p-3 text-center">
+                                            <span className={`
+                                                ${Seat.status === 'AVAILABLE' ? 'text-green-600 font-medium' : ''}
+                                                ${Seat.status === 'SELECTED' ? 'text-blue-600 font-medium' : ''}
+                                                ${Seat.status === 'BOOKED' ? 'text-purple-600 font-medium' : ''}
+                                                ${Seat.status === 'INVALID' ? 'text-red-600 font-medium' : ''}
+                                            `}>
+                                                {Seat.status}
+                                            </span>
+                                        </td>
                                         <td className="p-3 text-center">{Seat.seatInfoName}</td>
                                         <td className="p-3 text-center">
                                             <button
@@ -962,16 +971,16 @@ export default function SeatManagement () {
                                         <input
                                             type="radio"
                                             name="status"
-                                            value="ISVALID"
-                                            checked={editingSeat.status === 'ISVALID'}
-                                            onChange={() => setEditingSeat({...editingSeat, status: 'ISVALID'})}
+                                            value="INVALID"
+                                            checked={editingSeat.status === 'INVALID'}
+                                            onChange={() => setEditingSeat({...editingSeat, status: 'INVALID'})}
                                             className="absolute opacity-0 cursor-pointer"
                                         />
                                         <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.status === 'ISVALID'
+                                ${editingSeat.status === 'INVALID'
                                             ? 'bg-gray-900 border-gray-900'
                                             : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.status === 'ISVALID' && (
+                                            {editingSeat.status === 'INVALID' && (
                                                 <span className="text-white text-xs">✓</span>
                                             )}
                                         </div>
