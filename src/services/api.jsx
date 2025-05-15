@@ -67,3 +67,12 @@ export const verifyAccount = async (data) => {
   const response = await api.post(`/auth/verify`, data);
   return response.data;
 };
+
+export const getBookedSeat = async (showtimeId) => {
+  const response = await api.get(`/booked/${showtimeId}`);
+  return response.data;
+};
+export const getLockedSeat = async (showtimeId) => {
+  const response = await api.get(`/locked/${showtimeId}`);
+  return response.data;
+};
