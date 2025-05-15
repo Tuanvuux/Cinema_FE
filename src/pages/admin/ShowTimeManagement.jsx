@@ -635,7 +635,7 @@ export default function ShowtimeManagement () {
 
                                                 {/* Modal xác nhận xóa */}
                                                 {isDeleteModalOpen && (
-                                                    <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                                                    <div className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
                                                         <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                                             <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
                                                             <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này không?</p>
@@ -668,7 +668,7 @@ export default function ShowtimeManagement () {
 
                     {/* Bulk Delete Confirmation Modal */}
                     {bulkDeleteModalOpen && (
-                        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                                 <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedShowtime.length} lịch chiếu đã chọn không?</p>
@@ -691,7 +691,7 @@ export default function ShowtimeManagement () {
                     )}
 
                     {showAddModal && (
-                        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                             <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                                 <h2 className="text-2xl font-semibold mb-4">Thêm lịch chiếu</h2>
                                 <label className="block mb-2">Tên phim</label>
@@ -751,7 +751,7 @@ export default function ShowtimeManagement () {
                     )}
 
                     {showEditModal && (
-                        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                             <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                                 <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa lịch chiếu</h2>
                                 <label className="block mb-2">Tên phim</label>

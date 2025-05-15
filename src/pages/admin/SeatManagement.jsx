@@ -654,7 +654,16 @@ export default function SeatManagement () {
                                         <td className="p-3 text-center">{Seat.roomName || 'N/A'}</td>
                                         <td className="p-3 text-center">{Seat.rowLabel}</td>
                                         <td className="p-3 text-center">{Seat.columnNumber}</td>
-                                        <td className="p-3 text-center">{Seat.status}</td>
+                                        <td className="p-3 text-center">
+                                            <span className={`
+                                                ${Seat.status === 'AVAILABLE' ? 'text-green-600 font-medium' : ''}
+                                                ${Seat.status === 'SELECTED' ? 'text-blue-600 font-medium' : ''}
+                                                ${Seat.status === 'BOOKED' ? 'text-purple-600 font-medium' : ''}
+                                                ${Seat.status === 'INVALID' ? 'text-red-600 font-medium' : ''}
+                                            `}>
+                                                {Seat.status}
+                                            </span>
+                                        </td>
                                         <td className="p-3 text-center">{Seat.seatInfoName}</td>
                                         <td className="p-3 text-center">
                                             <button
@@ -671,8 +680,7 @@ export default function SeatManagement () {
                                             </button>
 
                                             {isDeleteModalOpen && (
-                                                <div
-                                                    className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                                                <div className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
                                                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
                                                         <p className="mb-6">Bạn có chắc chắn muốn xóa ghế này
@@ -794,7 +802,7 @@ export default function SeatManagement () {
 
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteModalOpen && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                         <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedSeats.length} ghế đã chọn
@@ -818,7 +826,7 @@ export default function SeatManagement () {
             )}
 
             {showEditModal && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Chỉnh sửa phòng chiếu</h2>
@@ -963,16 +971,16 @@ export default function SeatManagement () {
                                         <input
                                             type="radio"
                                             name="status"
-                                            value="ISVALID"
-                                            checked={editingSeat.status === 'ISVALID'}
-                                            onChange={() => setEditingSeat({...editingSeat, status: 'ISVALID'})}
+                                            value="INVALID"
+                                            checked={editingSeat.status === 'INVALID'}
+                                            onChange={() => setEditingSeat({...editingSeat, status: 'INVALID'})}
                                             className="absolute opacity-0 cursor-pointer"
                                         />
                                         <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                ${editingSeat.status === 'ISVALID'
+                                ${editingSeat.status === 'INVALID'
                                             ? 'bg-gray-900 border-gray-900'
                                             : 'bg-white border-gray-300'}`}>
-                                            {editingSeat.status === 'ISVALID' && (
+                                            {editingSeat.status === 'INVALID' && (
                                                 <span className="text-white text-xs">✓</span>
                                             )}
                                         </div>
@@ -1031,7 +1039,7 @@ export default function SeatManagement () {
 
             {/* Add Seat Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Thêm ghế mới</h2>
@@ -1139,7 +1147,7 @@ export default function SeatManagement () {
             )}
 
             {showEditPriceModal && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg max-w-xl p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Sửa giá ghế</h2>

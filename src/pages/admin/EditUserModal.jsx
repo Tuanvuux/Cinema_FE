@@ -144,7 +144,7 @@ const EditUserModal = ({ userInfo, onClose }) => {
     );
 
     return (
-        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
             <ToastNotification
                 message={toast.message}
                 type={toast.type}
