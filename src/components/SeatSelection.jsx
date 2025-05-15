@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShowtime } from "../contexts/ShowtimeContext";
-import { getRoomById, getSeatsLock } from "../services/api";
+import { getRoomById, getBookedSeat, getLockedSeat } from "../services/api";
 import { getShowtimeById } from "../utils/showtimeUtils";
-import useSeatSocket from "../hooks/useSeatSocket"; // Import hook WebSocket
+import useSeatSocket from "../hooks/useSeatSocket";
 import MovieInfo from "./MovieInfo";
 import SeatLegend from "./SeatLegend";
 
@@ -18,26 +18,27 @@ const SeatSelection = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.userId;
   const roomIdRef = useRef(null);
+  const isProcessingRef = useRef(false);
+  const [bookedSeatIds, setBookedSeatIds] = useState([]);
 
-  // 💥 Move handleSeatUpdate lên đây trước khi dùng
   const handleSeatUpdate = (seatStatus) => {
-    setSeatMatrix((prevMatrix) => {
-      return prevMatrix.map((row) =>
-        row.map((seat) => {
-          if (seat && seat.seatId === seatStatus.seatId) {
-            return {
-              ...seat,
-              status: seatStatus.status,
-              isLocked: seatStatus.isLocked ?? seat.isLocked,
-            };
-          }
-          return seat;
-        })
-      );
-    });
+    setSeatMatrix((prevMatrix) =>
+      prevMatrix.map((row) =>
+        row.map((seat) =>
+          seat && seat.seatId === seatStatus.seatId
+            ? {
+                ...seat,
+                status: seatStatus.status, // Cập nhật trạng thái ghế
+                isLocked: seatStatus.isLocked ?? seat.isLocked,
+                isLockedByMe: seatStatus.userId === userId, // Cập nhật trạng thái "đang chọn"
+              }
+            : seat
+        )
+      )
+    );
   };
 
-  const { sendSeatAction } = useSeatSocket(showtimeId, handleSeatUpdate); // Hook WebSocket
+  const { sendSeatAction } = useSeatSocket(showtimeId, handleSeatUpdate);
 
   const showtime = useMemo(() => {
     return getShowtimeById(showtimeId, showtimes);
@@ -59,25 +60,45 @@ const SeatSelection = () => {
       try {
         setIsLoading(true);
 
-        const [roomData, lockedSeatIds] = await Promise.all([
+        const [roomData, bookedSeats, lockedSeats] = await Promise.all([
           getRoomById(roomId),
-          getSeatsLock(showtimeId),
+          getBookedSeat(showtimeId),
+          getLockedSeat(showtimeId), // [{ seatId, userId }]
         ]);
 
         const { numberOfRows, numberOfColumns, seats } = roomData;
+        const bookedIds = bookedSeats || [];
+        setBookedSeatIds(bookedIds);
 
-        const seatsWithLock = seats.map((seat) => ({
-          ...seat,
-          isLocked: lockedSeatIds.includes(seat.seatId),
-        }));
+        const seatsWithStatus = seats.map((seat) => {
+          const lockedInfo = lockedSeats.find(
+            (locked) => locked.seatId === seat.seatId
+          );
+          const isLocked = !!lockedInfo;
+          const isLockedByMe = lockedInfo?.userId === userId;
+
+          let status = "AVAILABLE";
+          if (bookedIds.includes(seat.seatId)) {
+            status = "BOOKED";
+          } else if (isLockedByMe) {
+            status = "SELECTED";
+          }
+
+          return {
+            ...seat,
+            isLocked,
+            isLockedByMe,
+            status,
+          };
+        });
 
         const rowLabels = Array.from(
-          new Set(seatsWithLock.map((seat) => seat.rowLabel))
+          new Set(seatsWithStatus.map((seat) => seat.rowLabel))
         ).sort();
 
         const matrix = rowLabels.map((row) => {
           const rowSeats = Array(numberOfColumns).fill(null);
-          seatsWithLock
+          seatsWithStatus
             .filter((seat) => seat.rowLabel === row)
             .forEach((seat) => {
               rowSeats[seat.columnNumber - 1] = seat;
@@ -94,33 +115,42 @@ const SeatSelection = () => {
     };
 
     fetchSeats();
-  }, [roomId]);
+  }, [roomId, showtimeId]);
 
-  const handleSelectSeat = (seatId, seatName) => {
-    if (!selectedSeats.includes(seatId)) {
-      setSelectedSeats((prev) => [...prev, seatId]);
-    }
-    sendSeatAction(seatId, "SELECT", userId);
+  const handleSelectSeat = async (seatId, seatName) => {
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
 
-    setSeatMatrix((prevMatrix) =>
-      prevMatrix.map((row) =>
-        row.map((seat) =>
-          seat && seat.seatId === seatId
-            ? { ...seat, status: "SELECTED" }
-            : seat
+    try {
+      if (!selectedSeats.includes(seatId)) {
+        setSelectedSeats((prev) => [...prev, seatId]);
+      }
+      sendSeatAction(seatId, "SELECT", userId);
+
+      setSeatMatrix((prevMatrix) =>
+        prevMatrix.map((row) =>
+          row.map((seat) =>
+            seat && seat.seatId === seatId
+              ? { ...seat, status: "SELECTED" }
+              : seat
+          )
         )
-      )
-    );
+      );
 
-    const seat = seatMatrix.flat().find((seat) => seat.seatId === seatId);
-    if (seat) {
-      setTotalPrice((prevTotal) => prevTotal + seat.seatInfo.price);
+      const seat = seatMatrix.flat().find((seat) => seat.seatId === seatId);
+      if (seat) {
+        setTotalPrice((prevTotal) => prevTotal + seat.seatInfo.price);
+      }
+    } finally {
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 300);
     }
   };
 
   const handleReleaseSeat = (seatId, seatName) => {
     setSelectedSeats((prev) => prev.filter((id) => id !== seatId));
-    sendSeatAction(seatId, "SELECTED", userId);
+    sendSeatAction(seatId, "AVAILABLE", userId);
 
     setSeatMatrix((prevMatrix) =>
       prevMatrix.map((row) =>
@@ -171,15 +201,13 @@ const SeatSelection = () => {
                       className={`w-${
                         seat.seatInfo.name === "COUPLE" ? "16" : "8"
                       } h-8 rounded-lg text-black border-2 ${
-                        seat.isLocked
-                          ? "bg-gray-400 text-white cursor-not-allowed"
-                          : seat.status === "AVAILABLE"
-                          ? "bg-white hover:bg-blue-900"
+                        seat.status === "BOOKED"
+                          ? "bg-black text-white cursor-not-allowed"
+                          : seat.isLocked && !seat.isLockedByMe
+                          ? "bg-gray-300 text-white cursor-not-allowed"
                           : seat.status === "SELECTED"
                           ? "bg-blue-900 text-white"
-                          : seat.status === "BOOKED"
-                          ? "bg-black text-white cursor-not-allowed"
-                          : "bg-black cursor-not-allowed"
+                          : "bg-white hover:bg-blue-900"
                       } ${
                         seat.seatInfo.name === "VIP"
                           ? "border-yellow-300"
@@ -187,6 +215,10 @@ const SeatSelection = () => {
                           ? "border-pink-400 w-16"
                           : "border-gray-300"
                       }`}
+                      disabled={
+                        seat.status === "BOOKED" ||
+                        (seat.isLocked && !seat.isLockedByMe)
+                      }
                       onClick={() => {
                         if (seat.status === "AVAILABLE") {
                           handleSelectSeat(seat.seatId, seat.seatName);
@@ -194,7 +226,6 @@ const SeatSelection = () => {
                           handleReleaseSeat(seat.seatId, seat.seatName);
                         }
                       }}
-                      disabled={seat.status === "BOOKED" || seat.isLocked}
                     >
                       {seat.seatName}
                     </button>
@@ -205,6 +236,7 @@ const SeatSelection = () => {
               </div>
             ))}
           </div>
+
           <SeatLegend />
         </div>
         <div>
