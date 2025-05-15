@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { getUserByUsername, updateUserAdmin } from "@/services/apiadmin.jsx";
 
 const EditUserModal = ({ userInfo, onClose }) => {
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const [isLoading, setIsLoading] = useState(true);
     const [form, setForm] = useState({
         username: "",
@@ -242,49 +246,132 @@ const EditUserModal = ({ userInfo, onClose }) => {
                     </div>
 
                     <hr className="my-3" />
-                    <div>
+                    <div className="relative mb-3">
                         <label className="block font-medium mb-1">Nhập mật khẩu hiện tại</label>
-                        <input
-                            name="currentPassword"
-                            type="password"
-                            value={form.currentPassword || ""}
-                            onChange={handleChange}
-                            className="border p-2 w-full mb-2 rounded"
-                            placeholder="Mật khẩu hiện tại"
-                        />
+                        <div className="relative">
+                            <input
+                                name="currentPassword"
+                                type={showCurrentPassword ? "text" : "password"}
+                                value={form.currentPassword || ""}
+                                onChange={handleChange}
+                                className="border p-2 w-full rounded pr-10"
+                                placeholder="Mật khẩu hiện tại"
+                            />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            >
+                                {showCurrentPassword ? (
+                                    // Icon con mắt mở
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                ) : (
+                                    // Icon con mắt bị gạch
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 012.142-3.292m3.422-2.43A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.04 2.212M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M3 3l18 18"/>
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
-                    <div>
+                    <div className="relative mb-3">
                         <label className="block font-medium mb-1">Nhập mật khẩu mới</label>
-                        <input
-                            name="password"
-                            type="password"
-                            value={form.password || ""}
-                            onChange={handleChange}
-                            className="border p-2 w-full mb-2 rounded"
-                            placeholder="Mật khẩu mới"
-                        />
+                        <div className="relative">
+                            <input
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                value={form.password || ""}
+                                onChange={handleChange}
+                                className="border p-2 w-full rounded pr-10"
+                                placeholder="Mật khẩu mới"
+                            />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    // Icon con mắt mở
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                ) : (
+                                    // Icon con mắt bị gạch
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 012.142-3.292m3.422-2.43A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.04 2.212M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M3 3l18 18"/>
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
-                    <div>
+                    <div className="relative mb-3">
                         <label className="block font-medium mb-1">Nhập lại mật khẩu mới</label>
-                        <input
-                            name="confirmPassword"
-                            type="password"
-                            value={form.confirmPassword || ""}
-                            onChange={handleChange}
-                            className="border p-2 w-full mb-3 rounded"
-                            placeholder="Xác nhận mật khẩu"
-                        />
+                        <div className="relative">
+                            <input
+                                name="confirmPassword"
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={form.confirmPassword || ""}
+                                onChange={handleChange}
+                                className="border p-2 w-full rounded pr-10"
+                                placeholder="Xác nhận mật khẩu"
+                            />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                                {showConfirmPassword ? (
+                                    // Icon con mắt mở
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                ) : (
+                                    // Icon con mắt bị gạch
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 012.142-3.292m3.422-2.43A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.04 2.212M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M3 3l18 18"/>
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
-                </div> {/* Đóng div có thể cuộn */}
+                </div>
+                {/* Đóng div có thể cuộn */}
 
                 <div className="p-4 border-t flex justify-end gap-2">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded">
                         Hủy
                     </button>
-                    <button onClick={handleSubmit} className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">
+                    <button onClick={handleSubmit}
+                            className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">
                         Lưu
                     </button>
                 </div>
