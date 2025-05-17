@@ -1,6 +1,6 @@
 import {Link} from "react-router-dom";
 import { useForm } from "react-hook-form";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef } from "react";
 import {
     deleteMovie,
     addMovie,
@@ -63,6 +63,44 @@ export default function MovieManagement() {
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [bulkRestoreModalOpen, setBulkRestoreModalOpen] = useState(false);
     const [selectedMovieIds, setSelectedMovieIds] = useState([]);
+
+    const modalConfirmRef = useRef();
+    const modalEditRef = useRef();
+    const modalbulkDeRef = useRef();
+    const modalbulkReRef = useRef();
+    const modalAddRef = useRef();
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Đóng Confirm Modal
+            if (isConfirmModalOpen && modalConfirmRef.current && !modalConfirmRef.current.contains(event.target)) {
+                setConfirmModalOpen(false);
+                setSelectedMovieForAction(null);
+            }
+            if (bulkDeleteModalOpen && modalbulkDeRef.current && !modalbulkDeRef.current.contains(event.target)) {
+                setBulkDeleteModalOpen(false);
+            }
+            if (bulkRestoreModalOpen && modalbulkReRef.current && !modalbulkReRef.current.contains(event.target)) {
+                setBulkRestoreModalOpen(false);
+            }
+
+            if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
+                setShowEditModal(false);
+                handleCancel();
+            }
+
+            if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                setShowAddModal(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isConfirmModalOpen, bulkDeleteModalOpen, showEditModal,bulkRestoreModalOpen,showAddModal]);
+
+
 
     const ToastNotification = ({ message, type, movie }) => {
         if (!movie) return null;
@@ -197,7 +235,7 @@ export default function MovieManagement() {
             );
             setToast({
                 movie: true,
-                message: 'Xóa phim thành công!',
+                message: 'Khóa phim thành công!',
                 type: 'success'
             });
             handleCloseModal();
@@ -207,11 +245,11 @@ export default function MovieManagement() {
         } catch (error) {
             setToast({
                 movie: true,
-                message: 'Xóa phim thất bại',
+                message: 'Khóa phim thất bại',
                 type: 'error'
             })
             handleCloseModal();
-            console.error("Lỗi khi xóa phim:", error);
+            console.error("Lỗi khi khóa phim:", error);
             setTimeout(() => {
                 setToast({movie: false, message: '', type: 'success'});
             }, 3000);
@@ -247,7 +285,7 @@ export default function MovieManagement() {
             setSelectedMovieForAction(null);
             setToast({
                 movie: true,
-                message: newStatus ? 'Đã xóa phim!' : 'Đã khôi phục phim!',
+                message: newStatus ? 'Đã khóa phim!' : 'Đã khôi phục phim!',
                 type: 'success'
             });
 
@@ -258,7 +296,7 @@ export default function MovieManagement() {
 
             setToast({
                 movie: true,
-                message: newStatus ? 'Xóa phim thất bại!' : 'Khôi phục phim thất bại!',
+                message: newStatus ? 'óa phim thất bại!' : 'Khôi phục phim thất bại!',
                 type: 'error'
             });
             setConfirmModalOpen(false);
@@ -328,7 +366,7 @@ export default function MovieManagement() {
         if (selectedMovie.length === 0) {
             setToast({
                 movie: true,
-                message: 'Vui lòng chọn ít nhất một phim để xóa',
+                message: 'Vui lòng chọn ít nhất một phim để khóa',
                 type: 'error'
             });
             return;
@@ -362,7 +400,7 @@ export default function MovieManagement() {
 
             setToast({
                 movie: true,
-                message: `Đã xóa ${selectedMovie.length} phim thành công!`,
+                message: `Đã khóa ${selectedMovie.length} phim thành công!`,
                 type: 'success'
             });
 
@@ -370,12 +408,12 @@ export default function MovieManagement() {
                 setToast({ movie: false, message: '', type: 'success' });
             }, 3000);
         } catch (error) {
-            console.error("Lỗi khi xóa nhiều phim:", error);
+            console.error("Lỗi khi khóa nhiều phim:", error);
 
             setBulkDeleteModalOpen(false);
             setToast({
                 movie: true,
-                message: 'Xóa phim thất bại!',
+                message: 'hóa phim thất bại!',
                 type: 'error'
             });
 
@@ -389,7 +427,7 @@ export default function MovieManagement() {
         if (selectedMovie.length === 0) {
             setToast({
                 movie: true,
-                message: 'Vui lòng chọn ít nhất một phim để xóa',
+                message: 'Vui lòng chọn ít nhất một phim để khóa',
                 type: 'error'
             });
             return;
@@ -534,6 +572,7 @@ export default function MovieManagement() {
 
         // Show the edit modal
         setShowEditModal(true);
+        setSelectedMovieForAction(movie);
     };
 
 // Handle form submission for edit
@@ -621,10 +660,12 @@ export default function MovieManagement() {
 
                     {/* Main content */}
                     <div className="flex-1 p-6 overflow-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-2xl font-bold">QUẢN LÝ PHIM</h1>
-                            <div className="flex items-center">
-                            <div className="relative mr-4">
+                        <div
+                            className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+                            <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ PHIM</h1>
+                            <div
+                                className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
+                                <div className="relative w-full md:w-64">
                                     <input
                                         type="text"
                                         placeholder="Tìm kiếm phim"
@@ -634,11 +675,11 @@ export default function MovieManagement() {
                                     />
                                     <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                                 </div>
-                                <UserInfo/>
+                                <UserInfo className="w-full md:w-auto"/>
                             </div>
                         </div>
                         {/*Add Button */}
-                        <div className="flex justify-between mb-6">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                             <button
                                 className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
                                 onClick={() => setShowAddModal(true)}
@@ -646,14 +687,14 @@ export default function MovieManagement() {
                                 <span className="material-icons mr-1">add</span>
                                 Thêm phim
                             </button>
-                            <div className="flex space-x-2">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:space-x-2 sm:gap-0">
                                 <button
                                     className={`${selectedMovie.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
                                     onClick={handleBulkDelete}
                                     disabled={selectedMovie.length === 0}
                                 >
                                     <span className="material-icons mr-1">delete</span>
-                                    Xóa phim đã chọn ({selectedMovie.length})
+                                    Khóa phim đã chọn ({selectedMovie.length})
                                 </button>
 
                                 {/* Optional: Add a bulk restore button */}
@@ -688,6 +729,7 @@ export default function MovieManagement() {
                                                    onChange={handleSelectAll}
                                             />
                                         </th>
+                                        <th className="p-3 text-left">ID</th>
                                         <th className="p-3 text-left">Tên phim</th>
                                         <th className="p-3 text-left">Đạo diễn</th>
                                         <th className="p-3 text-center">Thời lượng</th>
@@ -706,12 +748,12 @@ export default function MovieManagement() {
                                                        onChange={() => handleSelect(movie.movieId)}
                                                 />
                                             </td>
+                                            <td className="p-3 font-center">{movie.movieId}</td>
                                             <td className="p-3 font-medium text-left">
                                                 {movie.name}
                                                 {movie.isDelete &&
-                                                    <span className="ml-2 text-xs text-red-500">(đã xóa)</span>}
+                                                    <span className="ml-2 text-xs text-red-500">(đã khóa)</span>}
                                             </td>
-                                            {/*<td className="p-3 font-medium">{movie.name}</td>*/}
                                             <td className="p-3 text-left">{movie.director}</td>
                                             <td className="p-3 text-center">{movie.duration}</td>
                                             <td className="p-3 text-center">{movie.releaseDate}</td>
@@ -740,39 +782,6 @@ export default function MovieManagement() {
                                                         <span className="material-icons">restore_from_trash</span>
                                                     </button>
                                                 )}
-
-                                                {/* Modal Xác Nhận Xóa/Khôi phục */}
-                                                {isConfirmModalOpen && (
-                                                    <div className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                            <h2 className="text-lg font-semibold mb-4">
-                                                                {actionType === 'delete' ? 'Xác nhận xóa' : 'Xác nhận khôi phục'}
-                                                            </h2>
-                                                            <p className="mb-6">
-                                                                {actionType === 'delete'
-                                                                    ? 'Bạn có chắc chắn muốn xóa phim này không?'
-                                                                    : 'Bạn có chắc chắn muốn khôi phục phim này không?'
-                                                                }
-                                                            </p>
-                                                            <div className="flex justify-end gap-4">
-                                                                <button
-                                                                    onClick={() => setConfirmModalOpen(false)}
-                                                                    className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                                >
-                                                                    Hủy
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleToggleDeleteStatus(movie)}
-                                                                    className={`px-4 py-2 rounded-md text-white ${
-                                                                        actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-                                                                    }`}
-                                                                >
-                                                                    {actionType === 'delete' ? 'Xóa' : 'Khôi phục'}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -780,11 +789,44 @@ export default function MovieManagement() {
                                 </table>
                             </div>
                         )}
+                        {/* Modal Xác Nhận Kh/Khôi phục */}
+                        {isConfirmModalOpen && selectedMovieForAction &&(
+                            <div
+                                className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                                <div ref={modalConfirmRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                    <h2 className="text-lg font-semibold mb-4">
+                                        {actionType === 'delete' ? 'Xác nhận ' : 'Xác nhận khôi phục'}
+                                    </h2>
+                                    <p className="mb-6">
+                                        {actionType === 'delete'
+                                            ? `Bạn có chắc chắn muốn khóa phim "${selectedMovieForAction.movieId}" không?`
+                                            : `Bạn có chắc chắn muốn khôi phục phim "${selectedMovieForAction.movieId}" không?`
+                                        }
+                                    </p>
+                                    <div className="flex justify-end gap-4">
+                                        <button
+                                            onClick={() => setConfirmModalOpen(false)}
+                                            className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={() => handleToggleDeleteStatus(selectedMovieForAction)}
+                                            className={`px-4 py-2 rounded-md text-white ${
+                                                actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+                                            }`}
+                                        >
+                                            {actionType === 'delete' ? 'Khóa' : 'Khôi phục'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {showAddModal && (
                             <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                                 <div
-                                    className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-screen overflow-y-auto">
+                                    ref ={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-screen overflow-y-auto">
                                     <h2 className="text-2xl font-semibold mb-4">Thêm Phim Mới</h2>
 
                                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -977,12 +1019,12 @@ export default function MovieManagement() {
                         )}
 
                         {/* Edit Modal - Add this to your component's return statement */}
-                        {showEditModal && (
+                        {showEditModal && selectedMovieForAction && (
                             <div
                                 className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                                 <div
-                                    className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-screen overflow-y-auto">
-                                    <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa Phim</h2>
+                                    ref={modalEditRef} className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-screen overflow-y-auto">
+                                    <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa Phim #{selectedMovieForAction.movieId}</h2>
 
                                     <form onSubmit={handleSubmit(handleEditSubmit)} className="space-y-4">
                                         <div className="mb-3">
@@ -1177,9 +1219,10 @@ export default function MovieManagement() {
                         {bulkDeleteModalOpen && (
                             <div
                                 className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                    <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
-                                    <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedMovie.length} phim đã chọn không?</p>
+                                <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                    <h2 className="text-lg font-semibold mb-4">Xác nhận Khóa hàng loạt</h2>
+                                    <p className="mb-6">Bạn có chắc chắn muốn khóa {selectedMovie.length} phim đã chọn
+                                        không?</p>
                                     <div className="flex justify-end gap-4">
                                         <button
                                             onClick={() => setBulkDeleteModalOpen(false)}
@@ -1191,7 +1234,7 @@ export default function MovieManagement() {
                                             onClick={confirmBulkDelete}
                                             className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
                                         >
-                                            Xóa
+                                            Khóa
                                         </button>
                                     </div>
                                 </div>
@@ -1201,9 +1244,10 @@ export default function MovieManagement() {
                         {bulkRestoreModalOpen && (
                             <div
                                 className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                <div ref={modalbulkReRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
                                     <h2 className="text-lg font-semibold mb-4">Xác nhận khôi phục hàng loạt</h2>
-                                    <p className="mb-6">Bạn có chắc chắn muốn khôi phục {selectedMovie.length} phim đã chọn không?</p>
+                                    <p className="mb-6">Bạn có chắc chắn muốn khôi phục {selectedMovie.length} phim đã
+                                        chọn không?</p>
                                     <div className="flex justify-end gap-4">
                                         <button
                                             onClick={() => setBulkRestoreModalOpen(false)}
@@ -1224,8 +1268,8 @@ export default function MovieManagement() {
 
 
                         {/* Pagination.jsx */}
-                        <div className="flex justify-center mt-6">
-                            <div className="flex items-center">
+                        <div className="flex flex-wrap justify-center mt-6 gap-1">
+                            <div className="flex flex-wrap justify-center items-center gap-1">
                                 {/* Nút về trang đầu tiên */}
                                 <button
                                     onClick={() => setCurrentPage(1)}

@@ -521,10 +521,10 @@ export default function ShowtimeManagement () {
             <div className="flex h-full">
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">QUẢN LÝ LỊCH CHIẾU</h1>
-                        <div className="flex items-center">
-                        <div className="relative mr-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+                        <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ LỊCH CHIẾU</h1>
+                        <div className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
+                        <div className="relative w-full md:w-64">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm lịch chiếu"
@@ -534,11 +534,11 @@ export default function ShowtimeManagement () {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <UserInfo/>
+                            <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
                     {/*Add Button */}
-                    <div className="flex justify-between mb-6">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                         <button
                             className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
                             onClick={() => setshowAddModal(true)}
@@ -584,6 +584,7 @@ export default function ShowtimeManagement () {
                                                onChange={handleSelectAllShowtime}
                                         />
                                     </th>
+                                    <th className="p-3 text-center">ID</th>
                                     <th className="p-3 text-center">Tên phim</th>
                                     <th className="p-3 text-center">Tên phòng</th>
                                     <th className="p-3 text-center">Ngày chiếu</th>
@@ -601,65 +602,69 @@ export default function ShowtimeManagement () {
                                     .map((Showtime) => {
                                         const isPast = isPastShowtime(Showtime.showDate);
                                         return (
-                                        <tr key={Showtime.showtimeId}
-                                            className={`border-b hover:bg-gray-50 ${isPast ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                            <td className="p-3">
-                                                <input
-                                                    type="checkbox"
-                                                    className="form-checkbox h-5 w-5"
-                                                    checked={selectedShowtime.includes(Showtime.showtimeId)}
-                                                    onChange={() => handleShowtimeSelect(Showtime.showtimeId)}
-                                                    disabled={isPast}
-                                                />
-                                            </td>
-                                            <td className="p-3 font-medium text-center">{Showtime.movie.name}</td>
-                                            <td className="p-3 text-center">{Showtime.room.name}</td>
-                                            <td className="p-3 text-center">{Showtime.showDate}</td>
-                                            <td className="p-3 text-center">{Showtime.startTime}</td>
-                                            <td className="p-3 text-center">{Showtime.endTime}</td>
-                                            <td className="p-3 text-center">
-                                                <button
-                                                    onClick={() => handleEditShowtime(Showtime)}
-                                                    className="text-gray-600 hover:text-gray-800"
-                                                    disabled={isPast}
-                                                >
-                                                    <span className="material-icons">edit</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleOpenDeleteModal(Showtime.showtimeId)}
-                                                    className="text-gray-600 hover:text-gray-800"
-                                                    disabled={isPast}
-                                                >
-                                                    <span className="material-icons">delete</span>
-                                                </button>
+                                            <tr key={Showtime.showtimeId}
+                                                className={`border-b hover:bg-gray-50 ${isPast ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                                <td className="p-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="form-checkbox h-5 w-5"
+                                                        checked={selectedShowtime.includes(Showtime.showtimeId)}
+                                                        onChange={() => handleShowtimeSelect(Showtime.showtimeId)}
+                                                        disabled={isPast}
+                                                    />
+                                                </td>
+                                                <td className="p-3 text-center">{Showtime.showtimeId}</td>
+                                                <td className="p-3 font-medium text-center">{Showtime.movie.name}</td>
+                                                <td className="p-3 text-center">{Showtime.room.name}</td>
+                                                <td className="p-3 text-center">{Showtime.showDate}</td>
+                                                <td className="p-3 text-center">{Showtime.startTime}</td>
+                                                <td className="p-3 text-center">{Showtime.endTime}</td>
+                                                <td className="p-3 text-center">
+                                                    <button
+                                                        onClick={() => handleEditShowtime(Showtime)}
+                                                        className="text-gray-600 hover:text-gray-800"
+                                                        disabled={isPast}
+                                                    >
+                                                        <span className="material-icons">edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenDeleteModal(Showtime.showtimeId)}
+                                                        className="text-gray-600 hover:text-gray-800"
+                                                        disabled={isPast}
+                                                    >
+                                                        <span className="material-icons">delete</span>
+                                                    </button>
 
-                                                {/* Modal xác nhận xóa */}
-                                                {isDeleteModalOpen && (
-                                                    <div className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                            <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
-                                                            <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này không?</p>
-                                                            <div className="flex justify-end gap-4">
-                                                                <button
-                                                                    onClick={handleCloseModal}
-                                                                    className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                                >
-                                                                    Hủy
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteShowtime(Showtime.showtimeId)}
-                                                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                                                                >
-                                                                    Xóa
-                                                                </button>
+                                                    {/* Modal xác nhận xóa */}
+                                                    {isDeleteModalOpen && (
+                                                        <div
+                                                            className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
+                                                            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                                                <h2 className="text-lg font-semibold mb-4">Xác nhận
+                                                                    xóa</h2>
+                                                                <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu
+                                                                    này không?</p>
+                                                                <div className="flex justify-end gap-4">
+                                                                    <button
+                                                                        onClick={handleCloseModal}
+                                                                        className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                                                    >
+                                                                        Hủy
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteShowtime(Showtime.showtimeId)}
+                                                                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                                                    >
+                                                                        Xóa
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
 
                                 </tbody>
                             </table>
@@ -836,7 +841,7 @@ export default function ShowtimeManagement () {
                     )}
 
                     {/* Pagination.jsx */}
-                    <div className="flex justify-center mt-6">
+                    <div className="flex flex-wrap justify-center mt-6 gap-1">
                         <div className="flex items-center">
                             {/* Nút về trang đầu tiên */}
                             <button

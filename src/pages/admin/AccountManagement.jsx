@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import {getUser, toggleDeleteUser, getListUser, getListEmployee} from "@/services/apiadmin.jsx";
+import {getUser, toggleDeleteUser, getListUser, getListEmployee,deactivateUser,restoreUser} from "@/services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import EditUserModal from "@/pages/admin/EditUserModal.jsx";
 import CreateAccountForEmployeeModal from "@/pages/admin/CreateAccountForEmployeeModal.jsx";
@@ -35,6 +35,37 @@ const AccountManagement = () => {
     const [bulkRestoreModalOpen, setBulkRestoreModalOpen] = useState(false);
 
     const [viewType, setViewType] = useState('user');
+
+    const modalConfirmRef = useRef();
+    const modalDetailRef = useRef();
+    const modalbulkDeRef = useRef();
+    const modalbulkReRef = useRef();
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Đóng Confirm Modal
+            if (isConfirmModalOpen && modalConfirmRef.current && !modalConfirmRef.current.contains(event.target)) {
+                setConfirmModalOpen(false);
+                setSelectedAccountForAction(null);
+            }
+            if (bulkDeleteModalOpen && modalbulkDeRef.current && !modalbulkDeRef.current.contains(event.target)) {
+                setBulkDeleteModalOpen(false);
+            }
+            if (bulkRestoreModalOpen && modalbulkReRef.current && !modalbulkReRef.current.contains(event.target)) {
+                setBulkRestoreModalOpen(false);
+            }
+
+            // Đóng Detail Modal (nếu cần)
+            if (showDetailModal && modalDetailRef.current && !modalDetailRef.current.contains(event.target)) {
+                setShowDetailModal(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isConfirmModalOpen, bulkDeleteModalOpen, showDetailModal,bulkRestoreModalOpen,isOpenAddEm]);
 
     const handleClick = () => {
         setIsOpenAddEm(true);
@@ -123,60 +154,112 @@ const AccountManagement = () => {
     };
 
     const handleDetailAccount = (account) => {
+        setSelectedAccountForAction(account);
         setDetailAccount(account);
         setShowDetailModal(true);
     };
 
+    // const handleToggleDeleteStatus = async (account) => {
+    //
+    //     if (!account) {
+    //         console.warn("Account is null or undefined");
+    //         return;
+    //     }
+    //
+    //     const newStatus = !account.isActive;
+    //
+    //     try {
+    //         // const newStatus = !account.isActive;
+    //         await toggleDeleteUser(account.userId, newStatus);
+    //
+    //         setAccount(prevAccounts =>
+    //             prevAccounts.map(m =>
+    //                 m.userId === account.userId ? {...m, isActive: newStatus} : m
+    //             )
+    //         );
+    //         setConfirmModalOpen(false);
+    //         setSelectedAccountForAction(null);
+    //         setToast({
+    //             account: true,
+    //             message: newStatus ? 'Đã khôi phục tài khoản!' : 'Đã khóa tài khoản!',
+    //             type: 'success'
+    //         });
+    //
+    //         setTimeout(() => {
+    //             setToast({account: false, message: '', type: 'success'});
+    //         }, 3000);
+    //     } catch (error) {
+    //
+    //         setToast({
+    //             account: true,
+    //             message: newStatus ? 'Khôi phục tài khoản thất bại!' : 'Khóa tài khoản thất bại!',
+    //             type: 'error'
+    //         });
+    //         setConfirmModalOpen(false);
+    //         console.error("Lỗi khi cập nhật trạng thái tài khoản:", error);
+    //
+    //         setTimeout(() => {
+    //             setToast({account: false, message: '', type: 'success'});
+    //         }, 3000);
+    //     }
+    // };
     const handleToggleDeleteStatus = async (account) => {
-
         if (!account) {
             console.warn("Account is null or undefined");
             return;
         }
 
-        const newStatus = !account.isActive;
+        const isCurrentlyActive = account.isActive;
 
         try {
-            // const newStatus = !account.isActive;
-            await toggleDeleteUser(account.userId, newStatus);
+            if (isCurrentlyActive) {
+                // Khóa tài khoản
+                await deactivateUser(account.userId);
+            } else {
+                // Khôi phục tài khoản
+                await restoreUser(account.userId);
+            }
 
+            // Cập nhật trạng thái trong danh sách
             setAccount(prevAccounts =>
                 prevAccounts.map(m =>
-                    m.userId === account.userId ? {...m, isActive: newStatus} : m
+                    m.userId === account.userId ? { ...m, isActive: !isCurrentlyActive } : m
                 )
             );
+
             setConfirmModalOpen(false);
             setSelectedAccountForAction(null);
             setToast({
                 account: true,
-                message: newStatus ? 'Đã khôi phục tài khoản!' : 'Đã khóa tài khoản!',
+                message: isCurrentlyActive ? 'Đã khóa tài khoản!' : 'Đã khôi phục tài khoản!',
                 type: 'success'
             });
 
             setTimeout(() => {
-                setToast({account: false, message: '', type: 'success'});
+                setToast({ account: false, message: '', type: 'success' });
             }, 3000);
         } catch (error) {
-
             setToast({
                 account: true,
-                message: newStatus ? 'Khôi phục tài khoản thất bại!' : 'Khóa tài khoản thất bại!',
+                message: isCurrentlyActive ? 'Khóa tài khoản thất bại!' : 'Khôi phục tài khoản thất bại!',
                 type: 'error'
             });
+
             setConfirmModalOpen(false);
             console.error("Lỗi khi cập nhật trạng thái tài khoản:", error);
 
             setTimeout(() => {
-                setToast({account: false, message: '', type: 'success'});
+                setToast({ account: false, message: '', type: 'success' });
             }, 3000);
         }
     };
+
 
     const handleBulkDelete = () => {
         if (selectedAccount.length === 0) {
             setToast({
                 account: true,
-                message: 'Vui lòng chọn ít nhất một tài khoản để xóa',
+                message: 'Vui lòng chọn ít nhất một tài khoản để óa',
                 type: 'error'
             });
             return;
@@ -191,7 +274,7 @@ const AccountManagement = () => {
         if (selectedAccount.length === 0) {
             setToast({
                 account: true,
-                message: 'Vui lòng chọn ít nhất một tài khoản để xóa',
+                message: 'Vui lòng chọn ít nhất một tài khoản để khóa',
                 type: 'error'
             });
             return;
@@ -232,12 +315,12 @@ const AccountManagement = () => {
                 setToast({ account: false, message: '', type: 'success' });
             }, 3000);
         } catch (error) {
-            console.error("Lỗi khi xóa nhiều tài khoản:", error);
+            console.error("Lỗi khi óa nhiều tài khoản:", error);
 
             setBulkDeleteModalOpen(false);
             setToast({
                 account: true,
-                message: 'Xóa tài khoản thất bại!',
+                message: ' tài khoản thất bại!',
                 type: 'error'
             });
 
@@ -361,16 +444,19 @@ const AccountManagement = () => {
             <div className="flex h-full">
                 {isOpenAddEm && (
                     <CreateAccountForEmployeeModal
+                        isOpen={isOpenAddEm}
                         onClose={() => setIsOpenAddEm(false)}
                     />
                 )}
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
-                        <div className="flex items-center">
-                            <div className="relative mr-4">
+                    <div
+                        className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+                        <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
+                        <div
+                            className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
+                            <div className="relative w-full md:w-64">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm tài khoản"
@@ -380,10 +466,11 @@ const AccountManagement = () => {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <UserInfo/>
+                            <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-4 justify-center mb-6">
+                    <div
+                        className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 justify-center mb-6">
                         <label className="flex items-center cursor-pointer">
                             <input
                                 type="radio"
@@ -427,22 +514,23 @@ const AccountManagement = () => {
                         </label>
                     </div>
 
-                    <div className="flex justify-between mb-6">
-                        {viewType === 'employee' ? (
-                            <button
-                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
-                                onClick={handleClick}
-                            >
-                                <span className="material-icons mr-1">add</span>
-                                Thêm nhân viên
-                            </button>
-                        ) : (
-                            <div className="px-4 py-2 invisible">Placeholder</div>
-                        )}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
+                        <div>
+                            {viewType === 'employee' ? (
+                                <button
+                                    className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto"
+                                    onClick={handleClick}>
+                                    <span className="material-icons mr-1">add</span>
+                                    Thêm nhân viên
+                                </button>
+                            ) : (
+                                <div className="px-4 py-2 invisible">Placeholder</div>
+                            )}
+                        </div>
 
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:space-x-2 sm:gap-0 w-full sm:w-auto">
                             <button
-                                className={`${selectedAccount.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                                className={`${selectedAccount.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto`}
                                 onClick={handleBulkDelete}
                                 disabled={selectedAccount.length === 0}
                             >
@@ -451,7 +539,7 @@ const AccountManagement = () => {
                             </button>
 
                             <button
-                                className={`${selectedAccount.length > 0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                                className={`${selectedAccount.length > 0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto`}
                                 onClick={handleBulkRestore}
                                 disabled={selectedAccount.length === 0}
                             >
@@ -482,6 +570,7 @@ const AccountManagement = () => {
                                                onChange={handleSelectAll}
                                         />
                                     </th>
+                                    <th className="p-3 text-left">ID</th>
                                     <th className="p-3 text-left">Tên tài khoản</th>
                                     <th className="p-3 text-left">Họ tên</th>
                                     <th className="p-3 text-left">Email</th>
@@ -499,6 +588,7 @@ const AccountManagement = () => {
                                                    onChange={() => handleSelect(account.userId)}
                                             />
                                         </td>
+                                        <td className="p-3 text-left">{account.userId}</td>
                                         <td className="p-3 font-medium text-left">
                                             {account.username}
                                             {!account.isActive &&
@@ -531,158 +621,6 @@ const AccountManagement = () => {
                                                     <span className="material-icons">restore_from_trash</span>
                                                 </button>
                                             )}
-
-                                            {/* Modal Xác Nhận Xóa/Khôi phục */}
-                                            {isConfirmModalOpen && (
-                                                <div
-                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                        <h2 className="text-lg font-semibold mb-4">
-                                                            {actionType === 'delete' ? 'Xác nhận xóa' : 'Xác nhận khôi phục'}
-                                                        </h2>
-                                                        <p className="mb-6">
-                                                            {actionType === 'delete'
-                                                                ? 'Bạn có chắc chắn muốn khóa tài khoản này không?'
-                                                                : 'Bạn có chắc chắn muốn khôi phục tài khoản này không?'
-                                                            }
-                                                        </p>
-                                                        <div className="flex justify-end gap-4">
-                                                            <button
-                                                                onClick={() => setConfirmModalOpen(false)}
-                                                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                            >
-                                                                Hủy
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleToggleDeleteStatus(account)}
-                                                                className={`px-4 py-2 rounded-md text-white ${
-                                                                    actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-                                                                }`}
-                                                            >
-                                                                {actionType === 'delete' ? 'Khóa' : 'Khôi phục'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {showDetailModal && (
-                                                <div
-                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                    <div
-                                                        className="p-6 max-w-2xl w-full bg-white rounded-lg shadow-lg w-96">
-                                                        <h2 className="text-2xl font-semibold text-black-600 mb-6">Chi
-                                                            tiết tài khoản</h2>
-
-                                                        <form className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Họ
-                                                                    và tên</label>
-                                                                <input value={account.fullName || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Tên
-                                                                    đăng nhập</label>
-                                                                <input value={account.username || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Email</label>
-                                                                <input value={account.email || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Số
-                                                                    điện thoại</label>
-                                                                <input value={account.phone || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Giới
-                                                                    tính</label>
-                                                                <input value={account.gender || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Ngày
-                                                                    sinh</label>
-                                                                <input value={account.birthday || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-
-                                                            {/*<div>*/}
-                                                            {/*    <label className="block text-sm font-medium text-gray-600">Vai trò</label>*/}
-                                                            {/*    <input value={account.role || ""} disabled*/}
-                                                            {/*           className="w-full p-2 border rounded-md bg-gray-100"/>*/}
-                                                            {/*</div>*/}
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Trạng
-                                                                    thái</label>
-                                                                <input
-                                                                    value={account.isActive ? "Hoạt động" : "Không hoạt động"}
-                                                                    disabled
-                                                                    className="w-full p-2 border rounded-md bg-gray-100"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Ngày
-                                                                    tạo</label>
-                                                                <input value={account.createdAt || ""} disabled
-                                                                       className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                            <div className="md:col-span-2">
-                                                                <label
-                                                                    className="block text-sm font-medium text-gray-600">Địa
-                                                                    chỉ</label>
-                                                                <textarea value={account.address || ""} disabled
-                                                                          className="w-full p-2 border rounded-md bg-gray-100"/>
-                                                            </div>
-                                                        </form>
-
-                                                        <div className="flex gap-2 justify-end">
-                                                            <button
-                                                                onClick={() => setShowDetailModal(false)}
-                                                                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
-                                                            >
-                                                                Hủy
-                                                            </button>
-
-                                                            {account.isActive ? (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setShowDetailModal(false);
-                                                                        handleOpenConfirmModal(account, 'delete')
-                                                                    }}
-                                                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                                                                    title="Khóa tài khoản"
-                                                                >
-                                                                    Khóa
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setShowDetailModal(false);
-                                                                        handleOpenConfirmModal(account, 'restore')
-                                                                    }}
-                                                                    className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
-                                                                    title="Khôi phục tài khoản"
-                                                                >
-                                                                    Khôi phục
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -691,13 +629,165 @@ const AccountManagement = () => {
                         </div>
                     )}
 
+                    {isConfirmModalOpen && selectedAccountForAction && (
+                        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                            <div ref={modalConfirmRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                <h2 className="text-lg font-semibold mb-4">
+                                    {actionType === 'delete' ? 'Xác nhận khóa' : 'Xác nhận khôi phục'}
+                                </h2>
+                                <p className="mb-6">
+                                    {actionType === 'delete'
+                                        ? `Bạn có chắc chắn muốn khóa tài khoản "${selectedAccountForAction.userId}" không?`
+                                        : `Bạn có chắc chắn muốn khôi phục tài khoản "${selectedAccountForAction.userId}" không?`}
+                                </p>
+                                <div className="flex justify-end gap-4">
+                                    <button
+                                        onClick={() => setConfirmModalOpen(false)}
+                                        className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={() => handleToggleDeleteStatus(selectedAccountForAction)}
+                                        className={`px-4 py-2 rounded-md text-white ${
+                                            actionType === 'delete'
+                                                ? 'bg-red-600 hover:bg-red-700'
+                                                : 'bg-green-600 hover:bg-green-700'
+                                        }`}
+                                    >
+                                        {actionType === 'delete' ? 'Khóa' : 'Khôi phục'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showDetailModal && selectedAccountForAction &&(
+                        <div
+                            className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                            <div
+                                ref={modalDetailRef} className="p-6 max-w-2xl w-full bg-white rounded-lg shadow-lg w-96">
+                                <h2 className="text-2xl font-semibold text-black-600 mb-6">Chi
+                                    tiết tài khoản #{selectedAccountForAction.userId}</h2>
+
+                                <form className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Họ
+                                            và tên</label>
+                                        <input value={selectedAccountForAction.fullName || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Tên
+                                            đăng nhập</label>
+                                        <input value={selectedAccountForAction.username || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Email</label>
+                                        <input value={selectedAccountForAction.email || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Số
+                                            điện thoại</label>
+                                        <input value={selectedAccountForAction.phone || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Giới
+                                            tính</label>
+                                        <input value={selectedAccountForAction.gender || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Ngày
+                                            sinh</label>
+                                        <input value={selectedAccountForAction.birthday || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+
+                                    {/*<div>*/}
+                                    {/*    <label className="block text-sm font-medium text-gray-600">Vai trò</label>*/}
+                                    {/*    <input value={account.role || ""} disabled*/}
+                                    {/*           className="w-full p-2 border rounded-md bg-gray-100"/>*/}
+                                    {/*</div>*/}
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Trạng
+                                            thái</label>
+                                        <input
+                                            value={selectedAccountForAction.isActive ? "Hoạt động" : "Không hoạt động"}
+                                            disabled
+                                            className="w-full p-2 border rounded-md bg-gray-100"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Ngày
+                                            tạo</label>
+                                        <input value={selectedAccountForAction.createdAt || ""} disabled
+                                               className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label
+                                            className="block text-sm font-medium text-gray-600">Địa
+                                            chỉ</label>
+                                        <textarea value={selectedAccountForAction.address || ""} disabled
+                                                  className="w-full p-2 border rounded-md bg-gray-100"/>
+                                    </div>
+                                </form>
+
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        onClick={() => setShowDetailModal(false)}
+                                        className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                                    >
+                                        Hủy
+                                    </button>
+
+                                    {selectedAccountForAction.isActive ? (
+                                        <button
+                                            onClick={() => {
+                                                setShowDetailModal(false);
+                                                handleOpenConfirmModal(selectedAccountForAction, 'delete')
+                                            }}
+                                            className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                            title="Khóa tài khoản"
+                                        >
+                                            Khóa
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                setShowDetailModal(false);
+                                                handleOpenConfirmModal(selectedAccountForAction, 'restore')
+                                            }}
+                                            className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
+                                            title="Khôi phục tài khoản"
+                                        >
+                                            Khôi phục
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+
                     {/* Bulk Delete Confirmation Modal */}
                     {bulkDeleteModalOpen && (
                         <div
                             className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
-                                <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedAccount.length} tài khoản đã chọn
+                            <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                <h2 className="text-lg font-semibold mb-4">Xác nhận khóa hàng loạt</h2>
+                                <p className="mb-6">Bạn có chắc chắn muốn khóa {selectedAccount.length} tài khoản đã chọn
                                     không?</p>
                                 <div className="flex justify-end gap-4">
                                     <button
@@ -710,7 +800,7 @@ const AccountManagement = () => {
                                         onClick={confirmBulkDelete}
                                         className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
                                     >
-                                        Xóa
+                                        Khóa
                                     </button>
                                 </div>
                             </div>
@@ -720,7 +810,7 @@ const AccountManagement = () => {
                     {bulkRestoreModalOpen && (
                         <div
                             className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                            <div ref={modalbulkReRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận khôi phục hàng loạt</h2>
                                 <p className="mb-6">Bạn có chắc chắn muốn khôi phục {selectedAccount.length} tài khoản
                                     đã chọn không?</p>
@@ -744,8 +834,8 @@ const AccountManagement = () => {
 
 
                     {/* Pagination.jsx */}
-                    <div className="flex justify-center mt-6">
-                        <div className="flex items-center">
+                    <div className="flex flex-wrap justify-center mt-6 gap-1">
+                        <div className="flex flex-wrap justify-center items-center gap-1">
                             {/* Nút về trang đầu tiên */}
                             <button
                                 onClick={() => setCurrentPage(1)}

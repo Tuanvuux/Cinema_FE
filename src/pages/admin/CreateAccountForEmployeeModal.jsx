@@ -1,13 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef  } from "react";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { addEmployee } from "@/services/apiadmin.jsx";
 import Button from "@/components/ui/button.jsx";
 
-export default function CreateAccountForEmployeeModal({ onClose }) {
+export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
+    const modalRef = useRef();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+                onClose(); // Đóng modal
+            }
+        };
 
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isOpen]);
 
     const ToastNotification = ({ message, type, show }) => {
         if (!show) return null;
@@ -103,7 +115,7 @@ export default function CreateAccountForEmployeeModal({ onClose }) {
             />
 
             <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
+                <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                     <div className="p-4 border-b relative">
                         {/* Nút đóng modal */}
                         <button

@@ -17,6 +17,7 @@
     "chart.js": "^4.4.9",
     "chartjs-plugin-datalabels": "^2.2.0",
     "date-fns": "^4.1.0",
+    "downloadjs": "^1.4.7",
     "framer-motion": "^12.5.0",
     "html-to-image": "^1.11.13",
     "jwt-decode": "^4.0.0",

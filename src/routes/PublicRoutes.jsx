@@ -6,6 +6,7 @@ import LoginPage from "../pages/public/LoginPage";
 import RegisterPage from "../pages/public/RegisterPage";
 import ShowTimePage from "../pages/public/ShowtimePage";
 import UploadImageOnly from "@/pages/admin/UploadImageOnly.jsx";
+import ExportToPNG from "@/pages/admin/ExportToPNG.jsx";
 
 const PublicRoutes = () => {
   return (
@@ -16,6 +17,7 @@ const PublicRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
         <Route path="/addimage" element={<UploadImageOnly />} />
+        <Route path="/loadPNG" element={<ExportToPNG />} />
       <Route path="/showtime/:movieId?" element={<ShowTimePage />} />
     </Routes>
   );
