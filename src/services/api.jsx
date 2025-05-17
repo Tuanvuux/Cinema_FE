@@ -77,3 +77,14 @@ export const getLockedSeat = async (showtimeId) => {
   const response = await api.get(`/locked/${showtimeId}`);
   return response.data;
 };
+export const getUserInfo = async (userId) => {
+  const response = await api.get("user/userInfo", {
+    params: { userId },
+  });
+  return response.data;
+};
+
+export const updateUserInfo = async (userId, data) => {
+  const response = await api.put(`/user/userInfo/${userId}`, data);
+  return response.data;
+};
