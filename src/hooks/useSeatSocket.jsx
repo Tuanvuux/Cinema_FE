@@ -6,8 +6,8 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
   const stompClientRef = useRef(null);
 
   useEffect(() => {
-    // const socket = new SockJS("http://localhost:8080/ws");
-    const socket = new SockJS("https://cinema-be-yaoa.onrender.com/ws");
+    const socket = new SockJS("http://localhost:8080/ws");
+    // const socket = new SockJS("https://cinema-be-yaoa.onrender.com/ws");
 
     const stompClient = Stomp.over(socket);
     stompClient.debug = null;
