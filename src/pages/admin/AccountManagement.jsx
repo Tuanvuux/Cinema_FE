@@ -367,10 +367,12 @@ const AccountManagement = () => {
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
-                        <div className="flex items-center">
-                            <div className="relative mr-4">
+                    <div
+                        className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+                        <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ TÀI KHOẢN</h1>
+                        <div
+                            className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
+                            <div className="relative w-full md:w-64">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm tài khoản"
@@ -380,10 +382,11 @@ const AccountManagement = () => {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <UserInfo/>
+                            <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-4 justify-center mb-6">
+                    <div
+                        className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 justify-center mb-6">
                         <label className="flex items-center cursor-pointer">
                             <input
                                 type="radio"
@@ -427,22 +430,23 @@ const AccountManagement = () => {
                         </label>
                     </div>
 
-                    <div className="flex justify-between mb-6">
-                        {viewType === 'employee' ? (
-                            <button
-                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
-                                onClick={handleClick}
-                            >
-                                <span className="material-icons mr-1">add</span>
-                                Thêm nhân viên
-                            </button>
-                        ) : (
-                            <div className="px-4 py-2 invisible">Placeholder</div>
-                        )}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
+                        <div>
+                            {viewType === 'employee' ? (
+                                <button
+                                    className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto"
+                                    onClick={handleClick}>
+                                    <span className="material-icons mr-1">add</span>
+                                    Thêm nhân viên
+                                </button>
+                            ) : (
+                                <div className="px-4 py-2 invisible">Placeholder</div>
+                            )}
+                        </div>
 
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:space-x-2 sm:gap-0 w-full sm:w-auto">
                             <button
-                                className={`${selectedAccount.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                                className={`${selectedAccount.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto`}
                                 onClick={handleBulkDelete}
                                 disabled={selectedAccount.length === 0}
                             >
@@ -451,7 +455,7 @@ const AccountManagement = () => {
                             </button>
 
                             <button
-                                className={`${selectedAccount.length > 0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                                className={`${selectedAccount.length > 0 ? 'bg-green-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto`}
                                 onClick={handleBulkRestore}
                                 disabled={selectedAccount.length === 0}
                             >
@@ -744,8 +748,8 @@ const AccountManagement = () => {
 
 
                     {/* Pagination.jsx */}
-                    <div className="flex justify-center mt-6">
-                        <div className="flex items-center">
+                    <div className="flex flex-wrap justify-center mt-6 gap-1">
+                        <div className="flex flex-wrap justify-center items-center gap-1">
                             {/* Nút về trang đầu tiên */}
                             <button
                                 onClick={() => setCurrentPage(1)}
