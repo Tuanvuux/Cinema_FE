@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 
@@ -32,6 +32,33 @@ export default function RoomManagement () {
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedRoomIds] = useState([]);
+
+    const modalEditRef = useRef();
+    const modalbulkDeRef = useRef();
+    const modalAddRef = useRef();
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Đóng Confirm Modal
+            if (bulkDeleteModalOpen && modalbulkDeRef.current && !modalbulkDeRef.current.contains(event.target)) {
+                setBulkDeleteModalOpen(false);
+            }
+
+            if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
+                setShowEditModal(false);
+            }
+
+            if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                setShowAddModal(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [bulkDeleteModalOpen, showEditModal,showAddModal]);
+
 
     const handleOpenDeleteModal = (showtimeId) => {
         setSelectedRoomId(showtimeId);
@@ -661,7 +688,7 @@ export default function RoomManagement () {
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteModalOpen && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-96 mx-4">
+                    <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-96 mx-4">
                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                         <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu đã chọn
                             không?</p>
@@ -686,7 +713,7 @@ export default function RoomManagement () {
             {/* Edit Modal */}
             {showEditModal && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <div ref={modalEditRef} className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold">Chỉnh sửa phòng chiếu</h2>
@@ -849,7 +876,7 @@ export default function RoomManagement () {
             {/* Add Room Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <div ref={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold">Thêm phòng chiếu mới</h2>

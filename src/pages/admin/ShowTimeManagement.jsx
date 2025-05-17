@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getShowtimes,deleteShowtime,getRooms,addShowtime, updateShowtime,getAvailableRooms } from "../../services/apiadmin.jsx";
 import {getMovies } from "../../services/api.jsx";
 import {Link} from "react-router-dom";
@@ -34,18 +34,49 @@ export default function ShowtimeManagement () {
     const [showEditModal,setshowEditModal] = useState(false);
     const [showAddModal, setshowAddModal] = useState(false);
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [selectedShowTimeForAction, setSelectedShowTimeForAction] = useState(null);
+
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedShowtimeIds] = useState([]);
 
+    const modalConfirmRef = useRef();
+    const modalEditRef = useRef();
+    const modalbulkDeRef = useRef();
+    const modalAddRef = useRef();
+
     useEffect(() => {
-        document.title = 'Quản lý lịch chiếu';
-    }, []);
+        const handleClickOutside = (event) => {
+            // Đóng Confirm Modal
+            if (isDeleteModalOpen && modalConfirmRef.current && !modalConfirmRef.current.contains(event.target)) {
+                setDeleteModalOpen(false);
+                setSelectedShowTimeForAction(null);
+            }
+            if (bulkDeleteModalOpen && modalbulkDeRef.current && !modalbulkDeRef.current.contains(event.target)) {
+                setBulkDeleteModalOpen(false);
+            }
+
+            if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
+                setshowEditModal(false);
+                handleCancel();
+            }
+
+            if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                setshowAddModal(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isDeleteModalOpen, bulkDeleteModalOpen, showEditModal,showAddModal]);
 
     useEffect(() => {
         getMovies().then(setMovies);
         getRooms().then(setRooms);
         getShowtimes().then(setShowtime);
+        document.title = 'Quản lý lịch chiếu';
     }, []);
 
     // useEffect(() => {
@@ -62,6 +93,14 @@ export default function ShowtimeManagement () {
         return showDateObj < today.setHours(0, 0, 0, 0); // So sánh chỉ theo ngày, bỏ giờ
     };
 
+    const handleCancel = () => {
+        setSelectedMovie("");
+        setShowDate("");
+        setStartTime("");
+        setEndTime("");
+        setSelectedRoom("");
+        setshowAddModal(false);
+    };
 
     const fetchAvailableRooms = async (date, start, end) => {
         if (!date || !start || !end) return;
@@ -467,9 +506,10 @@ export default function ShowtimeManagement () {
     };
 
 
-    const handleOpenDeleteModal = (showtimeId) => {
-        setSelectedShowtimeId(showtimeId);
+    const handleOpenDeleteModal = (showtime) => {
+        setSelectedShowtimeId(showtime.showtimeId);
         setDeleteModalOpen(true);
+        setSelectedShowTimeForAction(showtime);
     };
 
     // Đóng Modal
@@ -477,7 +517,6 @@ export default function ShowtimeManagement () {
         setDeleteModalOpen(false);
         setSelectedShowtimeId(null);
     };
-
 
     const handleDeleteShowtime = async (showtimeId) => {
         try {
@@ -628,39 +667,12 @@ export default function ShowtimeManagement () {
                                                         <span className="material-icons">edit</span>
                                                     </button>
                                                     <button
-                                                        onClick={() => handleOpenDeleteModal(Showtime.showtimeId)}
+                                                        onClick={() => handleOpenDeleteModal(Showtime)}
                                                         className="text-gray-600 hover:text-gray-800"
                                                         disabled={isPast}
                                                     >
                                                         <span className="material-icons">delete</span>
                                                     </button>
-
-                                                    {/* Modal xác nhận xóa */}
-                                                    {isDeleteModalOpen && (
-                                                        <div
-                                                            className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                                <h2 className="text-lg font-semibold mb-4">Xác nhận
-                                                                    xóa</h2>
-                                                                <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu
-                                                                    này không?</p>
-                                                                <div className="flex justify-end gap-4">
-                                                                    <button
-                                                                        onClick={handleCloseModal}
-                                                                        className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                                    >
-                                                                        Hủy
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleDeleteShowtime(Showtime.showtimeId)}
-                                                                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                                                                    >
-                                                                        Xóa
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -671,10 +683,36 @@ export default function ShowtimeManagement () {
                         </div>
                     )}
 
+                    {/* Modal xác nhận xóa */}
+                    {isDeleteModalOpen && selectedShowTimeForAction && (
+                        <div
+                            className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                            <div ref={modalConfirmRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                                <h2 className="text-lg font-semibold mb-4">Xác nhận
+                                    xóa</h2>
+                                <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu {selectedShowTimeForAction.showtimeId} không?</p>
+                                <div className="flex justify-end gap-4">
+                                    <button
+                                        onClick={handleCloseModal}
+                                        className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteShowtime(selectedShowTimeForAction.showtimeId)}
+                                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Bulk Delete Confirmation Modal */}
                     {bulkDeleteModalOpen && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                            <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                                 <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedShowtime.length} lịch chiếu đã chọn không?</p>
                                 <div className="flex justify-end gap-4">
@@ -697,7 +735,7 @@ export default function ShowtimeManagement () {
 
                     {showAddModal && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                            <div ref={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                                 <h2 className="text-2xl font-semibold mb-4">Thêm lịch chiếu</h2>
                                 <label className="block mb-2">Tên phim</label>
                                 <select
@@ -747,7 +785,7 @@ export default function ShowtimeManagement () {
                                             className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">Thêm
                                         lịch
                                     </button>
-                                    <button onClick={() => setshowAddModal(false)}
+                                    <button onClick={handleCancel}
                                             className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100">Hủy
                                     </button>
                                 </div>
@@ -757,7 +795,7 @@ export default function ShowtimeManagement () {
 
                     {showEditModal && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                            <div ref={modalEditRef} className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                                 <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa lịch chiếu</h2>
                                 <label className="block mb-2">Tên phim</label>
                                 <select

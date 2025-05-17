@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
     getSeats,
     addSeat,
@@ -42,13 +42,51 @@ export default function SeatManagement () {
     const [editSeatInfo, setEditSeatInfo] = useState({ id: '', name: '', price: 0});
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedSeatId, setSelectedSeatId] = useState(null);
+    const [selectedSeatForAction, setSelectedSeatForAction] = useState(null);
+
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedSeatIds] = useState([]);
 
-    const handleOpenDeleteModal = (seatId) => {
-        setSelectedSeatId(seatId);
+    const modalConfirmRef = useRef();
+    const modalEditRef = useRef();
+    const modalbulkDeRef = useRef();
+    const modalEditPriceRef = useRef();
+    const modalAddRef = useRef();
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Đóng Confirm Modal
+            if (isDeleteModalOpen && modalConfirmRef.current && !modalConfirmRef.current.contains(event.target)) {
+                setDeleteModalOpen(false);
+                setSelectedSeatForAction(null);
+            }
+            if (bulkDeleteModalOpen && modalbulkDeRef.current && !modalbulkDeRef.current.contains(event.target)) {
+                setBulkDeleteModalOpen(false);
+            }
+            if (showEditPriceModal && modalEditPriceRef.current && !modalEditPriceRef.current.contains(event.target)) {
+                setShowEditPriceModal(false);
+            }
+
+            if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
+                setShowEditModal(false);
+            }
+
+            if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                setShowAddModal(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isDeleteModalOpen, bulkDeleteModalOpen, showEditModal,showEditPriceModal,showAddModal]);
+
+    const handleOpenDeleteModal = (seat) => {
+        setSelectedSeatId(seat.seatId);
         setDeleteModalOpen(true);
+        setSelectedSeatForAction(seat)
     };
 
     // Đóng Modal
@@ -675,36 +713,12 @@ export default function SeatManagement () {
                                                 <span className="material-icons">edit</span>
                                             </button>
                                             <button
-                                                onClick={() => handleOpenDeleteModal(Seat.seatId)}
+                                                onClick={() => handleOpenDeleteModal(Seat)}
                                                 className="text-gray-600 hover:text-gray-800"
                                             >
                                                 <span className="material-icons">delete</span>
                                             </button>
 
-                                            {isDeleteModalOpen && (
-                                                <div
-                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                        <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
-                                                        <p className="mb-6">Bạn có chắc chắn muốn xóa ghế này
-                                                            không?</p>
-                                                        <div className="flex justify-end gap-4">
-                                                            <button
-                                                                onClick={handleCloseModal}
-                                                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                            >
-                                                                Hủy
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteSeat(Seat.seatId)}
-                                                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                                                            >
-                                                                Xóa
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -803,10 +817,34 @@ export default function SeatManagement () {
                 </div>
             </div>
 
+            {isDeleteModalOpen && selectedSeatForAction &&(
+                <div
+                    className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                    <div ref={modalConfirmRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
+                        <p className="mb-6">Bạn có chắc chắn muốn xóa ghế {selectedSeatForAction.seatId} không?</p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={handleCloseModal}
+                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={() => handleDeleteSeat(selectedSeatForAction.seatId)}
+                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                            >
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteModalOpen && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                    <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
                         <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedSeats.length} ghế đã chọn
                             không?</p>
@@ -830,7 +868,7 @@ export default function SeatManagement () {
 
             {showEditModal && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
+                    <div ref={modalEditRef} className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Chỉnh sửa phòng chiếu</h2>
                             <button
@@ -1043,7 +1081,7 @@ export default function SeatManagement () {
             {/* Add Seat Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
+                    <div ref={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Thêm ghế mới</h2>
                             <button
@@ -1151,7 +1189,7 @@ export default function SeatManagement () {
 
             {showEditPriceModal && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-lg max-w-xl p-6">
+                    <div ref={modalEditPriceRef} className="bg-white rounded-lg shadow-lg max-w-xl p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Sửa giá ghế</h2>
                             <button
