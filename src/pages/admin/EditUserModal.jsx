@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import { getUserByUsername, updateUserAdmin } from "@/services/apiadmin.jsx";
 
-const EditUserModal = ({ userInfo, onClose }) => {
+const EditUserModal = ({ isOpen, userInfo, onClose }) => {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -18,6 +18,20 @@ const EditUserModal = ({ userInfo, onClose }) => {
         phone: "",
         gender: "",
     });
+    const modalRef = useRef();
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+                onClose(); // Đóng modal
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         // Use the userInfo from JWT for initial form data
@@ -155,7 +169,7 @@ const EditUserModal = ({ userInfo, onClose }) => {
                 show={toast.show}
             />
 
-            <div className="bg-white rounded-lg w-full max-w-md shadow-md relative max-h-screen flex flex-col">
+            <div ref={modalRef} className="bg-white rounded-lg w-full max-w-md shadow-md relative max-h-screen flex flex-col">
                 <div className="p-4 border-b">
                     <h2 className="text-xl font-bold text-center">Chỉnh sửa thông tin</h2>
                 </div>

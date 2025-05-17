@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState, useRef, useEffect} from "react";
 import EditUserModal from "@/pages/admin/EditUserModal.jsx";
 
 // Hàm parse token
@@ -23,6 +23,7 @@ const UserInfo = () => {
     const token = localStorage.getItem("token");
     const userInfo = token ? parseJwt(token) : null;
 
+
     const handleClick = () => {
         setIsOpen(true);
     };
@@ -38,6 +39,7 @@ const UserInfo = () => {
 
             {isOpen && (
                 <EditUserModal
+                    isOpen = {isOpen}
                     userInfo={userInfo}
                     onClose={() => setIsOpen(false)}
                 />

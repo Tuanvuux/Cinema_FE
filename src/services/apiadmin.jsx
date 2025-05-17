@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  // baseURL: "http://localhost:8080",
-  baseURL: "https://cinema-be-yaoa.onrender.com",
+  baseURL: "http://localhost:8080",
+  // baseURL: "https://cinema-be-yaoa.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },
@@ -44,6 +44,18 @@ export const toggleDeleteStatus = async (movieId, isDelete) => {
     const response = await api.put(`/movies/admin/${movieId}/toggle-delete`, {
         isDelete: isDelete,
     });
+    return response.data;
+};
+
+// Deactivate (tạm khóa) tài khoản người dùng
+export const deactivateUser = async (userId) => {
+    const response = await api.put(`/accounts/admin/${userId}/delete`);
+    return response.data;
+};
+
+// Restore (kích hoạt lại) tài khoản người dùng
+export const restoreUser = async (userId) => {
+    const response = await api.put(`/accounts/admin/${userId}/restore`);
     return response.data;
 };
 

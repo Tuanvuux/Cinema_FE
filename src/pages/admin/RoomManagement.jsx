@@ -484,6 +484,7 @@ export default function RoomManagement () {
                                             onChange={handleSelectAllRooms}
                                         />
                                     </th>
+                                    <th className="p-2 md:p-3 text-center">ID</th>
                                     <th className="p-2 md:p-3 text-center">Tên phòng</th>
                                     <th className="p-2 md:p-3 text-center hidden sm:table-cell">Sức chứa</th>
                                     <th className="p-2 md:p-3 text-center hidden sm:table-cell">Số cột</th>
@@ -503,6 +504,7 @@ export default function RoomManagement () {
                                                 onChange={() => handleRoomSelect(room.id)}
                                             />
                                         </td>
+                                        <td className="p-2 md:p-3 font-medium text-center">{room.id}</td>
                                         <td className="p-2 md:p-3 font-medium text-center">{room.name}</td>
                                         <td className="p-2 md:p-3 text-center hidden sm:table-cell">{room.seatCount}</td>
                                         <td className="p-2 md:p-3 text-center hidden sm:table-cell">{room.numberOfColumns}</td>

@@ -632,6 +632,7 @@ export default function SeatManagement () {
                                                onChange={handleSelectAllSeats}
                                         />
                                     </th>
+                                    <th className="p-3 text-center">ID</th>
                                     <th className="p-3 text-center">Tên ghế</th>
                                     <th className="p-3 text-center">Phòng</th>
                                     <th className="p-3 text-center">Tên hàng ghế</th>
@@ -650,6 +651,7 @@ export default function SeatManagement () {
                                                    onChange={() => handleSeatSelect(Seat.seatId)}
                                             />
                                         </td>
+                                        <td className="p-3 text-center">{Seat.seatId}</td>
                                         <td className="p-3 font-medium text-center">{Seat.seatName}</td>
                                         <td className="p-3 text-center">{Seat.roomName || 'N/A'}</td>
                                         <td className="p-3 text-center">{Seat.rowLabel}</td>
@@ -680,7 +682,8 @@ export default function SeatManagement () {
                                             </button>
 
                                             {isDeleteModalOpen && (
-                                                <div className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
+                                                <div
+                                                    className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
                                                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                                                         <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
                                                         <p className="mb-6">Bạn có chắc chắn muốn xóa ghế này
