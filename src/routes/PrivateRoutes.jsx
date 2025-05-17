@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectPrivateRoute from "./ProtectPrivateRoute.jsx";
-import SeatSelectionPage from "../pages/public/SeatSelectionPage";
-import PaymentPage from "../pages/public/PaymentPage";
-
+import SeatSelectionPage from "../pages/private/SeatSelectionPage.jsx";
+import PaymentPage from "../pages/private/PaymentPage.jsx";
+import UserInfoPage from "../pages/private/UserInfoPage.jsx";
 const PrivateRoutes = () => {
   return (
     <Routes>
@@ -19,6 +19,14 @@ const PrivateRoutes = () => {
         element={
           <ProtectPrivateRoute>
             <PaymentPage />
+          </ProtectPrivateRoute>
+        }
+      />
+      <Route
+        path="userInfo"
+        element={
+          <ProtectPrivateRoute>
+            <UserInfoPage />
           </ProtectPrivateRoute>
         }
       />

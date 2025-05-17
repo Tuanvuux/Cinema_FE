@@ -61,7 +61,7 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center text-gray-900">
               <Link
-                to="/userInfor"
+                to="/user/userInfo"
                 className="hover:text-yellow-400 font-semibold mx-1"
               >
                 {user.fullName}
