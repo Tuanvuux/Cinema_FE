@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShowtime } from "../contexts/ShowtimeContext";
 import { getRoomById, getBookedSeat, getLockedSeat } from "../services/api";
@@ -6,7 +12,7 @@ import { getShowtimeById } from "../utils/showtimeUtils";
 import useSeatSocket from "../hooks/useSeatSocket";
 import MovieInfo from "./MovieInfo";
 import SeatLegend from "./SeatLegend";
-
+import { toast } from "react-toastify";
 const SeatSelection = () => {
   const [seatMatrix, setSeatMatrix] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,22 +27,67 @@ const SeatSelection = () => {
   const isProcessingRef = useRef(false);
   const [bookedSeatIds, setBookedSeatIds] = useState([]);
 
-  const handleSeatUpdate = (seatStatus) => {
-    setSeatMatrix((prevMatrix) =>
-      prevMatrix.map((row) =>
-        row.map((seat) =>
-          seat && seat.seatId === seatStatus.seatId
-            ? {
+  const handleSeatUpdate = useCallback(
+    (seatStatus) => {
+      console.log("Received seat update", seatStatus);
+
+      setSeatMatrix((prevMatrix) =>
+        prevMatrix.map((row) =>
+          row.map((seat) => {
+            if (seat && seat.seatId === seatStatus.seatId) {
+              const isNowAvailable = seatStatus.status === "AVAILABLE";
+
+              return {
                 ...seat,
-                status: seatStatus.status, // Cập nhật trạng thái ghế
-                isLocked: seatStatus.isLocked ?? seat.isLocked,
-                isLockedByMe: seatStatus.userId === userId, // Cập nhật trạng thái "đang chọn"
-              }
-            : seat
+                status: seatStatus.status,
+                isLocked: !isNowAvailable,
+                isLockedByMe:
+                  seatStatus.userId === userId &&
+                  seatStatus.status === "SELECTED",
+              };
+            }
+            return seat;
+          })
         )
-      )
-    );
-  };
+      );
+
+      console.log("1", seatStatus.status === "AVAILABLE");
+      console.log("2", selectedSeats.includes(seatStatus.seatId));
+
+      if (
+        seatStatus.status === "AVAILABLE" &&
+        selectedSeats.includes(seatStatus.seatId)
+      ) {
+        console.log(
+          "Seat expired and was selected, removing from selectedSeats:",
+          seatStatus.seatId
+        );
+        toast.info(`Ghế ${seatStatus.seatId} đã bị hủy do hết thời gian giữ.`);
+
+        setSelectedSeats((prev) => {
+          const newSelected = prev.filter((id) => id !== seatStatus.seatId);
+          console.log("New selectedSeats:", newSelected);
+          return newSelected;
+        });
+
+        const seat = seatMatrix
+          .flat()
+          .find((s) => s.seatId === seatStatus.seatId);
+
+        if (seat) {
+          setTotalPrice((prev) => {
+            console.log(
+              "Subtracting price for seat",
+              seat.seatId,
+              seat.seatInfo.price
+            );
+            return prev - seat.seatInfo.price;
+          });
+        }
+      }
+    },
+    [selectedSeats, userId, seatMatrix]
+  );
 
   const { sendSeatAction } = useSeatSocket(showtimeId, handleSeatUpdate);
 
@@ -117,13 +168,23 @@ const SeatSelection = () => {
     fetchSeats();
   }, [roomId, showtimeId]);
 
+  const updateTotalPrice = (newSelectedSeats) => {
+    const newTotal = seatMatrix
+      .flat()
+      .filter((seat) => seat && newSelectedSeats.includes(seat.seatId))
+      .reduce((sum, seat) => sum + seat.seatInfo.price, 0);
+    setTotalPrice(newTotal);
+  };
+
   const handleSelectSeat = async (seatId, seatName) => {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
 
     try {
       if (!selectedSeats.includes(seatId)) {
-        setSelectedSeats((prev) => [...prev, seatId]);
+        const newSelectedSeats = [...selectedSeats, seatId];
+        setSelectedSeats(newSelectedSeats);
+        updateTotalPrice(newSelectedSeats);
       }
       sendSeatAction(seatId, "SELECT", userId);
 
@@ -136,11 +197,6 @@ const SeatSelection = () => {
           )
         )
       );
-
-      const seat = seatMatrix.flat().find((seat) => seat.seatId === seatId);
-      if (seat) {
-        setTotalPrice((prevTotal) => prevTotal + seat.seatInfo.price);
-      }
     } finally {
       setTimeout(() => {
         isProcessingRef.current = false;
@@ -149,23 +205,30 @@ const SeatSelection = () => {
   };
 
   const handleReleaseSeat = (seatId, seatName) => {
-    setSelectedSeats((prev) => prev.filter((id) => id !== seatId));
+    setSelectedSeats((prevSelected) => {
+      const newSelectedSeats = prevSelected.filter((id) => id !== seatId);
+
+      updateTotalPrice(newSelectedSeats);
+
+      return newSelectedSeats;
+    });
+
     sendSeatAction(seatId, "AVAILABLE", userId);
 
     setSeatMatrix((prevMatrix) =>
       prevMatrix.map((row) =>
         row.map((seat) =>
           seat && seat.seatId === seatId
-            ? { ...seat, status: "AVAILABLE" }
+            ? {
+                ...seat,
+                status: "AVAILABLE",
+                isLocked: false,
+                isLockedByMe: false,
+              }
             : seat
         )
       )
     );
-
-    const seat = seatMatrix.flat().find((seat) => seat.seatId === seatId);
-    if (seat) {
-      setTotalPrice((prevTotal) => prevTotal - seat.seatInfo.price);
-    }
   };
 
   const handlePayment = () => {
@@ -205,7 +268,7 @@ const SeatSelection = () => {
                           ? "bg-black text-white cursor-not-allowed"
                           : seat.isLocked && !seat.isLockedByMe
                           ? "bg-gray-300 text-white cursor-not-allowed"
-                          : seat.status === "SELECTED"
+                          : seat.isLockedByMe
                           ? "bg-blue-900 text-white"
                           : "bg-white hover:bg-blue-900"
                       } ${
@@ -222,7 +285,7 @@ const SeatSelection = () => {
                       onClick={() => {
                         if (seat.status === "AVAILABLE") {
                           handleSelectSeat(seat.seatId, seat.seatName);
-                        } else if (seat.status === "SELECTED") {
+                        } else if (seat.isLockedByMe) {
                           handleReleaseSeat(seat.seatId, seat.seatName);
                         }
                       }}

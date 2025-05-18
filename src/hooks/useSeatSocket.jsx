@@ -7,10 +7,10 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
 
   useEffect(() => {
     const client = new Client({
-      // webSocketFactory: () => new SockJS("http://localhost:8080/ws"), // hoặc URL render
+      // webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       webSocketFactory: () =>
         new SockJS("https://cinema-be-yaoa.onrender.com/ws"),
-      debug: () => {}, // Tắt debug
+      debug: () => {},
       reconnectDelay: 5000,
       onConnect: () => {
         console.log("🟢 WebSocket connected");
@@ -38,7 +38,7 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
         });
       }
     };
-  }, [showtimeId]);
+  }, [showtimeId, onSeatUpdate]); // <-- thêm onSeatUpdate vào đây
 
   const sendSeatAction = (seatId, action, userId) => {
     if (stompClientRef.current && stompClientRef.current.connected) {
