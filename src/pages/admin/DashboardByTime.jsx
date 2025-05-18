@@ -8,6 +8,10 @@ import {Chart as ChartJS, CategoryScale,LinearScale, BarElement, Title, Tooltip,
 import { getPayments, getPaymentsByDateRange, getPaymentDetails } from "@/services/apiadmin.jsx";
 import PaymentDetailsModal from "@/pages/admin/PaymentDetailsModal.jsx";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from 'xlsx';
+import { Download, FileText, FileSpreadsheet } from 'lucide-react';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement,ChartDataLabels);
@@ -139,6 +143,107 @@ export default function DashBoardByTime() {
     const closeModal = () => {
         setIsModalOpen(false);
         setSelectedPayment(null);
+    };
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+
+        doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+        doc.setFont('Roboto');
+
+        doc.setFontSize(16);
+        doc.text("Báo cáo Doanh Thu", 14, 22);
+
+        const tableColumn = [
+            "ID",
+            "Ten phim",
+            "Ngay giao dich",
+            "Ghe",
+            "Lich chieu",
+            "So ve",
+            "Doanh thu",
+            "Phuong thuc",
+        ];
+
+        const tableRows = filteredPayments.map(payment => [
+            payment.paymentId,
+            payment.movieName || "N/A",
+            new Date(payment.dateTransaction).toLocaleString("vi-VN"),
+            payment.seatNames || "N/A",
+            payment.scheduleId || "N/A",
+            payment.sumTicket,
+            formatCurrency(payment.sumPrice),
+            payment.methodPayment,
+        ]);
+
+        // Tính tổng
+        const totalTransactions = filteredPayments.length;
+        const totalTickets = filteredPayments.reduce((sum, p) => sum + p.sumTicket, 0);
+        const totalRevenue = filteredPayments.reduce((sum, p) => sum + p.sumPrice, 0);
+
+        // Thêm dòng tổng vào cuối bảng
+        tableRows.push([
+            "", "", "", "", "",
+            totalTickets,
+            formatCurrency(totalRevenue),
+            "TỔNG CỘNG"
+        ]);
+
+        // Cấu hình autoTable với font Unicode
+        autoTable(doc, {
+            startY: 30,
+            head: [tableColumn],
+            body: tableRows,
+            styles: {
+                fontSize: 10,
+                font: 'Roboto' // Sử dụng font đã được thêm vào
+            },
+            // Xử lý các ký tự đặc biệt trong tiếng Việt
+            didDrawCell: (data) => {
+                // Có thể thêm xử lý đặc biệt ở đây nếu cần
+            }
+        });
+
+        // Thêm ghi chú cuối
+        doc.setFontSize(12);
+        doc.text(`Tổng giao dịch: ${totalTransactions}`, 14, doc.lastAutoTable.finalY + 10);
+        doc.save("bao_cao_doanh_thu.pdf");
+    };
+    const handleExportExcel = () => {
+        const worksheetData = filteredPayments.map(payment => ({
+            "ID": payment.paymentId,
+            "Tên phim": payment.movieName || "N/A",
+            "Ngày giao dịch": new Date(payment.dateTransaction).toLocaleString("vi-VN"),
+            "Ghế": payment.seatNames || "N/A",
+            "Lịch chiếu": payment.scheduleId || "N/A",
+            "Số vé": payment.sumTicket,
+            "Doanh thu (VND)": payment.sumPrice,
+            "Phương thức thanh toán": payment.methodPayment,
+            "Tổng kết": "", // Cột để hiển thị dòng tổng sau này
+        }));
+
+        // Tính tổng
+        const totalTransactions = filteredPayments.length;
+        const totalTickets = filteredPayments.reduce((sum, p) => sum + p.sumTicket, 0);
+        const totalRevenue = filteredPayments.reduce((sum, p) => sum + p.sumPrice, 0);
+
+        // Thêm dòng tổng kết
+        worksheetData.push({
+            "ID": "",
+            "Tên phim": "",
+            "Ngày giao dịch": "",
+            "Ghế": "",
+            "Lịch chiếu": "",
+            "Số vé": totalTickets,
+            "Doanh thu (VND)": totalRevenue,
+            "Phương thức thanh toán": "",
+            "Tổng kết": `TỔNG CỘNG (${totalTransactions} giao dịch)`
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Báo cáo doanh thu");
+
+        XLSX.writeFile(workbook, "bao_cao_doanh_thu.xlsx");
     };
 
     // Filter and pagination logic
@@ -431,16 +536,16 @@ export default function DashBoardByTime() {
                 />
             )}
 
-            <div className="flex h-full">
+            <div className="flex flex-col md:flex-row h-full">
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">BÁO CÁO DOANH THU THEO THỜI GIAN</h1>
-                        <div className="flex items-center">
-                            <div className="relative mr-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+                        <h1 className="text-xl md:text-2xl font-bold">BÁO CÁO DOANH THU THEO THỜI GIAN</h1>
+                        <div className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
+                            <div className="relative w-full md:w-64">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm giao dịch"
-                                    className="border rounded-md py-2 px-4 pl-10 w-64"
+                                    className="border rounded-md py-2 px-4 pl-10 w-full sm:w-64"
                                     value={searchTerm}
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
@@ -449,11 +554,11 @@ export default function DashBoardByTime() {
                                 />
                                 <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
                             </div>
-                            <UserInfo/>
+                            <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-4 justify-center mb-6">
+                    <div className="flex flex-wrap items-center space-x-4 justify-center mb-6">
                         <label className="flex items-center cursor-pointer">
                             <input
                                 type="radio"
@@ -490,7 +595,7 @@ export default function DashBoardByTime() {
                     </div>
 
                     {viewType === 'table' ? (
-                        <div className="flex items-center space-x-6 mb-6 justify-center">
+                        <div className="flex flex-wrap items-center space-x-6 mb-6 justify-center flex-wrap">
                             <DatePicker
                                 selected={startDate}
                                 onChange={setStartDate}
@@ -510,10 +615,28 @@ export default function DashBoardByTime() {
                             >
                                 Tìm kiếm
                             </button>
+                            <div className="flex gap-4 ml-auto flex-wrap">
+                                <button
+                                    onClick={handleExportPDF}
+                                    className="flex items-center bg-red-600 text-white px-3 py-2 rounded shadow hover:bg-red-700 transition min-w-[120px] justify-center"
+                                >
+                                    <FileText className="w-5 h-5 mr-2"/>
+                                    Xuất PDF
+                                </button>
+                                <button
+                                    onClick={handleExportExcel}
+                                    className="flex items-center bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition min-w-[120px] justify-center"
+                                >
+                                    <FileSpreadsheet className="w-5 h-5 mr-2"/>
+                                    Xuất Excel
+                                </button>
+                            </div>
                         </div>
+
+
                     ) : (
-                        <div className="flex items-center space-x-6 mb-6 justify-center flex-wrap">
-                            <div className="flex items-center space-x-2">
+                        <div className="flex flex-wrap items-center space-x-6 mb-6 justify-center flex-wrap">
+                            <div className="w-full sm:w-auto flex items-center space-x-2">
                                 <span>Nhóm theo:</span>
                                 <select
                                     className="p-2 border border-gray-300 rounded"
@@ -612,7 +735,7 @@ export default function DashBoardByTime() {
                         <div className="text-center py-10 text-red-500">{error}</div>
                     ) : viewType === 'table' ? (
                         <>
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto max-w-full">
                                 <table className="min-w-full bg-white border">
                                     <thead>
                                     <tr className="bg-gray-100 border-b">
@@ -660,8 +783,8 @@ export default function DashBoardByTime() {
 
                             {/* Pagination */}
                             <div className="flex justify-center mt-6">
-                                <nav>
-                                    <ul className="flex items-center">
+                                <nav className="w-full overflow-x-auto">
+                                    <ul className="flex justify-center md:justify-center flex-wrap md:flex-nowrap">
                                         <li>
                                             <button
                                                 onClick={() => paginate(Math.max(1, currentPage - 1))}
@@ -705,7 +828,7 @@ export default function DashBoardByTime() {
                             {/* Summary */}
                             <div className="mt-6 bg-gray-100 p-4 rounded-lg">
                                 <h2 className="text-lg font-bold mb-2">Tổng kết:</h2>
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="bg-white p-4 rounded shadow">
                                         <h3 className="text-gray-500 text-sm">Tổng số giao dịch</h3>
                                         <p className="text-2xl font-bold">{filteredPayments.length}</p>
@@ -728,7 +851,7 @@ export default function DashBoardByTime() {
                     ) : (
                         <div className="mt-6 p-4 bg-white rounded-lg shadow-md overflow-hidden">
                             <h2 className="text-xl font-bold mb-4">Biểu đồ doanh thu</h2>
-                            <div className="w-full h-96 flex justify-center items-center">
+                            <div className="w-full max-w-screen-md h-96 mx-auto flex justify-center items-center">
                                 {chartType === 'pie' ? (
                                     <Pie data={prepareChartDataPie()} options={chartOptions}/>
                                 ) : (
