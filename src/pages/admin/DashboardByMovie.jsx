@@ -57,6 +57,7 @@ const DashboardByMovie = () => {
     // Load data on component mount and when date range changes
     useEffect(() => {
         fetchReports();
+        document.title = 'Báo cáo doanh thu theo phim';
     }, []); // Empty dependency array to run only on mount
 
     const handleGenerateReport = () => {
@@ -85,13 +86,14 @@ const DashboardByMovie = () => {
 
     return (
         <div className="container mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold mb-6">BÁO CÁO DOANH THU THEO PHIM</h1>
-                <UserInfo/>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+                <h1 className="text-xl md:text-2xl font-bold">BÁO CÁO DOANH THU THEO PHIM</h1>
+                <UserInfo className="w-full md:w-auto"/>
             </div>
 
             <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex gap-4 mb-6">
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                    {/* Từ ngày */}
                     <div className="flex-1">
                         <label className="block text-gray-700 text-sm font-bold mb-2">
                             Từ ngày
@@ -103,6 +105,8 @@ const DashboardByMovie = () => {
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         />
                     </div>
+
+                    {/* Đến ngày */}
                     <div className="flex-1">
                         <label className="block text-gray-700 text-sm font-bold mb-2">
                             Đến ngày
@@ -114,16 +118,19 @@ const DashboardByMovie = () => {
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         />
                     </div>
-                    <div className="flex items-end">
+
+                    {/* Nút xem báo cáo */}
+                    <div className="flex md:items-end w-full md:w-auto">
                         <button
                             onClick={handleGenerateReport}
                             disabled={loading}
-                            className={`${loading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
+                            className={`w-full md:w-auto ${loading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
                         >
                             {loading ? 'Đang tải...' : 'Xem báo cáo'}
                         </button>
                     </div>
                 </div>
+
 
                 <div className="mb-8">
                     <h2 className="text-xl font-bold mb-4">Top phim doanh thu cao nhất</h2>
@@ -132,15 +139,15 @@ const DashboardByMovie = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={revenueData}
-                                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    margin={{top: 20, right: 30, left: 20, bottom: 60}}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <CartesianGrid strokeDasharray="3 3"/>
                                     <XAxis
                                         dataKey="name"
                                         angle={-45}
                                         textAnchor="end"
                                         height={70}
-                                        tick={{ fontSize: 12 }}
+                                        tick={{fontSize: 12}}
                                     />
                                     <YAxis
                                         tickFormatter={(value) => value >= 1000000
