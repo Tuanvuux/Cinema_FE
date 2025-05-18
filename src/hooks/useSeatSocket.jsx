@@ -1,38 +1,44 @@
 import { useEffect, useRef } from "react";
+import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import Stomp from "stompjs";
 
 export default function useSeatSocket(showtimeId, onSeatUpdate) {
   const stompClientRef = useRef(null);
 
   useEffect(() => {
-    // const socket = new SockJS("http://localhost:8080/ws");
-    const socket = new SockJS("https://cinema-be-yaoa.onrender.com/ws");
+    const client = new Client({
+      // webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () =>
+        new SockJS("https://cinema-be-yaoa.onrender.com/ws"),
+      debug: () => {},
+      reconnectDelay: 5000,
+      onConnect: () => {
+        console.log("🟢 WebSocket connected");
+        stompClientRef.current = client;
 
-    const stompClient = Stomp.over(socket);
-    stompClient.debug = null;
-
-    stompClient.connect({}, () => {
-      console.log("🟢 WebSocket connected");
-      stompClientRef.current = stompClient;
-
-      stompClient.subscribe(`/topic/seats/${showtimeId}`, (message) => {
-        const seatStatus = JSON.parse(message.body);
-        console.log("📥 Nhận được cập nhật ghế:", seatStatus);
-        if (onSeatUpdate) {
-          onSeatUpdate(seatStatus); // Cập nhật UI
-        }
-      });
+        client.subscribe(`/topic/seats/${showtimeId}`, (message) => {
+          const seatStatus = JSON.parse(message.body);
+          console.log("📥 Nhận được cập nhật ghế:", seatStatus);
+          if (onSeatUpdate) {
+            onSeatUpdate(seatStatus);
+          }
+        });
+      },
+      onStompError: (frame) => {
+        console.error("STOMP error", frame);
+      },
     });
+
+    client.activate();
 
     return () => {
       if (stompClientRef.current) {
-        stompClientRef.current.disconnect(() => {
+        stompClientRef.current.deactivate().then(() => {
           console.log("🔴 WebSocket disconnected");
         });
       }
     };
-  }, [showtimeId]);
+  }, [showtimeId, onSeatUpdate]); // <-- thêm onSeatUpdate vào đây
 
   const sendSeatAction = (seatId, action, userId) => {
     if (stompClientRef.current && stompClientRef.current.connected) {
@@ -43,11 +49,11 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
         userId: userId,
       };
 
-      stompClientRef.current.send(
-        "/app/seat/" + (action === "SELECT" ? "select" : "release"),
-        {},
-        JSON.stringify(message)
-      );
+      stompClientRef.current.publish({
+        destination: `/app/seat/${action === "SELECT" ? "select" : "release"}`,
+        body: JSON.stringify(message),
+      });
+
       console.log("📤 Gửi dữ liệu:", message);
     } else {
       console.warn("⚠️ WebSocket chưa sẵn sàng.");
