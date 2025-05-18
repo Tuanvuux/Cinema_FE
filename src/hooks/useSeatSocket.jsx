@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import SockJS from "sockjs-client";
-import Stomp from "stompjs";
+import * as Stomp from "@stomp/stompjs";
 
 export default function useSeatSocket(showtimeId, onSeatUpdate) {
   const stompClientRef = useRef(null);
