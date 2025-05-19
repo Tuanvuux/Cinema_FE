@@ -1,9 +1,31 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useShowtime } from "../contexts/ShowtimeContext";
+import { getShowtimeById } from "../utils/showtimeUtils";
 
 const Payment = () => {
-  const [paymentMethod, setPaymentMethod] = useState("metiz");
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const handlePaymentChange = () => {
+  const { seats = [], totalPrice = 0, showtimeId } = location.state || {};
+
+  const { loading, showtimes } = useShowtime();
+
+  const [paymentMethod, setPaymentMethod] = useState("metiz");
+  console.log("showtimes", showtimes);
+  const showtime = useMemo(() => {
+    return getShowtimeById(showtimeId, showtimes);
+  }, [showtimeId, showtimes]);
+  const movieName =
+    showtime?.movie?.title || showtime?.movie?.name || "Không xác định";
+  const date = showtime?.showDate || "??/??/????";
+  const time = showtime
+    ? `${showtime.startTime} - ${showtime.endTime}`
+    : "??:?? - ??:??";
+  const seatNames = seats.map((seat) => seat.seatName).join(", ");
+  const ticketCount = seats.length;
+
+  const handlePaymentChange = (event) => {
     setPaymentMethod(event.target.value);
   };
 
@@ -52,33 +74,39 @@ const Payment = () => {
 
       {/* Thông tin thanh toán */}
       <div className="mt-6 border p-4 rounded-md">
-        <h3 className="text-xl font-semibold">Nội Dung Thanh Toán</h3>
+        <h3 className="text-xl font-semibold mb-2">Nội Dung Thanh Toán</h3>
         <p>
-          <strong>Phim:</strong> (longTieng) Sát Thủ Vô Cùng Cừ
+          <strong>Phim:</strong> {movieName}
         </p>
         <p>
-          <strong>Ngày:</strong> 17/03/2025
+          <strong>Ngày:</strong> {date}
         </p>
         <p>
-          <strong>Thời gian:</strong> 09:30 - 11:17
+          <strong>Thời gian:</strong> {time}
         </p>
         <p>
-          <strong>Ghế:</strong> I08
+          <strong>Ghế:</strong> {seatNames}
         </p>
         <p>
-          <strong>Số vé:</strong> 1
+          <strong>Số vé:</strong> {ticketCount}
         </p>
         <p>
-          <strong>Tổng tiền:</strong> 45.000 VNĐ
+          <strong>Tổng tiền:</strong> {totalPrice.toLocaleString()} VNĐ
         </p>
       </div>
 
       {/* Nút tiếp tục */}
       <div className="mt-6 flex justify-center">
-        <button className=" text-gray-900 px-6 py-2 rounded-full border-1 border-gray-900 hover:bg-gray-900 hover:text-white mr-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-900 px-6 py-2 rounded-full border border-gray-900 hover:bg-gray-900 hover:text-white mr-2"
+        >
           QUAY LẠI
         </button>
-        <button className="text-gray-900 px-6 py-2 rounded-full border-1 border-gray-900 hover:bg-gray-900 hover:text-white ml-2">
+        <button
+          onClick={() => alert("Xử lý thanh toán sau")}
+          className="text-gray-900 px-6 py-2 rounded-full border border-gray-900 hover:bg-gray-900 hover:text-white ml-2"
+        >
           TIẾP TỤC
         </button>
       </div>

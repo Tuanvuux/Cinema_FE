@@ -7,7 +7,7 @@ const ProtectPrivateRoute = ({ children }) => {
 
   if (loading) return <div>Loading...</div>;
 
-  if (!user || (user.role !== "ADMIN" && user.role !== "USER")) {
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
