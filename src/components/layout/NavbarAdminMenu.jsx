@@ -53,8 +53,8 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
 
         if (item.hasSubmenu) {
             setExpandedItem(expandedItem === item.key ? null : item.key);
-            if (item.key === 'dashboard') {
-                onNavigate('dashboard');
+            if (['dashboard', 'seatmanagement'].includes(item.key)) {
+                onNavigate(item.key);
             }
         } else {
             onNavigate(item.key);

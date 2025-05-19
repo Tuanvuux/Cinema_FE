@@ -86,10 +86,10 @@ export default function MovieManagement() {
 
             if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
                 setShowEditModal(false);
-                handleCancel();
             }
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                handleCancel();
                 setShowAddModal(false);
             }
         };

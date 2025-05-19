@@ -16,6 +16,16 @@ export default function RoomManagement () {
         numberOfColumns: 0,
         numberOfRows: 0
     });
+
+    const resetAddModalState = () =>{
+        setNewRoom({
+            name: '',
+            seatCount: 0,
+            status: 'ACTIVE',
+            numberOfColumns: 0,
+            numberOfRows: 0
+        });
+    }
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
@@ -49,6 +59,7 @@ export default function RoomManagement () {
             }
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                resetAddModalState();
                 setShowAddModal(false);
             }
         };
@@ -69,6 +80,11 @@ export default function RoomManagement () {
     const handleCloseModal = () => {
         setDeleteModalOpen(false);
         setSelectedRoomId(null);
+    };
+
+    const handleCancel = () => {
+        resetAddModalState();
+        setShowAddModal(false);
     };
 
     const handleDeleteRoom = async (roomId) => {
@@ -1006,7 +1022,7 @@ export default function RoomManagement () {
 
                             <div className="flex justify-end mt-6 gap-3">
                                 <button
-                                    onClick={() => setShowAddModal(false)}
+                                    onClick={handleCancel}
                                     className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
                                 >
                                     Hủy
