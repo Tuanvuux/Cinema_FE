@@ -27,6 +27,17 @@ export default function SeatManagement () {
         status: 'AVAILABLE',
         seatInfoId: ''
     });
+
+    const resetAddModalState = () => {
+        setNewSeat({
+            seatName: '',
+            roomId: '',
+            rowLabel:'',
+            columnNumber: 0,
+            status: 'AVAILABLE',
+            seatInfoId: seatInfo.length > 0 ? seatInfo[0].id : ''
+        });
+    };
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
@@ -46,9 +57,9 @@ export default function SeatManagement () {
 
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
-    const [selectedShowtimeIds, setSelectedSeatIds] = useState([]);
+    const [selectedSeatIds, setSelectedSeatIds] = useState([]);
 
-    const modalConfirmRef = useRef();
+    const modalConfirmRef = useRef()
     const modalEditRef = useRef();
     const modalbulkDeRef = useRef();
     const modalEditPriceRef = useRef();
@@ -73,6 +84,7 @@ export default function SeatManagement () {
             }
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
+                resetAddModalState();
                 setShowAddModal(false);
             }
         };
@@ -328,7 +340,6 @@ export default function SeatManagement () {
         type: 'success'
     });
 
-
     useEffect(() => {
         const fetchSeats = async () => {
             try {
@@ -370,8 +381,6 @@ export default function SeatManagement () {
 
         fetchSeats();
     }, []);
-
-
     // Handle adding a new Seat
     const handleAddSeat = async () => {
         try {
@@ -433,6 +442,11 @@ export default function SeatManagement () {
                 setToast({ show: false, message: '', type: '' });
             }, 3000);
         }
+    };
+
+    const handleCancel = () => {
+        resetAddModalState();
+        setShowAddModal(false);
     };
 
     // Toast Notification Component
@@ -1171,7 +1185,7 @@ export default function SeatManagement () {
 
                         <div className="flex justify-end mt-6 gap-3">
                             <button
-                                onClick={() => setShowAddModal(false)}
+                                onClick={handleCancel}
                                 className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
                             >
                                 Hủy

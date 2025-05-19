@@ -79,14 +79,6 @@ export default function ShowtimeManagement () {
         document.title = 'Quản lý lịch chiếu';
     }, []);
 
-    // useEffect(() => {
-    //     if (editingShowtime.showDate    && editingShowtime.startTime && editingShowtime.endTime) {
-    //         getAvailableRooms(editingShowtime.showDate, editingShowtime.startTime, editingShowtime.endTime).then(setRooms);
-    //     }
-    //     else{
-    //         getRooms().then(setRooms);
-    //     }
-    // }, [editingShowtime.showDate, editingShowtime.startTime, editingShowtime.endTime]);
     const isPastShowtime = (showDate) => {
         const today = new Date();
         const showDateObj = new Date(showDate);
@@ -101,18 +93,6 @@ export default function ShowtimeManagement () {
         setSelectedRoom("");
         setshowAddModal(false);
     };
-
-    const fetchAvailableRooms = async (date, start, end) => {
-        if (!date || !start || !end) return;
-
-        try {
-            const res = await getAvailableRooms(date, start, end);
-            setRooms(res); // gán danh sách phòng trống
-        } catch (err) {
-            console.error("Lỗi khi lấy phòng trống:", err);
-        }
-    };
-
 
     const handleEditShowtime = (showtime) => {
         setEditingShowtime({

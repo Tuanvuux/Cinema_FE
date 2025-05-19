@@ -18,7 +18,15 @@ const navItems = [
     { key: 'showtimemanagement', icon: 'calendar_month', label: 'Lịch chiếu' },
     { key: 'moviemanagement', icon: 'movie', label: 'Phim' },
     { key: 'accountmanagement', icon: 'account_circle', label: 'Tài khoản' },
-    { key: 'seatmanagement', icon: 'event_seat', label: 'Ghế ngồi' },
+    {
+        key: 'seatmanagement',
+        icon: 'event_seat',
+        label: 'Ghế ngồi',
+        hasSubmenu: true,
+        submenu: [
+            { key: 'seat-lock',icon: 'lock',label: 'Khóa ghế theo suất' }
+        ]
+    },
     // { key: '#', icon: 'confirmation_number', label: 'Quản lý vé đặt' },
 ];
 
@@ -45,8 +53,8 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
 
         if (item.hasSubmenu) {
             setExpandedItem(expandedItem === item.key ? null : item.key);
-            if (item.key === 'dashboard') {
-                onNavigate('dashboard');
+            if (['dashboard', 'seatmanagement'].includes(item.key)) {
+                onNavigate(item.key);
             }
         } else {
             onNavigate(item.key);
