@@ -4,6 +4,12 @@ import SockJS from "sockjs-client";
 
 export default function useSeatSocket(showtimeId, onSeatUpdate) {
   const stompClientRef = useRef(null);
+  const onSeatUpdateRef = useRef(onSeatUpdate);
+
+  // Luôn cập nhật ref nếu onSeatUpdate thay đổi
+  useEffect(() => {
+    onSeatUpdateRef.current = onSeatUpdate;
+  }, [onSeatUpdate]);
 
   useEffect(() => {
     const client = new Client({
@@ -19,8 +25,8 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
         client.subscribe(`/topic/seats/${showtimeId}`, (message) => {
           const seatStatus = JSON.parse(message.body);
           console.log("📥 Nhận được cập nhật ghế:", seatStatus);
-          if (onSeatUpdate) {
-            onSeatUpdate(seatStatus);
+          if (onSeatUpdateRef.current) {
+            onSeatUpdateRef.current(seatStatus); // dùng ref, tránh tạo lại hàm
           }
         });
       },
@@ -38,7 +44,7 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
         });
       }
     };
-  }, [showtimeId, onSeatUpdate]); // <-- thêm onSeatUpdate vào đây
+  }, [showtimeId]); // ✅ chỉ phụ thuộc showtimeId
 
   const sendSeatAction = (seatId, action, userId) => {
     if (stompClientRef.current && stompClientRef.current.connected) {

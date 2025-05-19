@@ -29,8 +29,6 @@ const SeatSelection = () => {
 
   const handleSeatUpdate = useCallback(
     (seatStatus) => {
-      console.log("Received seat update", seatStatus);
-
       setSeatMatrix((prevMatrix) =>
         prevMatrix.map((row) =>
           row.map((seat) => {
@@ -51,38 +49,24 @@ const SeatSelection = () => {
         )
       );
 
-      console.log("1", seatStatus.status === "AVAILABLE");
-      console.log("2", selectedSeats.includes(seatStatus.seatId));
-
       if (
         seatStatus.status === "AVAILABLE" &&
         selectedSeats.includes(seatStatus.seatId)
       ) {
-        console.log(
-          "Seat expired and was selected, removing from selectedSeats:",
-          seatStatus.seatId
-        );
-        toast.info(`Ghế ${seatStatus.seatId} đã bị hủy do hết thời gian giữ.`);
-
-        setSelectedSeats((prev) => {
-          const newSelected = prev.filter((id) => id !== seatStatus.seatId);
-          console.log("New selectedSeats:", newSelected);
-          return newSelected;
+        toast.dismiss(`seat-${seatStatus.seatId}`); // xóa toast cũ nếu có
+        toast.info(`Ghế ${seatStatus.seatId} đã bị hủy do hết thời gian giữ.`, {
+          toastId: `seat-${seatStatus.seatId}`, // mỗi ghế có ID riêng, tránh hiển thị trùng
         });
+
+        setSelectedSeats((prev) =>
+          prev.filter((id) => id !== seatStatus.seatId)
+        );
 
         const seat = seatMatrix
           .flat()
           .find((s) => s.seatId === seatStatus.seatId);
-
         if (seat) {
-          setTotalPrice((prev) => {
-            console.log(
-              "Subtracting price for seat",
-              seat.seatId,
-              seat.seatInfo.price
-            );
-            return prev - seat.seatInfo.price;
-          });
+          setTotalPrice((prev) => prev - seat.seatInfo.price);
         }
       }
     },
@@ -103,6 +87,17 @@ const SeatSelection = () => {
       roomIdRef.current = roomId;
     }
   }, [roomId]);
+  useEffect(() => {
+    if (!isLoading && seatMatrix.length > 0) {
+      const lockedByMeSeats = seatMatrix
+        .flat()
+        .filter((seat) => seat && seat.isLockedByMe)
+        .map((seat) => seat.seatId);
+
+      setSelectedSeats(lockedByMeSeats);
+      updateTotalPrice(lockedByMeSeats);
+    }
+  }, [isLoading, seatMatrix]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -232,7 +227,17 @@ const SeatSelection = () => {
   };
 
   const handlePayment = () => {
-    navigate("/user/payment");
+    const selectedSeatObjects = seatMatrix
+      .flat()
+      .filter((seat) => seat && selectedSeats.includes(seat.seatId));
+
+    navigate("/user/payment", {
+      state: {
+        seats: selectedSeatObjects,
+        totalPrice,
+        showtimeId,
+      },
+    });
   };
 
   if (loading || isLoading) {
