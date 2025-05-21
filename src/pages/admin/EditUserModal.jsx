@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import { getUserByUsername, updateUserAdmin } from "@/services/apiadmin.jsx";
+import {AlertCircle, CheckCircle, X} from "lucide-react";
 
 const EditUserModal = ({ isOpen, userInfo, onClose }) => {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -18,6 +19,8 @@ const EditUserModal = ({ isOpen, userInfo, onClose }) => {
         gender: "",
     });
     const modalRef = useRef();
+
+    const [toast, setToast] = useState([]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -72,13 +75,48 @@ const EditUserModal = ({ isOpen, userInfo, onClose }) => {
         setForm(prevForm => ({ ...prevForm, [name]: value }));
     };
 
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
 
-    const ToastNotification = ({ message, type, show }) => {
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
         if (!show) return null;
 
         const typeStyles = {
@@ -88,40 +126,37 @@ const EditUserModal = ({ isOpen, userInfo, onClose }) => {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-6 py-3 text-white rounded-md shadow-lg transition-all duration-300 ${typeStyles[type]}`}
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
-                    opacity: show ? 1 : 0
+                    opacity: show ? 1 : 0,
+                    transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
                 <div className="flex items-center">
-                    {type === 'success' ? (
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    ) : (
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    )}
-                    {message}
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
                 </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
         );
     };
 
-    const showToast = (message, type = 'success') => {
-        setToast({ show: true, message, type });
-        setTimeout(() => setToast({ show: false, message: '', type }), 3000);
-    };
-
     const handleSubmit = () => {
         if (form.password && form.password !== form.confirmPassword) {
-            showToast("Mật khẩu mới không khớp!", "error");
+            addToast("Mật khẩu mới không khớp!", "error");
             return;
         }
         if (form.password && !form.currentPassword) {
-            showToast("Vui lòng nhập mật khẩu hiện tại!", "error");
+            addToast("Vui lòng nhập mật khẩu hiện tại!", "error");
             return;
         }
 
@@ -138,16 +173,16 @@ const EditUserModal = ({ isOpen, userInfo, onClose }) => {
 
         updateUserAdmin(form.userId, updateData)
             .then((response) => {
-                showToast("Cập nhật thành công!");
+                addToast("Cập nhật thành công!");
                 setTimeout(() => {
                     onClose();
                 }, 1500);
             })
             .catch((err) => {
                 if (err.response && err.response.data) {
-                    showToast(err.response.data, "error");
+                    addToast(err.response.data, "error");
                 } else {
-                    showToast("Lỗi khi cập nhật!", "error");
+                    addToast("Lỗi khi cập nhật!", "error");
                 }
                 console.error(err);
             });
@@ -166,11 +201,12 @@ const EditUserModal = ({ isOpen, userInfo, onClose }) => {
 
     return (
         <div className={`fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <ToastNotification
-                message={toast.message}
-                type={toast.type}
-                show={toast.show}
-            />
+            {/*<ToastNotification*/}
+            {/*    message={toast.message}*/}
+            {/*    type={toast.type}*/}
+            {/*    show={toast.show}*/}
+            {/*/>*/}
+            <ToastContainer/>
 
             <div
                 ref={modalRef}

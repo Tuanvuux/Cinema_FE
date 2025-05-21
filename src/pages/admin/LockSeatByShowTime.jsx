@@ -8,7 +8,7 @@ import {
     deleteLockSeat
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
-
+import { CheckCircle, AlertCircle, X } from "lucide-react";
 
 export default function LockSeatByShowTime () {
     const [seatsLock, setSeatsLock] = useState([]);
@@ -56,6 +56,14 @@ export default function LockSeatByShowTime () {
 
     const [selectedRoomId, setSelectedRoomId] = useState("");
     const [selectedShowtimeId, setSelectedShowtimeId] = useState("");
+
+    // const [toast, setToast] = useState({
+    //     show: false,
+    //     message: '',
+    //     type: 'success'
+    // });
+
+    const [toast, setToast] = useState([]);
 
     const modalConfirmRef = useRef();
     const modalbulkDeRef = useRef();
@@ -172,9 +180,7 @@ export default function LockSeatByShowTime () {
                 type: 'success'
             });
             handleCloseModal();
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Xóa ghế thành công!', 'success');
         } catch (error) {
             setToast({
                 show: true,
@@ -183,9 +189,7 @@ export default function LockSeatByShowTime () {
             })
             handleCloseModal();
             console.error("Lỗi khi xóa ghế:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Xóa ghế thất bại', 'error');
         }
     };
 
@@ -220,11 +224,7 @@ export default function LockSeatByShowTime () {
     // Add this function to handle bulk deletion
     const handleBulkDelete = () => {
         if (selectedSeats.length === 0) {
-            setToast({
-                show: true,
-                message: 'Vui lòng chọn ít nhất một lịch chiếu để xóa',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một lịch chiếu để xóa', 'error');
             return;
         }
 
@@ -232,8 +232,6 @@ export default function LockSeatByShowTime () {
         setSelectedSeatIds(selectedSeats); // Store all selected IDs
         setBulkDeleteModalOpen(true);
     };
-
-
 
 // Add this function to perform the actual bulk deletion
     const confirmBulkDelete = async () => {
@@ -251,41 +249,17 @@ export default function LockSeatByShowTime () {
             // Clear selection
             setSelectedSeats([]);
 
-            // Show success notification
-            setToast({
-                show: true,
-                message: `Đã xóa ${selectedSeats.length} ghế thành công!`,
-                type: 'success'
-            });
-
+            addToast(`Đã xóa ${selectedSeats.length} ghế thành công!`, 'success');
             setBulkDeleteModalOpen(false);
 
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa lịch chiếu thất bại',
-                type: 'error'
-            });
+            addToast('Xóa lịch chiếu thất bại', 'error');
 
             setBulkDeleteModalOpen(false);
             console.error("Lỗi khi xóa nhiều phòng chiếu:", error);
 
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         }
     };
-
-    // New state for toast notification
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
-
 
     useEffect(() => {
         const fetchSeats = async () => {
@@ -332,11 +306,7 @@ export default function LockSeatByShowTime () {
         try {
             // Đảm bảo ghế có tất cả dữ liệu cần thiết
             if (!newSeat.seatId || !newSeat.roomId || !newSeat.showtimeId) {
-                setToast({
-                    show: true,
-                    message: 'Vui lòng điền đầy đủ thông tin!',
-                    type: 'error'
-                });
+                addToast('Vui lòng điền đầy đủ thông tin!', 'error');
                 return;
             }
 
@@ -357,38 +327,79 @@ export default function LockSeatByShowTime () {
             setSeatsLock([...seatsLock, completeSeat]);
 
             // Show success toast
-            setToast({
-                show: true,
-                message: 'Thêm ghế thành công!',
-                type: 'success'
-            });
+            addToast('Thêm ghế thành công!', 'success');
 
             // Đặt lại form và đóng modal
             resetAddModalState();
             setShowAddModal(false);
 
-            // Tự động ẩn thông báo sau 3 giây
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: '' });
-            }, 3000);
         } catch (err) {
             // Hiển thị thông báo lỗi
-            setToast({
-                show: true,
-                message: 'Thêm ghế thất bại!',
-                type: 'error'
-            });
-
+            addToast('Thêm ghế thất bại!', 'error');
             console.error("Error adding seat:", err);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: '' });
-            }, 3000);
         }
     };
 
-    // Toast Notification Component
-    const ToastNotification = ({ message, type, show }) => {
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            5% { opacity: 1; transform: translateY(0); }
+            95% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+          }
+        `;
+        document.head.appendChild(style);
+
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
+    // Hàm thêm toast mới
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
+
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
         if (!show) return null;
 
         const typeStyles = {
@@ -398,21 +409,55 @@ export default function LockSeatByShowTime () {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
                     opacity: show ? 1 : 0,
-                    transform: 'translateY(0)',
                     transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
-                <span className="material-icons mr-2 text-white">
-                    {type === 'success' ? 'check_circle' : 'error'}
-                </span>
-                <p className="text-white font-medium">{message}</p>
+                <div className="flex items-center">
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
+                </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
         );
     };
+    // // Toast Notification Component
+    // const ToastNotification = ({ message, type, show }) => {
+    //     if (!show) return null;
+    //
+    //     const typeStyles = {
+    //         success: 'bg-green-500',
+    //         error: 'bg-red-500'
+    //     };
+    //
+    //     return (
+    //         <div
+    //             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
+    //             style={{
+    //                 animation: 'fadeInOut 3s ease-in-out',
+    //                 opacity: show ? 1 : 0,
+    //                 transform: 'translateY(0)',
+    //                 transition: 'opacity 0.3s ease, transform 0.3s ease'
+    //             }}
+    //         >
+    //             <span className="material-icons mr-2 text-white">
+    //                 {type === 'success' ? 'check_circle' : 'error'}
+    //             </span>
+    //             <p className="text-white font-medium">{message}</p>
+    //         </div>
+    //     );
+    // };
 
     const filteredSeats = seatsLock.filter(seat => {
         const matchesSearch = Object.values(seat).some(value =>
@@ -448,12 +493,12 @@ export default function LockSeatByShowTime () {
     return (
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Left sidebar - similar to the image */}
-
-            <ToastNotification
-                message={toast.message}
-                type={toast.type}
-                show={toast.show}
-            />
+            <ToastContainer />
+            {/*<ToastNotification*/}
+            {/*    message={toast.message}*/}
+            {/*    type={toast.type}*/}
+            {/*    show={toast.show}*/}
+            {/*/>*/}
 
             <div className="flex h-full">
 

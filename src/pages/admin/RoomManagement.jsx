@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
+import {AlertCircle, CheckCircle, X} from "lucide-react";
 
 export default function RoomManagement () {
     const [rooms, setRooms] = useState([]);
@@ -41,6 +42,8 @@ export default function RoomManagement () {
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedRoomIds] = useState([]);
 
+    const [toast, setToast] = useState([]);
+
     const modalEditRef = useRef();
     const modalbulkDeRef = useRef();
     const modalAddRef = useRef();
@@ -54,11 +57,12 @@ export default function RoomManagement () {
             }
 
             if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
+                resetAddModalState();
                 setShowEditModal(false);
             }
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
-                resetAddModalState();
+                // resetAddModalState();
                 setShowAddModal(false);
             }
 
@@ -74,6 +78,81 @@ export default function RoomManagement () {
         };
     }, [bulkDeleteModalOpen, showEditModal, showAddModal, showFilter]);
 
+    // Hàm thêm toast mới
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
+
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
+        if (!show) return null;
+
+        const typeStyles = {
+            success: 'bg-green-500',
+            error: 'bg-red-500'
+        };
+
+        return (
+            <div
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
+                style={{
+                    animation: 'fadeInOut 3s ease-in-out',
+                    opacity: show ? 1 : 0,
+                    transition: 'opacity 0.3s ease, transform 0.3s ease'
+                }}
+            >
+                <div className="flex items-center">
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
+                </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+        );
+    };
 
     const handleOpenDeleteModal = (roomId) => {
         setSelectedRoomId(roomId);
@@ -97,26 +176,13 @@ export default function RoomManagement () {
             setRooms(prevRoom =>
                 prevRoom.filter(room => room.id !== roomId)
             );
-            setToast({
-                show: true,
-                message: 'Xóa phòng chiếu thành công!',
-                type: 'success'
-            });
+            addToast('Xóa phòng chiếu thành công!','success')
             handleCloseModal();
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa phòng chiếu thất bại',
-                type: 'error'
-            })
+            addToast('Xóa phòng chiếu thất bại!','error')
             handleCloseModal();
             console.error("Lỗi khi xóa phòng chiếu:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'error' });
-            }, 3000);
         }
     };
 
@@ -143,25 +209,12 @@ export default function RoomManagement () {
             setRooms((prevRooms) =>
                 prevRooms.map((room) => (room.id === updatedRoom.id ? updatedRoom : room))
             );
-            setToast({
-                show: true,
-                message: 'Sửa phòng thành công!',
-                type: 'success'
-            });
+            addToast('Sửa phòng thành công!','success')
             setShowEditModal(false);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Cập nhật phòng thất bại!',
-                type: 'error'
-            })
+            addToast('Sửa phòng thất bại!','error')
             console.error("Lỗi khi cập nhật phòng:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'error' });
-            }, 3000);
         }
     };
 
@@ -191,11 +244,7 @@ export default function RoomManagement () {
     // Add this function to handle bulk deletion
     const handleBulkDelete = () => {
         if (selectedRooms.length === 0) {
-            setToast({
-                show: true,
-                message: 'Vui lòng chọn ít nhất một phòng chiếu để xóa',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một phòng chiếu để xóa','error')
             return;
         }
 
@@ -222,39 +271,15 @@ export default function RoomManagement () {
             setSelectAll(false);
 
             // Show success notification
-            setToast({
-                show: true,
-                message: `Đã xóa ${selectedRooms.length} phòng chiếu thành công!`,
-                type: 'success'
-            });
-
+            addToast(`Đã xóa ${selectedRooms.length} phòng chiếu thành công!`,'success')
             setBulkDeleteModalOpen(false);
 
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa phòng chiếu thất bại',
-                type: 'error'
-            });
-
+            addToast('Xóa phòng chiếu thất bại','error')
             setBulkDeleteModalOpen(false);
             console.error("Lỗi khi xóa nhiều phòng chiếu:", error);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'error' });
-            }, 3000);
         }
     };
-
-    // New state for toast notification
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
 
     // Fetch rooms
     useEffect(() => {
@@ -280,11 +305,7 @@ export default function RoomManagement () {
             const addedRoom = await addRoom(newRoom);
             setRooms([...rooms, addedRoom]);
             // Show success toast
-            setToast({
-                show: true,
-                message: 'Thêm phòng thành công!',
-                type: 'success'
-            });
+            addToast('Thêm phòng thành công!','success')
             // Reset form and close modal
             setNewRoom({
                 name: '',
@@ -294,52 +315,15 @@ export default function RoomManagement () {
                 numberOfRows: 0
             });
             setShowAddModal(false);
-            // Automatically hide toast after 3 seconds
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+
         } catch (err) {
             // Show error toast
-            setToast({
-                show: true,
-                message: 'Thêm phòng thất bại!',
-                type: 'error'
-            })
-
+            addToast('Thêm phòng thất bại!','error')
             console.error(err);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'error' });
-            }, 3000);
         }
     };
 
     // Toast Notification Component
-    const ToastNotification = ({ message, type, show }) => {
-        if (!show) return null;
-
-        const typeStyles = {
-            success: 'bg-green-500',
-            error: 'bg-red-500'
-        };
-
-        return (
-            <div
-                className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
-                style={{
-                    animation: 'fadeInOut 3s ease-in-out',
-                    opacity: show ? 1 : 0,
-                    transform: 'translateY(0)',
-                    transition: 'opacity 0.3s ease, transform 0.3s ease'
-                }}
-            >
-                <span className="material-icons mr-2 text-white">
-                    {type === 'success' ? 'check_circle' : 'error'}
-                </span>
-                <p className="text-white font-medium">{message}</p>
-            </div>
-        );
-    };
 
     // Handle updating a room's status
     const handleStatusChange = async (roomId, status) => {
@@ -351,29 +335,12 @@ export default function RoomManagement () {
 
                 // Update local state
                 setRooms(rooms.map(room => room.id === roomId ? { ...room, status } : room));
-
-                setToast({
-                    show: true,
-                    message: `Trạng thái phòng đã được chuyển thành ${status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}`,
-                    type: 'success'
-                });
-
-                setTimeout(() => {
-                    setToast({ show: false, message: '', type: 'success' });
-                }, 3000);
+                addToast(`Trạng thái phòng đã được chuyển thành ${status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}`,'success')
             }
         } catch (err) {
             setError('Failed to update room status');
-            setToast({
-                show: true,
-                message: 'Cập nhật trạng thái thất bại',
-                type: 'error'
-            });
+            addToast('Cập nhật trạng thái thất bại','error')
             console.error(err);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'error' });
-            }, 3000);
         }
     };
 
@@ -435,11 +402,12 @@ export default function RoomManagement () {
     return (
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Toast notification */}
-            <ToastNotification
-                message={toast.message}
-                type={toast.type}
-                show={toast.show}
-            />
+            <ToastContainer />
+            {/*<ToastNotification*/}
+            {/*    message={toast.message}*/}
+            {/*    type={toast.type}*/}
+            {/*    show={toast.show}*/}
+            {/*/>*/}
 
             <div className="flex h-full">
                 {/* Main content */}

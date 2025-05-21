@@ -9,7 +9,7 @@ import {
     updateSeatInfo
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
-import {Link} from "react-router-dom";
+import {CheckCircle, AlertCircle, X } from "lucide-react";
 
 export default function SeatManagement () {
     const [seats, setSeats] = useState([]);
@@ -54,6 +54,7 @@ export default function SeatManagement () {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedSeatId, setSelectedSeatId] = useState(null);
     const [selectedSeatForAction, setSelectedSeatForAction] = useState(null);
+    const [toast, setToast] = useState([]);
 
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
@@ -134,26 +135,12 @@ export default function SeatManagement () {
             setSeats(prevSeat =>
                 prevSeat.filter(Seat => Seat.seatId !== SeatId)
             );
-            setToast({
-                show: true,
-                message: 'Xóa ghế thành công!',
-                type: 'success'
-            });
+            addToast('Xóa ghế thành công!','success')
             handleCloseModal();
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa ghế thất bại',
-                type: 'error'
-            })
+            addToast('Xóa ghế thất bại','error')
             handleCloseModal();
             console.error("Lỗi khi xóa ghế:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         }
     };
 
@@ -190,31 +177,14 @@ export default function SeatManagement () {
             setSeats((prevSeats) =>
                 prevSeats.map((Seat) => (Seat.seatId === updatedSeat.seatId ? updatedSeat : Seat))
             );
-            setToast({
-                show: true,
-                message: 'Sửa ghế thành công!',
-                type: 'success'
-            });
+            addToast('Sửa ghế thành công!','success')
             setShowEditModal(false);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Cập nhật ghế thất bại!',
-                type: 'error'
-            })
+            addToast('Cập nhật ghế thất bại!')
             console.error("Lỗi khi cập nhật phòng:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         }
 
         setShowEditModal(false);
-        setTimeout(() => {
-            setToast({show: false, message: '', type: 'success'});
-        }, 3000);
     };
 
     const handleSaveEditSeatInfo = async () => {
@@ -228,31 +198,14 @@ export default function SeatManagement () {
             setSeatInfos((prevSeatsInfo) =>
                 prevSeatsInfo.map((SeatInfo) => (SeatInfo.id === updatedSeatInfo.id ? updatedSeatInfo : SeatInfo))
             );
-            setToast({
-                show: true,
-                message: 'Sửa giá ghế thành công!',
-                type: 'success'
-            });
+            addToast('Sửa giá ghế thành công!','success')
             setShowEditPriceModal(false);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Cập nhật giá ghế thất bại!',
-                type: 'error'
-            })
+            addToast('Cập nhật giá ghế thất bại!','error')
             console.error("Lỗi khi cập nhật giá ghế:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         }
 
         setShowEditPriceModal(false);
-        setTimeout(() => {
-            setToast({show: false, message: '', type: 'success'});
-        }, 3000);
     };
 
     // Handle select all Seats
@@ -281,14 +234,9 @@ export default function SeatManagement () {
     // Add this function to handle bulk deletion
     const handleBulkDelete = () => {
         if (selectedSeats.length === 0) {
-            setToast({
-                show: true,
-                message: 'Vui lòng chọn ít nhất một lịch chiếu để xóa',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một lịch chiếu để xóa','error')
             return;
         }
-
         // Open a confirmation modal for bulk deletion
         setSelectedSeatIds(selectedSeats); // Store all selected IDs
         setBulkDeleteModalOpen(true);
@@ -309,41 +257,14 @@ export default function SeatManagement () {
 
             // Clear selection
             setSelectedSeats([]);
-
-            // Show success notification
-            setToast({
-                show: true,
-                message: `Đã xóa ${selectedSeats.length} ghế thành công!`,
-                type: 'success'
-            });
-
+            addToast(`Đã xóa ${selectedSeats.length} ghế thành công!`,'success')
             setBulkDeleteModalOpen(false);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa lịch chiếu thất bại',
-                type: 'error'
-            });
-
+            addToast('Xóa lịch chiếu thất bại','error')
             setBulkDeleteModalOpen(false);
             console.error("Lỗi khi xóa nhiều phòng chiếu:", error);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         }
     };
-
-    // New state for toast notification
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
 
     useEffect(() => {
         const fetchSeats = async () => {
@@ -391,11 +312,7 @@ export default function SeatManagement () {
         try {
             // Ensure the seat has all required data
             if (!newSeat.seatName || !newSeat.roomId || !newSeat.rowLabel || !newSeat.seatInfoId) {
-                setToast({
-                    show: true,
-                    message: 'Vui lòng điền đầy đủ thông tin!',
-                    type: 'error'
-                });
+                addToast('Vui lòng điền đầy đủ thông tin!','error')
                 return;
             }
 
@@ -409,14 +326,7 @@ export default function SeatManagement () {
 
             const addedSeat = await addSeat(seatData);
             setSeats([...seats, addedSeat]);
-
-            // Show success toast
-            setToast({
-                show: true,
-                message: 'Thêm ghế thành công!',
-                type: 'success'
-            });
-
+            addToast('Thêm ghế thành công!','success')
             // Reset form and close modal
             setNewSeat({
                 seatName: '',
@@ -428,24 +338,9 @@ export default function SeatManagement () {
             });
 
             setShowAddModal(false);
-
-            // Automatically hide toast after 3 seconds
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: '' });
-            }, 3000);
         } catch (err) {
-            // Show error toast
-            setToast({
-                show: true,
-                message: 'Thêm ghế thất bại!',
-                type: 'error'
-            });
-
+            addToast('Thêm ghế thất bại!','error')
             console.error("Error adding seat:", err);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: '' });
-            }, 3000);
         }
     };
 
@@ -454,8 +349,48 @@ export default function SeatManagement () {
         setShowAddModal(false);
     };
 
-    // Toast Notification Component
-    const ToastNotification = ({ message, type, show }) => {
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
+
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
         if (!show) return null;
 
         const typeStyles = {
@@ -465,18 +400,26 @@ export default function SeatManagement () {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
                     opacity: show ? 1 : 0,
-                    transform: 'translateY(0)',
                     transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
-                <span className="material-icons mr-2 text-white">
-                    {type === 'success' ? 'check_circle' : 'error'}
-                </span>
-                <p className="text-white font-medium">{message}</p>
+                <div className="flex items-center">
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
+                </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
         );
     };
@@ -551,12 +494,7 @@ export default function SeatManagement () {
     return (
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Left sidebar - similar to the image */}
-
-            <ToastNotification
-                message={toast.message}
-                type={toast.type}
-                show={toast.show}
-            />
+            <ToastContainer/>
 
             <div className="flex h-full">
 

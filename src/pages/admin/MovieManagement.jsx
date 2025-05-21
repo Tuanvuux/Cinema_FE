@@ -9,7 +9,7 @@ import {
     toggleDeleteStatus
 } from "@/services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
-
+import {CheckCircle, AlertCircle, X } from "lucide-react";
 import {getMovies} from "@/services/api.jsx";
 import {
     uploadImageToCloudinary,
@@ -63,6 +63,8 @@ export default function MovieManagement() {
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [bulkRestoreModalOpen, setBulkRestoreModalOpen] = useState(false);
     const [selectedMovieIds, setSelectedMovieIds] = useState([]);
+    const [toast, setToast] = useState([]);
+
 
     const modalConfirmRef = useRef();
     const modalEditRef = useRef();
@@ -85,6 +87,7 @@ export default function MovieManagement() {
             }
 
             if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
+                handleCancel();
                 setShowEditModal(false);
             }
 
@@ -100,8 +103,49 @@ export default function MovieManagement() {
         };
     }, [isConfirmModalOpen, bulkDeleteModalOpen, showEditModal,bulkRestoreModalOpen,showAddModal]);
 
-    const ToastNotification = ({ message, type, movie }) => {
-        if (!movie) return null;
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
+
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
+        if (!show) return null;
 
         const typeStyles = {
             success: 'bg-green-500',
@@ -110,19 +154,26 @@ export default function MovieManagement() {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-6 py-3 text-white rounded-lg shadow-lg transition-all duration-500 ${typeStyles[type]}`}
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
-                    opacity: movie ? 1 : 0,
-                    transform: movie ? 'translateY(0)' : 'translateY(-20px)'
+                    opacity: show ? 1 : 0,
+                    transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
                 <div className="flex items-center">
-                    <span className="material-icons mr-2">
-                        {type === 'success' ? 'check_circle' : 'error'}
-                    </span>
-                    {message}
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
                 </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
         );
     };
@@ -198,28 +249,10 @@ export default function MovieManagement() {
             // reset();
             // setVideoPreview("");
             setShowAddModal(false);
-
-            setToast({
-                movie: true,
-                message: 'Thêm phim thành công!',
-                type: 'success'
-            });
-
-            setTimeout(() => {
-                setToast({ movie: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Thêm phim thành công!','success')
         } catch (error) {
-            setToast({
-                movie: true,
-                message: 'Thêm phòng thất bại!',
-                type: 'error'
-            })
-
+            addToast('Thêm phòng thất bại!','error')
             console.error(error);
-
-            setTimeout(() => {
-                setToast({ movie: false, message: '', type: 'success' });
-            }, 3000);
         }
     };
 
@@ -237,26 +270,12 @@ export default function MovieManagement() {
             setMovie(prevMovie =>
                 prevMovie.filter(movie => movie.movieId !== MovieId)
             );
-            setToast({
-                movie: true,
-                message: 'Khóa phim thành công!',
-                type: 'success'
-            });
+            addToast('Khóa phim thành công!','success')
             handleCloseModal();
-            setTimeout(() => {
-                setToast({movie: false, message: '', type: 'success'});
-            }, 3000);
         } catch (error) {
-            setToast({
-                movie: true,
-                message: 'Khóa phim thất bại',
-                type: 'error'
-            })
+            addToast('Khóa phim thất bại','error')
             handleCloseModal();
             console.error("Lỗi khi khóa phim:", error);
-            setTimeout(() => {
-                setToast({movie: false, message: '', type: 'success'});
-            }, 3000);
         }
     };
 
@@ -287,36 +306,13 @@ export default function MovieManagement() {
             );
             setConfirmModalOpen(false);
             setSelectedMovieForAction(null);
-            setToast({
-                movie: true,
-                message: newStatus ? 'Đã khóa phim!' : 'Đã khôi phục phim!',
-                type: 'success'
-            });
-
-            setTimeout(() => {
-                setToast({movie: false, message: '', type: 'success'});
-            }, 3000);
+            addToast(newStatus ? 'Đã khóa phim!' : 'Đã khôi phục phim!','success')
         } catch (error) {
-
-            setToast({
-                movie: true,
-                message: newStatus ? 'óa phim thất bại!' : 'Khôi phục phim thất bại!',
-                type: 'error'
-            });
+            addToast(newStatus ? 'Khóa phim thất bại!' : 'Khôi phục phim thất bại!','error')
             setConfirmModalOpen(false);
             console.error("Lỗi khi cập nhật trạng thái phim:", error);
-
-            setTimeout(() => {
-                setToast({movie: false, message: '', type: 'success'});
-            }, 3000);
         }
     };
-
-    const [toast, setToast] = useState({
-        movie: false,
-        message: '',
-        type: 'success'
-    });
 
     const filteredMovie = movies.filter(movie =>
         Object.values(movie).some(value =>
@@ -368,11 +364,7 @@ export default function MovieManagement() {
     };
     const confirmBulkDelete = async () => {
         if (selectedMovie.length === 0) {
-            setToast({
-                movie: true,
-                message: 'Vui lòng chọn ít nhất một phim để khóa',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một phim để khóa','error')
             return;
         }
 
@@ -401,42 +393,19 @@ export default function MovieManagement() {
             // Close modal and show success message
             setBulkDeleteModalOpen(false);
             setSelectedMovie([]); // Clear selection after delete
-
-            setToast({
-                movie: true,
-                message: `Đã khóa ${selectedMovie.length} phim thành công!`,
-                type: 'success'
-            });
-
-            setTimeout(() => {
-                setToast({ movie: false, message: '', type: 'success' });
-            }, 3000);
+            addToast(`Đã khóa ${selectedMovie.length} phim thành công!`,'success')
         } catch (error) {
             console.error("Lỗi khi khóa nhiều phim:", error);
-
             setBulkDeleteModalOpen(false);
-            setToast({
-                movie: true,
-                message: 'hóa phim thất bại!',
-                type: 'error'
-            });
-
-            setTimeout(() => {
-                setToast({ movie: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Khóa phim thất bại!',error)
         }
     };
 // Add this function to handle bulk deletion
     const handleBulkDelete = () => {
         if (selectedMovie.length === 0) {
-            setToast({
-                movie: true,
-                message: 'Vui lòng chọn ít nhất một phim để khóa',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một phim để khóa','error')
             return;
         }
-
         // Open a confirmation modal for bulk deletion
         setSelectedMovieIds(selectedMovie); // Store all selected IDs
         setBulkDeleteModalOpen(true);
@@ -444,14 +413,9 @@ export default function MovieManagement() {
 
     const handleBulkRestore = () => {
         if (selectedMovie.length === 0) {
-            setToast({
-                movie: true,
-                message: 'Vui lòng chọn ít nhất một phim để khôi phục',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một phim để khôi phục','error')
             return;
         }
-
         // Open a confirmation modal for bulk deletion
         setSelectedMovieIds(selectedMovie); // Store all selected IDs
         setBulkRestoreModalOpen(true);
@@ -460,11 +424,7 @@ export default function MovieManagement() {
     // Add a bulk restore function as well (optional)
     const confirmBulkRestore = () => {
         if (selectedMovie.length === 0) {
-            setToast({
-                movie: true,
-                message: 'Vui lòng chọn ít nhất một phim để khôi phục',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một phim để khôi phục','error')
             return;
         }
 
@@ -486,29 +446,12 @@ export default function MovieManagement() {
                 );
                 setBulkRestoreModalOpen(false);
                 setSelectedMovie([]);
-
-                setToast({
-                    movie: true,
-                    message: `Đã khôi phục ${selectedMovie.length} phim thành công!`,
-                    type: 'success'
-                });
-
-                setTimeout(() => {
-                    setToast({ movie: false, message: '', type: 'success' });
-                }, 3000);
+                addToast(`Đã khôi phục ${selectedMovie.length} phim thành công!`,'success')
             })
             .catch(error => {
                 console.error("Lỗi khi khôi phục nhiều phim:", error);
                 setBulkRestoreModalOpen(false);
-                setToast({
-                    movie: true,
-                    message: 'Khôi phục phim thất bại!',
-                    type: 'error'
-                });
-
-                setTimeout(() => {
-                    setToast({ movie: false, message: '', type: 'success' });
-                }, 3000);
+                addToast('Khôi phục phim thất bại!','error')
             });
     };
 
@@ -599,16 +542,7 @@ export default function MovieManagement() {
                     movie.movieId === editingMovie.movieId ? updatedMovie : movie
                 )
             );
-
-            setToast({
-                movie: true,
-                message: 'Cập nhật phim thành công!',
-                type: 'success'
-            });
-
-            setTimeout(() => {
-                setToast({ movie: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Cập nhật phim thành công!','success')
 
             // Close the modal and reset form
             setShowEditModal(false);
@@ -619,16 +553,7 @@ export default function MovieManagement() {
 
         } catch (error) {
             console.error("Lỗi khi cập nhật phim:", error);
-
-            setToast({
-                movie: true,
-                message: 'Cập nhật phim thất bại!',
-                type: 'error'
-            });
-
-            setTimeout(() => {
-                setToast({ movie: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Cập nhật phim thất bại!','error')
         } finally {
             setUploading(false);
         }
@@ -653,12 +578,7 @@ export default function MovieManagement() {
         return (
             <div className="flex flex-col h-screen bg-gray-50">
                 {/* Left sidebar - similar to the image */}
-
-                <ToastNotification
-                    message={toast.message}
-                    type={toast.type}
-                    movie={toast.movie}
-                />
+                <ToastContainer/>
 
                 <div className="flex h-full">
 

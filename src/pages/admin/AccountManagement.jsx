@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import {
   getUser,
   toggleDeleteUser,
@@ -12,7 +10,7 @@ import {
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import EditUserModal from "@/pages/admin/EditUserModal.jsx";
 import CreateAccountForEmployeeModal from "@/pages/admin/CreateAccountForEmployeeModal.jsx";
-
+import { Users, UserCircle,CheckCircle, AlertCircle, X } from "lucide-react";
 const AccountManagement = () => {
   const [accounts, setAccount] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +39,8 @@ const AccountManagement = () => {
   const [bulkRestoreModalOpen, setBulkRestoreModalOpen] = useState(false);
 
   const [viewType, setViewType] = useState("user");
+  const [toast, setToast] = useState([]);
+
 
   const modalConfirmRef = useRef();
   const modalDetailRef = useRef();
@@ -120,11 +120,6 @@ const AccountManagement = () => {
     fetchData();
   }, [viewType]); // <-- Chạy lại khi viewType thay đổi
 
-  const [toast, setToast] = useState({
-    account: false,
-    message: "",
-    type: "success",
-  });
   const filteredAccount = accounts.filter((account) =>
     Object.values(account).some((value) =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
@@ -257,42 +252,21 @@ const AccountManagement = () => {
 
       setConfirmModalOpen(false);
       setSelectedAccountForAction(null);
-      setToast({
-        account: true,
-        message: isCurrentlyActive
-          ? "Đã khóa tài khoản!"
-          : "Đã khôi phục tài khoản!",
-        type: "success",
-      });
-
-      setTimeout(() => {
-        setToast({ account: false, message: "", type: "success" });
-      }, 3000);
+      addToast(isCurrentlyActive
+              ? "Đã khóa tài khoản!"
+              : "Đã khôi phục tài khoản!", "success")
     } catch (error) {
-      setToast({
-        account: true,
-        message: isCurrentlyActive
+      addToast(isCurrentlyActive
           ? "Khóa tài khoản thất bại!"
-          : "Khôi phục tài khoản thất bại!",
-        type: "error",
-      });
-
+          : "Khôi phục tài khoản thất bại!",'error')
       setConfirmModalOpen(false);
       console.error("Lỗi khi cập nhật trạng thái tài khoản:", error);
-
-      setTimeout(() => {
-        setToast({ account: false, message: "", type: "success" });
-      }, 3000);
     }
   };
 
   const handleBulkDelete = () => {
     if (selectedAccount.length === 0) {
-      setToast({
-        account: true,
-        message: "Vui lòng chọn ít nhất một tài khoản để óa",
-        type: "error",
-      });
+      addToast('Vui lòng chọn ít nhất một tài khoản để khóa','error')
       return;
     }
 
@@ -303,11 +277,7 @@ const AccountManagement = () => {
 
   const confirmBulkDelete = async () => {
     if (selectedAccount.length === 0) {
-      setToast({
-        account: true,
-        message: "Vui lòng chọn ít nhất một tài khoản để khóa",
-        type: "error",
-      });
+      addToast("Vui lòng chọn ít nhất một tài khoản để khóa",'error')
       return;
     }
 
@@ -337,39 +307,18 @@ const AccountManagement = () => {
       // Close modal and show success message
       setBulkDeleteModalOpen(false);
       setSelectedAccount([]); // Clear selection after delete
-
-      setToast({
-        account: true,
-        message: `Đã khóa ${selectedAccount.length} tài khoản thành công!`,
-        type: "success",
-      });
-
-      setTimeout(() => {
-        setToast({ account: false, message: "", type: "success" });
-      }, 3000);
+      addToast(`Đã khóa ${selectedAccount.length} tài khoản thành công!`,'success')
     } catch (error) {
-      console.error("Lỗi khi óa nhiều tài khoản:", error);
+      console.error("Lỗi khi xóa nhiều tài khoản:", error);
 
       setBulkDeleteModalOpen(false);
-      setToast({
-        account: true,
-        message: " tài khoản thất bại!",
-        type: "error",
-      });
-
-      setTimeout(() => {
-        setToast({ account: false, message: "", type: "success" });
-      }, 3000);
+      addToast("Khóa tài khoản thất bại!",'error')
     }
   };
 
   const handleBulkRestore = () => {
     if (selectedAccount.length === 0) {
-      setToast({
-        account: true,
-        message: "Vui lòng chọn ít nhất một tài khoản để khôi phục",
-        type: "error",
-      });
+      addToast('Vui lòng chọn ít nhất một tài khoản để khôi phục','error')
       return;
     }
 
@@ -380,11 +329,7 @@ const AccountManagement = () => {
 
   const confirmBulkRestore = () => {
     if (selectedAccount.length === 0) {
-      setToast({
-        movie: true,
-        message: "Vui lòng chọn ít nhất một tài khoản để khôi phục",
-        type: "error",
-      });
+      addToast('Vui lòng chọn ít nhất một tài khoản để khôi phục','error')
       return;
     }
 
@@ -409,29 +354,12 @@ const AccountManagement = () => {
 
         setBulkRestoreModalOpen(false);
         setSelectedAccount([]);
-
-        setToast({
-          account: true,
-          message: `Đã khôi phục ${selectedAccount.length} tài khoản thành công!`,
-          type: "success",
-        });
-
-        setTimeout(() => {
-          setToast({ account: false, message: "", type: "success" });
-        }, 3000);
+        addToast(`Đã khôi phục ${selectedAccount.length} tài khoản thành công!`,'success')
       })
       .catch((error) => {
         console.error("Lỗi khi khôi phục nhiều tài khoản:", error);
         setBulkRestoreModalOpen(false);
-        setToast({
-          account: true,
-          message: "Khôi phục tài khoản thất bại!",
-          type: "error",
-        });
-
-        setTimeout(() => {
-          setToast({ account: false, message: "", type: "success" });
-        }, 3000);
+        addToast('Khôi phục tài khoản thất bại!','error')
       });
   };
 
@@ -444,41 +372,115 @@ const AccountManagement = () => {
   // const handleDetailAccount = (account) => {
   //     navigate(`/admin/accountmanagement/${account.userId}`);
   // };
+  const addToast = (message, type = 'success') => {
+    const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+    setToast(prev => [...prev, { id, message, type, show: true }]);
 
-  const ToastNotification = ({ message, type, account }) => {
-    if (!account) return null;
+    // Tự động xóa toast sau 3 giây
+    setTimeout(() => {
+      removeToast(id);
+    }, 3000);
+  };
 
-    const typeStyles = {
-      success: "bg-green-500",
-      error: "bg-red-500",
-    };
+  // Hàm xóa toast
+  const removeToast = (id) => {
+    setToast(prev => prev.map(t =>
+        t.id === id ? { ...t, show: false } : t
+    ));
 
+    // Xóa toast khỏi mảng sau khi animation kết thúc
+    setTimeout(() => {
+      setToast(prev => prev.filter(t => t.id !== id));
+    }, 300);
+  };
+
+  // Component Toast Container để hiển thị nhiều toast
+  const ToastContainer = () => {
     return (
-        <div
-            className={`fixed top-4 right-4 z-50 px-6 py-3 text-white rounded-lg shadow-lg transition-all duration-500 ${typeStyles[type]}`}
-            style={{
-              animation: 'fadeInOut 3s ease-in-out',
-              opacity: account ? 1 : 0,
-              transform: account ? 'translateY(0)' : 'translateY(-20px)'
-            }}
-        >
-          <div className="flex items-center">
-                    <span className="material-icons mr-2">
-                        {type === 'success' ? 'check_circle' : 'error'}
-                    </span>
-            {message}
-          </div>
+        <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+          {toast.map((t) => (
+              <ToastNotification
+                  key={t.id}
+                  id={t.id}
+                  message={t.message}
+                  type={t.type}
+                  show={t.show}
+                  onClose={() => removeToast(t.id)}
+              />
+          ))}
         </div>
     );
   };
 
+  // Component Toast Notification cập nhật
+  const ToastNotification = ({ id, message, type, show, onClose }) => {
+    if (!show) return null;
+
+    const typeStyles = {
+      success: 'bg-green-500',
+      error: 'bg-red-500'
+    };
+
+    return (
+        <div
+            className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
+            style={{
+              animation: 'fadeInOut 3s ease-in-out',
+              opacity: show ? 1 : 0,
+              transition: 'opacity 0.3s ease, transform 0.3s ease'
+            }}
+        >
+          <div className="flex items-center">
+            {type === 'success' ?
+                <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                <AlertCircle className="mr-2 h-5 w-5 text-white" />
+            }
+            <p className="text-white font-medium">{message}</p>
+          </div>
+          <button
+              className="text-white opacity-70 hover:opacity-100"
+              onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+    );
+  };
+  // const ToastNotification = ({ message, type, account }) => {
+  //   if (!account) return null;
+  //
+  //   const typeStyles = {
+  //     success: "bg-green-500",
+  //     error: "bg-red-500",
+  //   };
+  //
+  //   return (
+  //       <div
+  //           className={`fixed top-4 right-4 z-50 px-6 py-3 text-white rounded-lg shadow-lg transition-all duration-500 ${typeStyles[type]}`}
+  //           style={{
+  //             animation: 'fadeInOut 3s ease-in-out',
+  //             opacity: account ? 1 : 0,
+  //             transform: account ? 'translateY(0)' : 'translateY(-20px)'
+  //           }}
+  //       >
+  //         <div className="flex items-center">
+  //                   <span className="material-icons mr-2">
+  //                       {type === 'success' ? 'check_circle' : 'error'}
+  //                   </span>
+  //           {message}
+  //         </div>
+  //       </div>
+  //   );
+  // };
+
   return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <ToastNotification
-            message={toast.message}
-            type={toast.type}
-            account={toast.account}
-        />
+        {/*<ToastNotification*/}
+        {/*    message={toast.message}*/}
+        {/*    type={toast.type}*/}
+        {/*    account={toast.account}*/}
+        {/*/>*/}
+        <ToastContainer/>
 
         <div className="flex h-full">
           {isOpenAddEm && (
@@ -512,62 +514,41 @@ const AccountManagement = () => {
               </div>
             </div>
             <div className="w-full max-w-lg mx-auto p-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                {/* User Option */}
-                <div
-                    className={`relative cursor-pointer group transition-all duration-300 ease-out 
-            ${viewType === "user" ? "bg-indigo-50" : "bg-white hover:bg-gray-50"} 
-            rounded-lg px-4 py-3 shadow-sm border border-gray-200 flex-1`}
-                    onClick={() => setViewType("user")}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 transition-all duration-300
-              ${viewType === "user" ? "bg-indigo-600" : "bg-gray-200 group-hover:bg-gray-300"}`}>
-                      {viewType === "user" && (
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                      )}
-                    </div>
+              <div
+                  className="flex flex-wrap items-center space-x-4 justify-center mb-8 bg-white p-4 rounded-lg shadow-sm">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                      type="radio"
+                      name="viewType"
+                      value="user"
+                      checked={viewType === 'user'}
+                      onChange={() => setViewType('user')}
+                      className="hidden"
+                  />
+                  <span className={`flex items-center px-4 py-2 rounded-full transition-all duration-200 ${
+                      viewType === 'user' ? 'bg-indigo-100 text-indigo-900 font-medium' : 'text-gray-500 hover:bg-gray-100'
+                  }`}>
+            <UserCircle className="mr-2" size={20}/>
+            Khách hàng
+          </span>
+                </label>
 
-                    <span className={`font-medium transition-colors duration-300 
-              ${viewType === "user" ? "text-indigo-900" : "text-gray-600 group-hover:text-gray-800"}`}>
-              Khách hàng
-            </span>
-                  </div>
-
-                  {viewType === "user" && (
-                      <div className="absolute -right-1 -top-1 w-3 h-3 bg-indigo-600 rounded-full">
-                        <div className="absolute inset-0 bg-indigo-600 rounded-full animate-ping opacity-75"></div>
-                      </div>
-                  )}
-                </div>
-
-                {/* Employee Option */}
-                <div
-                    className={`relative cursor-pointer group transition-all duration-300 ease-out 
-                      ${viewType === "employee" ? "bg-indigo-50" : "bg-white hover:bg-gray-50"} 
-                      rounded-lg px-4 py-3 shadow-sm border border-gray-200 flex-1`}
-                    onClick={() => setViewType("employee")}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 transition-all duration-300
-              ${viewType === "employee" ? "bg-indigo-600" : "bg-gray-200 group-hover:bg-gray-300"}`}>
-                      {viewType === "employee" && (
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                      )}
-                    </div>
-
-                    <span className={`font-medium transition-colors duration-300 
-              ${viewType === "employee" ? "text-indigo-900" : "text-gray-600 group-hover:text-gray-800"}`}>
-              Nhân viên
-            </span>
-                  </div>
-
-                  {viewType === "employee" && (
-                      <div className="absolute -right-1 -top-1 w-3 h-3 bg-indigo-600 rounded-full">
-                        <div className="absolute inset-0 bg-indigo-600 rounded-full animate-ping opacity-75"></div>
-                      </div>
-                  )}
-                </div>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                      type="radio"
+                      name="viewType"
+                      value="employee"
+                      checked={viewType === 'employee'}
+                      onChange={() => setViewType('employee')}
+                      className="hidden"
+                  />
+                  <span className={`flex items-center px-4 py-2 rounded-full transition-all duration-200 ${
+                      viewType === 'employee' ? 'bg-indigo-100 text-indigo-900 font-medium' : 'text-gray-500 hover:bg-gray-100'
+                  }`}>
+            <Users className="mr-2" size={20}/>
+            Nhân viên
+          </span>
+                </label>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
@@ -865,9 +846,9 @@ const AccountManagement = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-600">Vai trò</label>
-                            <input value={selectedAccountForAction.role || ""} disabled
-                                   className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 bg-gray-100"/>
+                          <label className="block text-sm font-medium text-gray-600">Vai trò</label>
+                          <input value={selectedAccountForAction.role || ""} disabled
+                                 className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 bg-gray-100"/>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-600">
