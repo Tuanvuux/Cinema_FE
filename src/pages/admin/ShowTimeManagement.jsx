@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getShowtimes,deleteShowtime,getRooms,addShowtime, updateShowtime,getAvailableRooms } from "../../services/apiadmin.jsx";
-import {getMovies } from "../../services/api.jsx";
-import {Link} from "react-router-dom";
+import { getShowtimes, deleteShowtime, getRooms, addShowtime, updateShowtime, getAvailableRooms } from "../../services/apiadmin.jsx";
+import { getMovies } from "../../services/api.jsx";
+import { Link } from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
 import showtime from "@/components/Showtime.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 
-export default function ShowtimeManagement () {
+export default function ShowtimeManagement() {
     const [Showtime, setShowtime] = useState([]);
 
     const [movies, setMovies] = useState([]);
@@ -18,7 +18,6 @@ export default function ShowtimeManagement () {
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [showPastShowtimes, setShowPastShowtimes] = useState(false);
 
-
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -28,14 +27,13 @@ export default function ShowtimeManagement () {
     const [selectedShowtime, setSelectedShowtime] = useState([]);
     const [selectAll, setSelectAll] = useState(false);
 
-    const [editingShowtime, setEditingShowtime] = useState({showtimeId: '', nameMovie: '', showDate: '', startTime: '', endTime: '', nameRoom: ''});
+    const [editingShowtime, setEditingShowtime] = useState({ showtimeId: '', nameMovie: '', showDate: '', startTime: '', endTime: '', nameRoom: '' });
     const [selectedShowtimeId, setSelectedShowtimeId] = useState(null);
 
-    const [showEditModal,setshowEditModal] = useState(false);
+    const [showEditModal, setshowEditModal] = useState(false);
     const [showAddModal, setshowAddModal] = useState(false);
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedShowTimeForAction, setSelectedShowTimeForAction] = useState(null);
-
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedShowtimeIds] = useState([]);
@@ -44,6 +42,13 @@ export default function ShowtimeManagement () {
     const modalEditRef = useRef();
     const modalbulkDeRef = useRef();
     const modalAddRef = useRef();
+
+    // New state for toast notification
+    const [toast, setToast] = useState({
+        show: false,
+        message: '',
+        type: 'success'
+    });
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -70,7 +75,7 @@ export default function ShowtimeManagement () {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [isDeleteModalOpen, bulkDeleteModalOpen, showEditModal,showAddModal]);
+    }, [isDeleteModalOpen, bulkDeleteModalOpen, showEditModal, showAddModal]);
 
     useEffect(() => {
         getMovies().then(setMovies);
@@ -92,6 +97,7 @@ export default function ShowtimeManagement () {
         setEndTime("");
         setSelectedRoom("");
         setshowAddModal(false);
+        setshowEditModal(false)
     };
 
     const handleEditShowtime = (showtime) => {
@@ -112,7 +118,7 @@ export default function ShowtimeManagement () {
         setStartTime(showtime.startTime);
         setEndTime(showtime.endTime);
     };
-// Cập nhật hàm handleInputChangeEdit để xử lý cả trường hợp movieId là số
+
     const handleInputChangeEdit = (e) => {
         const value = e.target.name === "movieId" ? parseInt(e.target.value) : e.target.value;
         setEditingShowtime({ ...editingShowtime, [e.target.name]: value });
@@ -136,7 +142,6 @@ export default function ShowtimeManagement () {
             }
         }
     };
-
 
     const handleStartTimeChange = (e) => {
         const timeValue = e.target.value;
@@ -202,10 +207,16 @@ export default function ShowtimeManagement () {
 
         } catch (error) {
             console.error("Chi tiết lỗi:", error.response?.data || error.message);
-            alert("Có lỗi xảy ra khi thêm lịch chiếu");
+            setToast({
+                show: true,
+                message: 'Có lỗi xảy ra khi thêm lịch chiếu',
+                type: 'error'
+            });
+            setTimeout(() => {
+                setToast({ show: false, message: '', type: 'error' });
+            }, 3000);
         }
     };
-
 
     const isRoomDisabled = (roomId) => {
         // Nếu không có ngày hoặc giờ bắt đầu hoặc giờ kết thúc được chọn, trả về false
@@ -266,7 +277,6 @@ export default function ShowtimeManagement () {
         });
     };
 
-
     const handleEditSubmit = async () => {
         try {
             const formattedStartTime = editingShowtime.startTime.includes(":") ?
@@ -279,7 +289,7 @@ export default function ShowtimeManagement () {
                     (editingShowtime.endTime.split(":").length === 2 ? editingShowtime.endTime + ":00" : editingShowtime.endTime)) :
                 editingShowtime.endTime + ":00:00";
 
-            const updatedShowtime = await updateShowtime(editingShowtime.showtimeId,{
+            const updatedShowtime = await updateShowtime(editingShowtime.showtimeId, {
                 movie: {
                     movieId: editingShowtime.movieId,
                     name: selectedMovie.name
@@ -294,7 +304,7 @@ export default function ShowtimeManagement () {
             });
 
             setShowtime((prevShowtime) =>
-                prevShowtime.map((showtime) => (showtime.showtimeId  === updatedShowtime.showtimeId  ? updatedShowtime : showtime))
+                prevShowtime.map((showtime) => (showtime.showtimeId === updatedShowtime.showtimeId ? updatedShowtime : showtime))
             );
             setToast({
                 show: true,
@@ -310,16 +320,13 @@ export default function ShowtimeManagement () {
                 show: true,
                 message: 'Cập nhật lịch chiếu thất bại!',
                 type: 'error'
-            })
+            });
             console.error("Lỗi khi cập nhật lịch chiếu:", error);
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
         setshowEditModal(false);
-        setTimeout(() => {
-            setToast({show: false, message: '', type: 'success'});
-        }, 3000);
     };
 
     // Handle select all Showtime
@@ -395,17 +402,10 @@ export default function ShowtimeManagement () {
             console.error("Lỗi khi xóa nhiều lịch chiếu:", error);
 
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
     };
-
-    // New state for toast notification
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
 
     // Fetch Showtime
     useEffect(() => {
@@ -430,19 +430,25 @@ export default function ShowtimeManagement () {
         if (!show) return null;
 
         const typeStyles = {
-            success: 'bg-green-500',
-            error: 'bg-red-500'
+            success: 'bg-green-600',
+            error: 'bg-red-600'
         };
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-4 py-2 text-white rounded-md shadow-lg transition-all duration-300 ${typeStyles[type]}`}
+                className={`fixed top-4 right-4 z-50 px-6 py-3 text-white rounded-lg shadow-lg transition-all duration-500 ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
-                    opacity: show ? 1 : 0
+                    opacity: show ? 1 : 0,
+                    transform: show ? 'translateY(0)' : 'translateY(-20px)'
                 }}
             >
-                {message}
+                <div className="flex items-center">
+                    <span className="material-icons mr-2">
+                        {type === 'success' ? 'check_circle' : 'error'}
+                    </span>
+                    {message}
+                </div>
             </div>
         );
     };
@@ -460,7 +466,6 @@ export default function ShowtimeManagement () {
             val?.toString().toLowerCase().includes(search)
         );
     });
-
 
     // Calculate pagination
     const indexOfLastShowtime = currentPage * itemsPerPage;
@@ -484,7 +489,6 @@ export default function ShowtimeManagement () {
 
         return Array.from({ length: end - start + 1 }, (_, i) => start + i);
     };
-
 
     const handleOpenDeleteModal = (showtime) => {
         setSelectedShowtimeId(showtime.showtimeId);
@@ -518,19 +522,17 @@ export default function ShowtimeManagement () {
                 show: true,
                 message: 'Xóa lịch chiếu thất bại',
                 type: 'error'
-            })
+            });
             handleCloseModal();
             console.error("Lỗi khi xóa lịch chiếu:", error);
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
     };
 
     return (
-        <div className="flex flex-col h-screen">
-            {/* Left sidebar - similar to the image */}
-
+        <div className="flex flex-col h-screen bg-gray-50">
             <ToastNotification
                 message={toast.message}
                 type={toast.type}
@@ -540,79 +542,104 @@ export default function ShowtimeManagement () {
             <div className="flex h-full">
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-                        <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ LỊCH CHIẾU</h1>
-                        <div className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
-                        <div className="relative w-full md:w-64">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-200">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">QUẢN LÝ LỊCH CHIẾU</h1>
+                        <div className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4 mt-4 md:mt-0">
+                            <div className="relative w-full md:w-64 group">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm lịch chiếu"
-                                    className="border rounded-md py-2 px-4 pl-10 w-64"
+                                    className="border border-gray-300 rounded-lg py-2 px-4 pl-10 w-full transition-all focus:border-gray-500 focus:ring-2 focus:ring-gray-200 outline-none"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
+                                <span className="material-icons absolute left-3 top-2.5 text-gray-400 group-hover:text-gray-600 transition-colors duration-300">search</span>
                             </div>
-                            <UserInfo className="w-full md:w-auto"/>
+                            <UserInfo className="w-full md:w-auto" />
                         </div>
                     </div>
-                    {/*Add Button */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8">
                         <button
-                            className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
+                            className="bg-gray-900 text-white px-5 py-2.5 rounded-lg flex items-center shadow-md hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1"
                             onClick={() => setshowAddModal(true)}
                         >
-                            <span className="material-icons mr-1">add</span>
+                            <span className="material-icons mr-2">add</span>
                             Thêm lịch chiếu
                         </button>
+
                         <button
-                            className={`ml-4 px-4 py-2 rounded-md border ${showPastShowtimes ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}
+                            className={`px-5 py-2.5 rounded-lg border shadow-md transition-all duration-300 transform hover:-translate-y-1 ${
+                                showPastShowtimes
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+                                    : 'bg-white text-gray-800 hover:bg-gray-100 border-gray-300'
+                            }`}
                             onClick={() => setShowPastShowtimes(!showPastShowtimes)}
                         >
-                            {showPastShowtimes ? ' Xem lịch chiếu hiện tại' : 'Xem lịch chiếu đã qua'}
+                            <div className="flex items-center">
+                                <span className="material-icons mr-2">{showPastShowtimes ? 'history' : 'calendar_today'}</span>
+                                {showPastShowtimes ? 'Xem lịch chiếu hiện tại' : 'Xem lịch chiếu đã qua'}
+                            </div>
                         </button>
 
-
                         <button
-                            className={`${selectedShowtime.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                            className={`${
+                                selectedShowtime.length > 0
+                                    ? 'bg-red-600 hover:bg-red-700'
+                                    : 'bg-gray-400 cursor-not-allowed'
+                            } text-white px-5 py-2.5 rounded-lg flex items-center shadow-md transition-all duration-300 transform ${
+                                selectedShowtime.length > 0 ? 'hover:-translate-y-1' : ''
+                            }`}
                             onClick={handleBulkDelete}
                             disabled={selectedShowtime.length === 0}
                         >
-                            <span className="material-icons mr-1">delete</span>
-                            Xóa lịch chiếu đã chọn ({selectedShowtime.length})
+                            <span className="material-icons mr-2">delete</span>
+                            Xóa lịch chiếu đã chọn
+                            {selectedShowtime.length > 0 && <span className="ml-1 bg-white text-red-600 rounded-full px-2 py-0.5 text-xs font-bold">{selectedShowtime.length}</span>}
                         </button>
                     </div>
 
                     {/* Table */}
                     {loading ? (
-                        <div className="text-center py-10">
-                            <div
-                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className="mt-2">Đang tải dữ liệu...</p>
+                        <div className="text-center py-12">
+                            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mx-auto"></div>
+                            <p className="mt-4 text-lg text-gray-600">Đang tải dữ liệu...</p>
                         </div>
                     ) : error ? (
-                        <div className="text-center py-10 text-red-500">{error}</div>
+                        <div className="text-center py-10 text-red-600 bg-red-50 rounded-lg">
+                            <span className="material-icons text-4xl mb-2">error</span>
+                            <p className="text-lg">{error}</p>
+                        </div>
+                    ) : filteredShowtime.length === 0 ? (
+                        <div className="text-center py-10 bg-gray-50 rounded-lg p-6">
+                            <span className="material-icons text-5xl text-gray-400 mb-3">calendar_month</span>
+                            <h3 className="text-xl font-medium text-gray-700 mb-1">Không tìm thấy lịch chiếu</h3>
+                            <p className="text-gray-500">Không có lịch chiếu nào phù hợp với tiêu chí tìm kiếm</p>
+                        </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white border">
+                        <div className="overflow-x-auto rounded-lg shadow">
+                            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <thead>
                                 <tr className="bg-gray-100 border-b">
-                                    <th className="p-3 text-left w-12">
-                                        <input type="checkbox" className="form-checkbox h-5 w-5"
-                                               checked={selectAll || (currentShowtime.length > 0 && currentShowtime.every(showtime => selectedShowtime.includes(showtime.showtimeId)))}
-                                               onChange={handleSelectAllShowtime}
+                                    <th className="p-3 text-left w-10">
+                                        <input
+                                            type="checkbox"
+                                            className="form-checkbox h-5 w-5 text-gray-700 rounded transition-all duration-300"
+                                            checked={selectAll || (currentShowtime.length > 0 && currentShowtime.every(showtime => selectedShowtime.includes(showtime.showtimeId)))}
+                                            onChange={handleSelectAllShowtime}
                                         />
                                     </th>
-                                    <th className="p-3 text-center">ID</th>
-                                    <th className="p-3 text-center">Tên phim</th>
-                                    <th className="p-3 text-center">Tên phòng</th>
-                                    <th className="p-3 text-center">Ngày chiếu</th>
-                                    <th className="p-3 text-center">Giờ bắt đầu</th>
-                                    <th className="p-3 text-center">Giờ kết thúc</th>
-                                    <th className="p-3 text-center">Thao tác</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">ID</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">Tên phim</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Tên phòng</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Ngày chiếu</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Giờ bắt đầu</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Giờ kết thúc</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Thao tác</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-gray-200">
                                 {currentShowtime
                                     .filter(showtime => {
                                         const isPast = isPastShowtime(showtime.showDate);
@@ -622,33 +649,33 @@ export default function ShowtimeManagement () {
                                         const isPast = isPastShowtime(Showtime.showDate);
                                         return (
                                             <tr key={Showtime.showtimeId}
-                                                className={`border-b hover:bg-gray-50 ${isPast ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                                <td className="p-3">
+                                                className={`border-b transition-colors duration-200 hover:bg-gray-50 ${isPast ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                                                <td className="px-4 py-3">
                                                     <input
                                                         type="checkbox"
-                                                        className="form-checkbox h-5 w-5"
+                                                        className="form-checkbox h-5 w-5 text-gray-700 rounded transition-all duration-300"
                                                         checked={selectedShowtime.includes(Showtime.showtimeId)}
                                                         onChange={() => handleShowtimeSelect(Showtime.showtimeId)}
                                                         disabled={isPast}
                                                     />
                                                 </td>
-                                                <td className="p-3 text-center">{Showtime.showtimeId}</td>
-                                                <td className="p-3 font-medium text-center">{Showtime.movie.name}</td>
-                                                <td className="p-3 text-center">{Showtime.room.name}</td>
-                                                <td className="p-3 text-center">{Showtime.showDate}</td>
-                                                <td className="p-3 text-center">{Showtime.startTime}</td>
-                                                <td className="p-3 text-center">{Showtime.endTime}</td>
-                                                <td className="p-3 text-center">
+                                                <td className="p-3 font-medium text-center text-gray-900">{Showtime.showtimeId}</td>
+                                                <td className="p-3 font-medium text-center text-gray-900">{Showtime.movie.name}</td>
+                                                <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Showtime.room.name}</td>
+                                                <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Showtime.showDate}</td>
+                                                <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Showtime.startTime}</td>
+                                                <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Showtime.endTime}</td>
+                                                <td className="p-3 text-center text-gray-700 hidden sm:table-cell">
                                                     <button
                                                         onClick={() => handleEditShowtime(Showtime)}
-                                                        className="text-gray-600 hover:text-gray-800"
+                                                        className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
                                                         disabled={isPast}
                                                     >
                                                         <span className="material-icons">edit</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleOpenDeleteModal(Showtime)}
-                                                        className="text-gray-600 hover:text-gray-800"
+                                                        className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
                                                         disabled={isPast}
                                                     >
                                                         <span className="material-icons">delete</span>
@@ -667,20 +694,20 @@ export default function ShowtimeManagement () {
                     {isDeleteModalOpen && selectedShowTimeForAction && (
                         <div
                             className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div ref={modalConfirmRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
+                            <div ref={modalConfirmRef} className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận
                                     xóa</h2>
                                 <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu {selectedShowTimeForAction.showtimeId} không?</p>
                                 <div className="flex justify-end gap-4">
                                     <button
                                         onClick={handleCloseModal}
-                                        className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                        className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         Hủy
                                     </button>
                                     <button
                                         onClick={() => handleDeleteShowtime(selectedShowTimeForAction.showtimeId)}
-                                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                                     >
                                         Xóa
                                     </button>
@@ -692,19 +719,19 @@ export default function ShowtimeManagement () {
                     {/* Bulk Delete Confirmation Modal */}
                     {bulkDeleteModalOpen && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
-                                <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedShowtime.length} lịch chiếu đã chọn không?</p>
+                            <div ref={modalbulkDeRef} className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
+                                <h2 className="text-xl font-semibold mb-4 text-gray-800">Xác nhận xóa hàng loạt</h2>
+                                <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa {selectedShowtime.length} lịch chiếu đã chọn không?</p>
                                 <div className="flex justify-end gap-4">
                                     <button
                                         onClick={() => setBulkDeleteModalOpen(false)}
-                                        className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                        className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         Hủy
                                     </button>
                                     <button
                                         onClick={confirmBulkDelete}
-                                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                                     >
                                         Xóa
                                     </button>
@@ -715,157 +742,206 @@ export default function ShowtimeManagement () {
 
                     {showAddModal && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div ref={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                                <h2 className="text-2xl font-semibold mb-4">Thêm lịch chiếu</h2>
-                                <label className="block mb-2">Tên phim</label>
-                                <select
-                                    onChange={(e) => {
-                                        const movieId = parseInt(e.target.value);
-                                        setSelectedMovie(movieId);
+                            <div
+                                ref={modalAddRef}
+                                className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
+                            >
+                                <div className="p-6">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-2xl font-bold text-gray-800">Thêm lịch chiếu</h2>
+                                        <button
+                                            onClick={() => setshowAddModal(false)}
+                                            className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
+                                        >
+                                            <span className="material-icons">close</span>
+                                        </button>
+                                    </div>
 
-                                        // Nếu đã có startTime, tính lại endTime
-                                        if (startTime && movieId) {
-                                            const movie = movies.find(m => m.movieId === movieId);
-                                            if (movie) {
-                                                const startDate = new Date(`2023-01-01T${startTime}`);
-                                                const endDate = addMinutes(startDate, movie.duration);
-                                                setEndTime(format(endDate, 'HH:mm:ss'));
-                                            }
-                                        }
-                                    }}
-                                    className="w-full p-2 mb-3 border rounded"
-                                >
-                                    <option value="">Chọn phim</option>
-                                    {movies.map(movie => (
-                                        <option key={movie.movieId} value={movie.movieId}>{movie.name}</option>
-                                    ))}
-                                </select>
-                                <label className="block mb-2">Ngày chiếu</label>
-                                <input type="date" onChange={(e) => setShowDate(e.target.value)}
-                                       className="w-full p-2 mb-3 border rounded"/>
-                                <label className="block mb-2">Giờ bắt đầu</label>
-                                <input type="time" onChange={handleStartTimeChange}
-                                       className="w-full p-2 mb-3 border rounded"/>
-                                <label className="block mb-2">Giờ kết thúc</label>
-                                <input type="time" value={endTime} readOnly className="w-full p-2 mb-3 border rounded"/>
-                                <label className="block mb-2">Chọn phòng</label>
-                                <select
-                                    onChange={(e) => setSelectedRoom(parseInt(e.target.value))}
-                                    className="w-full p-2 mb-4 border rounded"
-                                >
-                                    <option value="">Chọn phòng</option>
-                                    {rooms.map(room => (
-                                        <option key={room.id} value={room.id} disabled={isRoomDisabled(room.id)}>
-                                            {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="flex justify-end mt-6 gap-3">
-                                    <button onClick={handleSubmit}
-                                            className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">Thêm
-                                        lịch
-                                    </button>
-                                    <button onClick={handleCancel}
-                                            className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100">Hủy
-                                    </button>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Tên phim</label>
+                                            <select
+                                                onChange={(e) => {
+                                                    const movieId = parseInt(e.target.value);
+                                                    setSelectedMovie(movieId);
+                                                    if (startTime && movieId) {
+                                                        const movie = movies.find(m => m.movieId === movieId);
+                                                        if (movie) {
+                                                            const startDate = new Date(`2023-01-01T${startTime}`);
+                                                            const endDate = addMinutes(startDate, movie.duration);
+                                                            setEndTime(format(endDate, 'HH:mm:ss'));
+                                                        }
+                                                    }
+                                                }}
+                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                            >
+                                                <option value="">Chọn phim</option>
+                                                {movies.map(movie => (
+                                                    <option key={movie.movieId} value={movie.movieId}>{movie.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Ngày chiếu</label>
+                                            <input
+                                                type="date"
+                                                onChange={(e) => setShowDate(e.target.value)}
+                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ bắt đầu</label>
+                                            <input
+                                                type="time"
+                                                onChange={handleStartTimeChange}
+                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ kết thúc</label>
+                                            <input
+                                                type="time"
+                                                value={endTime}
+                                                readOnly
+                                                className="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-lg py-2.5 px-3.5 shadow-sm"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Chọn phòng</label>
+                                            <select
+                                                onChange={(e) => setSelectedRoom(parseInt(e.target.value))}
+                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                            >
+                                                <option value="">Chọn phòng</option>
+                                                {rooms.map(room => (
+                                                    <option key={room.id} value={room.id} disabled={isRoomDisabled(room.id)}>
+                                                        {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end mt-8 gap-3">
+                                        <button
+                                            onClick={handleCancel}
+                                            className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={handleSubmit}
+                                            className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                                        >
+                                            Thêm lịch
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
+
 
                     {showEditModal && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div ref={modalEditRef} className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                                <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa lịch chiếu</h2>
-                                <label className="block mb-2">Tên phim</label>
-                                <select
-                                    name="movieId"
-                                    value={editingShowtime.movieId || ""}
-                                    onChange={handleInputChangeEdit}
-                                    className="w-full p-2 mb-3 border rounded"
-                                >
-                                    <option value="">Chọn phim</option>
-                                    {movies.map(movie => (
-                                        <option key={movie.movieId} value={movie.movieId}>
-                                            {movie.name}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div ref={modalEditRef} className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100">
+                                <div className="p-6">
+                                    <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa lịch chiếu</h2>
+                                    <label className="block mb-2">Tên phim</label>
+                                    <select
+                                        name="movieId"
+                                        value={editingShowtime.movieId || ""}
+                                        onChange={handleInputChangeEdit}
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                    >
+                                        <option value="">Chọn phim</option>
+                                        {movies.map(movie => (
+                                            <option key={movie.movieId} value={movie.movieId}>
+                                                {movie.name}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                <label className="block mb-2">Ngày chiếu</label>
-                                <input type="date" value={editingShowtime.showDate} name="showDate"
-                                       onChange={handleInputChangeEdit}
-                                       className="w-full p-2 mb-3 border rounded"/>
-                                <label className="block mb-2">Giờ bắt đầu</label>
-                                <input type="time" name="startTime" value={editingShowtime.startTime}
-                                       onChange={(e) => {
-                                           const newStartTime = e.target.value;
-                                           // Cập nhật startTime trước
-                                           setEditingShowtime(prevState => ({
-                                               ...prevState,
-                                               startTime: newStartTime
-                                           }));
+                                    <label className="block mb-2">Ngày chiếu</label>
+                                    <input type="date" value={editingShowtime.showDate} name="showDate"
+                                           onChange={handleInputChangeEdit}
+                                           className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
+                                    <label className="block mb-2">Giờ bắt đầu</label>
+                                    <input type="time" name="startTime" value={editingShowtime.startTime}
+                                           onChange={(e) => {
+                                               const newStartTime = e.target.value;
+                                               // Cập nhật startTime trước
+                                               setEditingShowtime(prevState => ({
+                                                   ...prevState,
+                                                   startTime: newStartTime
+                                               }));
 
-                                           // Sau đó tính toán và cập nhật endTime nếu có movieId
-                                           if (newStartTime && editingShowtime.movieId) {
-                                               const movie = movies.find(m => m.movieId === editingShowtime.movieId);
-                                               if (movie) {
-                                                   const startDate = new Date(`1970-01-01T${newStartTime}:00`);
-                                                   const endDate = addMinutes(startDate, movie.duration);
-                                                   const newEndTime = format(endDate, 'HH:mm:ss');
+                                               // Sau đó tính toán và cập nhật endTime nếu có movieId
+                                               if (newStartTime && editingShowtime.movieId) {
+                                                   const movie = movies.find(m => m.movieId === editingShowtime.movieId);
+                                                   if (movie) {
+                                                       const startDate = new Date(`1970-01-01T${newStartTime}:00`);
+                                                       const endDate = addMinutes(startDate, movie.duration);
+                                                       const newEndTime = format(endDate, 'HH:mm:ss');
 
-                                                   // Cập nhật lại state với endTime mới
-                                                   setEditingShowtime(prevState => ({
-                                                       ...prevState,
-                                                       startTime: newStartTime,  // đảm bảo startTime được cập nhật
-                                                       endTime: newEndTime
-                                                   }));
+                                                       // Cập nhật lại state với endTime mới
+                                                       setEditingShowtime(prevState => ({
+                                                           ...prevState,
+                                                           startTime: newStartTime,  // đảm bảo startTime được cập nhật
+                                                           endTime: newEndTime
+                                                       }));
+                                                   }
                                                }
-                                           }
-                                       }}
-                                       className="w-full p-2 mb-3 border rounded"/>
-                                <label className="block mb-2">Giờ kết thúc</label>
-                                <input type="time" name="endTime" value={editingShowtime.endTime} readOnly
-                                       className="w-full p-2 mb-3 border rounded"/>
-                                <label className="block mb-2">Chọn phòng</label>
-                                <select
-                                    value={editingShowtime.roomId}
-                                    name="roomId"
-                                    onChange={(e) => setEditingShowtime({
-                                        ...editingShowtime,
-                                        roomId: parseInt(e.target.value)
-                                    })}
-                                    className="w-full p-2 mb-4 border rounded"
-                                >
-                                    <option value="">Chọn phòng</option>
-                                    {rooms.map(room => (
-                                        <option key={room.id} value={room.id} disabled={isRoomDisabledEdit(room.id)}>
-                                            {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
-                                        </option>
-                                    ))}
-                                </select>
+                                           }}
+                                           className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
+                                    <label className="block mb-2">Giờ kết thúc</label>
+                                    <input type="time" name="endTime" value={editingShowtime.endTime} readOnly
+                                           className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
+                                    <label className="block mb-2">Chọn phòng</label>
+                                    <select
+                                        value={editingShowtime.roomId}
+                                        name="roomId"
+                                        onChange={(e) => setEditingShowtime({
+                                            ...editingShowtime,
+                                            roomId: parseInt(e.target.value)
+                                        })}
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                    >
+                                        <option value="">Chọn phòng</option>
+                                        {rooms.map(room => (
+                                            <option key={room.id} value={room.id}
+                                                    disabled={isRoomDisabledEdit(room.id)}>
+                                                {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                <div className="flex justify-end mt-6 gap-3">
-                                    <button onClick={handleEditSubmit}
-                                            className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">Cập
-                                        nhật
-                                    </button>
-                                    <button onClick={() => setshowEditModal(false)}
-                                            className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100">Hủy
-                                    </button>
+                                    <div className="flex justify-end mt-6 gap-3">
+                                        <button onClick={handleEditSubmit}
+                                                className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600">Cập
+                                            nhật
+                                        </button>
+                                        <button onClick={handleCancel}
+                                                className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400">Hủy
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Pagination.jsx */}
-                    <div className="flex flex-wrap justify-center mt-6 gap-1">
-                        <div className="flex items-center">
+                    {/* Pagination */}
+                    <div className="flex flex-wrap justify-center mt-8 gap-2">
+                        <div className="flex flex-wrap justify-center items-center gap-2">
                             {/* Nút về trang đầu tiên */}
                             <button
                                 onClick={() => setCurrentPage(1)}
                                 disabled={currentPage === 1}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang đầu"
                             >
                                 &laquo;
@@ -875,7 +951,7 @@ export default function ShowtimeManagement () {
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 &lt;
                             </button>
@@ -885,12 +961,12 @@ export default function ShowtimeManagement () {
                                 <>
                                     <button
                                         onClick={() => setCurrentPage(1)}
-                                        className="mx-1 px-3 py-1 rounded border"
+                                        className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         1
                                     </button>
                                     {getPageNumbers()[0] > 2 && (
-                                        <span className="mx-1 px-3 py-1">...</span>
+                                        <span className="mx-1 px-2 py-1.5 text-sm md:text-base text-gray-500">...</span>
                                     )}
                                 </>
                             )}
@@ -900,11 +976,11 @@ export default function ShowtimeManagement () {
                                 <button
                                     key={pageNumber}
                                     onClick={() => setCurrentPage(pageNumber)}
-                                    className={`mx-1 px-3 py-1 rounded ${
+                                    className={`mx-1 px-3 py-1.5 rounded-md transition-all duration-200 ease-in-out ${
                                         currentPage === pageNumber
-                                            ? 'bg-gray-900 text-white'
-                                            : 'border'
-                                    }`}
+                                            ? 'bg-gray-900 text-white shadow-md transform scale-105'
+                                            : 'border border-gray-300 hover:bg-gray-100'
+                                    } text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-gray-400`}
                                 >
                                     {pageNumber}
                                 </button>
@@ -914,11 +990,11 @@ export default function ShowtimeManagement () {
                             {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
                                 <>
                                     {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
-                                        <span className="mx-1 px-3 py-1">...</span>
+                                        <span className="mx-1 px-2 py-1.5 text-sm md:text-base text-gray-500">...</span>
                                     )}
                                     <button
                                         onClick={() => setCurrentPage(totalPages)}
-                                        className="mx-1 px-3 py-1 rounded border"
+                                        className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         {totalPages}
                                     </button>
@@ -929,7 +1005,7 @@ export default function ShowtimeManagement () {
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 &gt;
                             </button>
@@ -938,7 +1014,7 @@ export default function ShowtimeManagement () {
                             <button
                                 onClick={() => setCurrentPage(totalPages)}
                                 disabled={currentPage === totalPages}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang cuối"
                             >
                                 &raquo;

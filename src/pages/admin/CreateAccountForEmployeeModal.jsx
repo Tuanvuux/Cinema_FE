@@ -141,7 +141,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                             </div>
@@ -152,7 +152,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                             </div>
@@ -163,7 +163,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded pr-10"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                                 <span
@@ -199,7 +199,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded pr-10"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                                 <span
@@ -230,7 +230,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className={`w-full p-2 rounded-md flex justify-center items-center ${
+                                className={`w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 ${
                                     isLoading ? " cursor-not-allowed" : " "
                                 }`}
                             >

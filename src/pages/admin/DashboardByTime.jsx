@@ -1,20 +1,19 @@
-import React, { useEffect, useState ,useRef} from "react";
-import { ChevronDown, X, Check } from 'lucide-react';
+import React, { useEffect, useState, useRef } from "react";
+import { ChevronDown, X, Check, FileText, FileSpreadsheet, Search, Calendar, BarChart, PieChart } from 'lucide-react';
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Bar, Pie } from 'react-chartjs-2';
-import {Chart as ChartJS, CategoryScale,LinearScale, BarElement, Title, Tooltip, Legend, ArcElement} from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { getPayments, getPaymentsByDateRange, getPaymentDetails } from "@/services/apiadmin.jsx";
 import PaymentDetailsModal from "@/pages/admin/PaymentDetailsModal.jsx";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from 'xlsx';
-import { Download, FileText, FileSpreadsheet } from 'lucide-react';
 
 // Register ChartJS components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement,ChartDataLabels);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, ChartDataLabels);
 
 export default function DashBoardByTime() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -46,6 +45,13 @@ export default function DashBoardByTime() {
     const dropdownRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
 
+    // Toast notification
+    const [toast, setToast] = useState({
+        show: false,
+        message: '',
+        type: 'success'
+    });
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
@@ -53,6 +59,7 @@ export default function DashBoardByTime() {
     useEffect(() => {
         document.title = 'Báo cáo doanh thu theo thời gian';
         fetchPayments();
+
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsOpen(false);
@@ -78,7 +85,6 @@ export default function DashBoardByTime() {
         e.stopPropagation(); // Ngăn không cho dropdown mở khi xóa
         setSelectedYears(selectedYears.filter(y => y !== year));
     };
-
 
     const fetchPayments = async () => {
         setLoading(true);
@@ -109,9 +115,26 @@ export default function DashBoardByTime() {
             );
             setPayments(data);
             setError(null);
+
+            // Show success toast
+            setToast({
+                show: true,
+                message: 'Dữ liệu đã được cập nhật theo khoảng thời gian',
+                type: 'success'
+            });
+            setTimeout(() => setToast({ ...toast, show: false }), 3000);
+
         } catch (err) {
             setError('Đã xảy ra lỗi khi tải dữ liệu thanh toán theo khoảng thời gian');
             console.error('Error fetching payments by date range:', err);
+
+            // Show error toast
+            setToast({
+                show: true,
+                message: 'Lỗi khi tải dữ liệu',
+                type: 'error'
+            });
+            setTimeout(() => setToast({ ...toast, show: false }), 3000);
         } finally {
             setLoading(false);
         }
@@ -144,6 +167,7 @@ export default function DashBoardByTime() {
         setIsModalOpen(false);
         setSelectedPayment(null);
     };
+
     const handleExportPDF = () => {
         const doc = new jsPDF();
 
@@ -207,7 +231,16 @@ export default function DashBoardByTime() {
         doc.setFontSize(12);
         doc.text(`Tổng giao dịch: ${totalTransactions}`, 14, doc.lastAutoTable.finalY + 10);
         doc.save("bao_cao_doanh_thu.pdf");
+
+        // Show success toast
+        setToast({
+            show: true,
+            message: 'Đã xuất file PDF thành công',
+            type: 'success'
+        });
+        setTimeout(() => setToast({ ...toast, show: false }), 3000);
     };
+
     const handleExportExcel = () => {
         const worksheetData = filteredPayments.map(payment => ({
             "ID": payment.paymentId,
@@ -244,6 +277,14 @@ export default function DashBoardByTime() {
         XLSX.utils.book_append_sheet(workbook, worksheet, "Báo cáo doanh thu");
 
         XLSX.writeFile(workbook, "bao_cao_doanh_thu.xlsx");
+
+        // Show success toast
+        setToast({
+            show: true,
+            message: 'Đã xuất file Excel thành công',
+            type: 'success'
+        });
+        setTimeout(() => setToast({ ...toast, show: false }), 3000);
     };
 
     // Filter and pagination logic
@@ -262,7 +303,6 @@ export default function DashBoardByTime() {
     const currentPayments = filteredPayments.slice(indexOfFirstPayment, indexOfLastPayment);
 
     const paginate = pageNumber => setCurrentPage(pageNumber);
-
 
     // Chart data preparation - Tách thành 2 hàm riêng cho Pie và Bar
     const prepareChartDataPie = () => {
@@ -294,11 +334,11 @@ export default function DashBoardByTime() {
 
             // Tạo mảng màu với số lượng phù hợp
             const backgroundColors = sortedYears.map((_, i) =>
-                `hsla(${(i * 40) % 360}, 70%, 50%, 0.7)`
+                `hsla(${(i * 40) % 360}, 70%, 50%, 0.8)`
             );
 
             const borderColors = backgroundColors.map(color =>
-                color.replace('0.7', '1')
+                color.replace('0.8', '1')
             );
 
             return {
@@ -325,16 +365,16 @@ export default function DashBoardByTime() {
                 datasets: [{
                     data: quarterData,
                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)'
+                        'rgba(53, 162, 235, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
                     ],
                     borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)'
+                        'rgb(53, 162, 235)',
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 205, 86)',
+                        'rgb(255, 99, 132)'
                     ],
                     borderWidth: 1
                 }]
@@ -348,38 +388,21 @@ export default function DashBoardByTime() {
                 monthData[month] += payment.sumPrice;
             });
 
+            // Gradient colors for months
+            const backgroundColors = Array(12).fill().map((_, i) =>
+                `hsla(${210 + (i * 12) % 360}, 70%, 60%, 0.8)`
+            );
+
+            const borderColors = backgroundColors.map(color =>
+                color.replace('0.8', '1')
+            );
+
             return {
                 labels: Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`),
                 datasets: [{
                     data: monthData,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(0, 200, 83, 0.7)',
-                        'rgba(255, 0, 255, 0.7)',
-                        'rgba(0, 0, 255, 0.7)',
-                        'rgba(255, 0, 0, 0.7)',
-                        'rgba(128, 0, 128, 0.7)',
-                        'rgba(165, 42, 42, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(0, 200, 83, 0.7)',
-                        'rgba(255, 0, 255, 0.7)',
-                        'rgba(0, 0, 255, 0.7)',
-                        'rgba(255, 0, 0, 0.7)',
-                        'rgba(128, 0, 128, 0.7)',
-                        'rgba(165, 42, 42, 0.7)'
-                    ],
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
                     borderWidth: 1
                 }]
             };
@@ -416,9 +439,9 @@ export default function DashBoardByTime() {
             return {
                 labels: sortedYears.map(year => `Năm ${year}`),
                 datasets: [{
-                    label: 'Doanh thu theo (VND)',
+                    label: 'Doanh thu (VND)',
                     data: sortedYears.map(year => yearData[year]),
-                    backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                    backgroundColor: 'rgba(53, 162, 235, 0.7)',
                     borderColor: 'rgb(53, 162, 235)',
                     borderWidth: 1
                 }]
@@ -438,8 +461,18 @@ export default function DashBoardByTime() {
                 datasets: [{
                     label: `Doanh thu theo quý (VND)`,
                     data: quarterData,
-                    backgroundColor: 'rgba(53, 162, 235, 0.5)',
-                    borderColor: 'rgb(53, 162, 235)',
+                    backgroundColor: [
+                        'rgba(53, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 205, 86, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(53, 162, 235)',
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 205, 86)',
+                        'rgb(255, 99, 132)'
+                    ],
                     borderWidth: 1
                 }]
             };
@@ -452,12 +485,17 @@ export default function DashBoardByTime() {
                 monthData[month] += payment.sumPrice;
             });
 
+            // Create a gradient of colors
+            const backgroundColors = Array(12).fill().map((_, i) =>
+                `rgba(53, ${120 + (i * 10)}, 235, 0.7)`
+            );
+
             return {
                 labels: Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`),
                 datasets: [{
                     label: `Doanh thu theo tháng (VND)`,
                     data: monthData,
-                    backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                    backgroundColor: backgroundColors,
                     borderColor: 'rgb(53, 162, 235)',
                     borderWidth: 1
                 }]
@@ -465,16 +503,30 @@ export default function DashBoardByTime() {
         }
     };
 
-
     const chartOptions = {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: {
                 position: 'top',
+                labels: {
+                    padding: 20,
+                    font: {
+                        size: 12
+                    }
+                }
             },
             title: {
                 display: true,
-                text: `Doanh thu theo ${chartGroupType === 'quarter' ? 'quý' : chartGroupType === 'month' ? 'tháng' : 'năm'} năm ${selectedYear}`,
+                text: `Doanh thu theo ${chartGroupType === 'quarter' ? 'quý' : chartGroupType === 'month' ? 'tháng' : 'năm'} ${chartGroupType !== 'year' ? 'năm ' + selectedYear : ''}`,
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: {
+                    top: 10,
+                    bottom: 20
+                }
             },
             tooltip: {
                 callbacks: {
@@ -488,6 +540,14 @@ export default function DashBoardByTime() {
                         }
                         return `${label}: ${formatCurrency(value)}`;
                     }
+                },
+                padding: 12,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleFont: {
+                    size: 14
+                },
+                bodyFont: {
+                    size: 14
                 }
             },
             datalabels: {
@@ -503,29 +563,32 @@ export default function DashBoardByTime() {
                     weight: 'bold',
                     size: 14,
                 },
+                textShadow: true,
+                shadowBlur: 10,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
             }
+        },
+        animation: {
+            animateScale: true,
+            animateRotate: true
         }
     };
-
-
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
 
     const ToastNotification = ({ message, type, show }) => {
         if (!show) return null;
 
         return (
-            <div className={`fixed top-4 right-4 z-50 px-4 py-2 text-white rounded-md shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+            <div className={`fixed top-4 right-4 z-50 px-6 py-3 text-white rounded-md shadow-lg transition-opacity duration-300 ease-in-out flex items-center ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                <span className={`material-icons mr-2 ${type === 'success' ? 'text-green-200' : 'text-red-200'}`}>
+                    {type === 'success' ? 'check_circle' : 'error'}
+                </span>
                 {message}
             </div>
         );
     };
 
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen bg-gray-50">
             <ToastNotification {...toast} />
 
             {selectedPayment && (
@@ -538,27 +601,27 @@ export default function DashBoardByTime() {
 
             <div className="flex flex-col md:flex-row h-full">
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-                        <h1 className="text-xl md:text-2xl font-bold">BÁO CÁO DOANH THU THEO THỜI GIAN</h1>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 pb-4 border-b border-gray-200">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">BÁO CÁO DOANH THU THEO THỜI GIAN</h1>
                         <div className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
                             <div className="relative w-full md:w-64">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm giao dịch"
-                                    className="border rounded-md py-2 px-4 pl-10 w-full sm:w-64"
+                                    className="border rounded-lg py-2 px-4 pl-10 w-full shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 transition-all duration-200"
                                     value={searchTerm}
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
                                         setCurrentPage(1);
                                     }}
                                 />
-                                <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
+                                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                             </div>
                             <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center space-x-4 justify-center mb-6">
+                    <div className="flex flex-wrap items-center space-x-4 justify-center mb-8 bg-white p-4 rounded-lg shadow-sm">
                         <label className="flex items-center cursor-pointer">
                             <input
                                 type="radio"
@@ -568,10 +631,8 @@ export default function DashBoardByTime() {
                                 onChange={() => setViewType('table')}
                                 className="hidden"
                             />
-                            <span className={`flex items-center ${viewType === 'table' ? 'text-gray-800' : 'text-gray-500'}`}>
-                                <span className="relative inline-block w-5 h-5 mr-2 rounded-full border border-gray-400">
-                                    {viewType === 'table' && <span className="absolute inset-1 rounded-full bg-indigo-900"></span>}
-                                </span>
+                            <span className={`flex items-center px-4 py-2 rounded-full transition-all duration-200 ${viewType === 'table' ? 'bg-indigo-100 text-indigo-900 font-medium' : 'text-gray-500 hover:bg-gray-100'}`}>
+                                <span className="material-icons mr-2">table_chart</span>
                                 Bảng
                             </span>
                         </label>
@@ -585,34 +646,41 @@ export default function DashBoardByTime() {
                                 onChange={() => setViewType('chart')}
                                 className="hidden"
                             />
-                            <span className={`flex items-center ${viewType === 'chart' ? 'text-gray-800' : 'text-gray-500'}`}>
-                                <span className="relative inline-block w-5 h-5 mr-2 rounded-full border border-gray-400">
-                                    {viewType === 'chart' && <span className="absolute inset-1 rounded-full bg-indigo-900"></span>}
-                                </span>
+                            <span className={`flex items-center px-4 py-2 rounded-full transition-all duration-200 ${viewType === 'chart' ? 'bg-indigo-100 text-indigo-900 font-medium' : 'text-gray-500 hover:bg-gray-100'}`}>
+                                <span className="material-icons mr-2">insert_chart</span>
                                 Biểu đồ
                             </span>
                         </label>
                     </div>
 
                     {viewType === 'table' ? (
-                        <div className="flex flex-wrap items-center space-x-6 mb-6 justify-center flex-wrap">
-                            <DatePicker
-                                selected={startDate}
-                                onChange={setStartDate}
-                                className="p-2 border border-gray-300 rounded"
-                                dateFormat="dd/MM/yyyy"
-                            />
-                            <DatePicker
-                                selected={endDate}
-                                onChange={setEndDate}
-                                className="p-2 border border-gray-300 rounded"
-                                dateFormat="dd/MM/yyyy"
-                                minDate={startDate}
-                            />
+                        <div className="flex flex-wrap items-center mb-6 justify-center gap-4 bg-white p-4 rounded-lg shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-indigo-800" />
+                                <span className="font-medium">Từ:</span>
+                                <DatePicker
+                                    selected={startDate}
+                                    onChange={setStartDate}
+                                    className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 transition-all duration-200"
+                                    dateFormat="dd/MM/yyyy"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-indigo-800" />
+                                <span className="font-medium">Đến:</span>
+                                <DatePicker
+                                    selected={endDate}
+                                    onChange={setEndDate}
+                                    className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 transition-all duration-200"
+                                    dateFormat="dd/MM/yyyy"
+                                    minDate={startDate}
+                                />
+                            </div>
                             <button
                                 onClick={handleDateRangeSearch}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center"
                             >
+                                <Search className="h-5 w-5 mr-2" />
                                 Tìm kiếm
                             </button>
                             <div className="flex gap-4 ml-auto flex-wrap">
@@ -635,11 +703,11 @@ export default function DashBoardByTime() {
 
 
                     ) : (
-                        <div className="flex flex-wrap items-center space-x-6 mb-6 justify-center flex-wrap">
-                            <div className="w-full sm:w-auto flex items-center space-x-2">
-                                <span>Nhóm theo:</span>
+                        <div className="flex flex-wrap items-center space-x-4 mb-8 justify-center">
+                            <div className="w-full sm:w-auto flex items-center space-x-3 mb-4 sm:mb-0">
+                                <span className="text-gray-700 font-medium">Nhóm theo:</span>
                                 <select
-                                    className="p-2 border border-gray-300 rounded"
+                                    className="p-2.5 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-blue-400"
                                     value={chartGroupType}
                                     onChange={(e) => setChartGroupType(e.target.value)}
                                 >
@@ -650,11 +718,10 @@ export default function DashBoardByTime() {
                             </div>
 
                             {chartGroupType !== 'year' ? (
-                                // Hiển thị dropdown chọn một năm khi không phải nhóm theo năm
-                                <div className="flex items-center space-x-2">
-                                    <span>Năm:</span>
+                                <div className="flex items-center space-x-3 mb-4 sm:mb-0">
+                                    <span className="text-gray-700 font-medium">Năm:</span>
                                     <select
-                                        className="p-2 border border-gray-300 rounded"
+                                        className="p-2.5 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-blue-400"
                                         value={selectedYear}
                                         onChange={(e) => setSelectedYear(e.target.value)}
                                     >
@@ -664,45 +731,46 @@ export default function DashBoardByTime() {
                                     </select>
                                 </div>
                             ) : (
-                                // Custom dropdown cho phép chọn nhiều năm
-                                <div className="flex items-center space-x-2 relative" ref={dropdownRef}>
-                                    <span>Chọn năm:</span>
+                                <div className="flex items-center space-x-3 relative mb-4 sm:mb-0" ref={dropdownRef}>
+                                    <span className="text-gray-700 font-medium">Chọn năm:</span>
                                     <div className="relative min-w-48">
-                                        {/* Dropdown button */}
                                         <div
-                                            className="p-2 border border-gray-300 rounded flex items-center justify-between cursor-pointer bg-white min-h-10"
+                                            className="p-2.5 border border-gray-300 rounded-lg flex items-center justify-between cursor-pointer bg-white min-h-10 hover:border-blue-400 transition-all duration-200 shadow-sm"
                                             onClick={() => setIsOpen(!isOpen)}
                                         >
                                             {selectedYears.length === 0 ? (
                                                 <span className="text-gray-500">Chọn năm</span>
                                             ) : (
-                                                <div className="flex flex-wrap gap-1 max-w-full overflow-hidden">
+                                                <div className="flex flex-wrap gap-1.5 max-w-full overflow-hidden">
                                                     {selectedYears.map(year => (
-                                                        <div key={year} className="bg-blue-100 text-blue-800 rounded px-2 py-1 text-sm flex items-center">
+                                                        <div key={year}
+                                                             className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm flex items-center transition-all duration-200 hover:bg-blue-200">
                                                             {year}
                                                             <X
-                                                                size={14}
-                                                                className="ml-1 cursor-pointer text-blue-600 hover:text-blue-800"
+                                                                size={16}
+                                                                className="ml-1.5 cursor-pointer text-blue-600 hover:text-blue-800"
                                                                 onClick={(e) => removeYear(year, e)}
                                                             />
                                                         </div>
                                                     ))}
                                                 </div>
                                             )}
-                                            <ChevronDown size={18} className={`ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                            <ChevronDown size={18}
+                                                         className={`ml-2 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}/>
                                         </div>
 
-                                        {/* Dropdown menu */}
                                         {isOpen && (
-                                            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
+                                            <div
+                                                className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg transform transition-all duration-200 origin-top">
                                                 {availableYears.map(year => (
                                                     <div
                                                         key={year}
-                                                        className="p-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                                                        className="p-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between transition-colors duration-150"
                                                         onClick={() => toggleYear(year)}
                                                     >
                                                         <span>{year}</span>
-                                                        {selectedYears.includes(year) && <Check size={16} className="text-blue-600" />}
+                                                        {selectedYears.includes(year) &&
+                                                            <Check size={18} className="text-blue-600"/>}
                                                     </div>
                                                 ))}
                                             </div>
@@ -711,10 +779,10 @@ export default function DashBoardByTime() {
                                 </div>
                             )}
 
-                            <div className="flex items-center space-x-2">
-                                <span>Loại biểu đồ:</span>
+                            <div className="flex items-center space-x-3 mb-4 sm:mb-0">
+                                <span className="text-gray-700 font-medium">Loại biểu đồ:</span>
                                 <select
-                                    className="p-2 border border-gray-300 rounded"
+                                    className="p-2.5 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-blue-400"
                                     value={chartType}
                                     onChange={(e) => setChartType(e.target.value)}
                                 >
@@ -726,53 +794,66 @@ export default function DashBoardByTime() {
                     )}
 
                     {loading ? (
-                        <div className="text-center py-10">
+                        <div className="text-center py-16 flex flex-col items-center justify-center">
                             <div
-                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className="mt-2">Đang tải dữ liệu...</p>
+                                className="animate-spin rounded-full h-16 w-16 border-t-3 border-b-3 border-blue-600 mx-auto"></div>
+                            <p className="mt-4 text-lg text-gray-600 font-medium">Đang tải dữ liệu...</p>
                         </div>
                     ) : error ? (
-                        <div className="text-center py-10 text-red-500">{error}</div>
+                        <div className="text-center py-16 bg-red-50 rounded-lg border border-red-200">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
+                                <span className="material-icons text-3xl">error_outline</span>
+                            </div>
+                            <p className="text-red-600 text-lg font-medium">{error}</p>
+                        </div>
                     ) : viewType === 'table' ? (
                         <>
-                            <div className="overflow-x-auto max-w-full">
-                                <table className="min-w-full bg-white border">
+                            <div className="overflow-x-auto max-w-full bg-white rounded-xl shadow-md border border-gray-100">
+                                <table className="min-w-full bg-white">
                                     <thead>
-                                    <tr className="bg-gray-100 border-b">
-                                        <th className="p-3 text-center">ID</th>
-                                        <th className="p-3 text-center">Tên phim</th>
-                                        <th className="p-3 text-center">Ngày giao dịch</th>
-                                        <th className="p-3 text-center">Ghế</th>
-                                        <th className="p-3 text-center">ID lịch chiếu</th>
-                                        <th className="p-3 text-center">Số vé</th>
-                                        <th className="p-3 text-center">Doanh thu</th>
-                                        <th className="p-3 text-center">Phương thức thanh toán</th>
-                                        <th className="p-3 text-center">Thao tác</th>
+                                    <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">ID</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Tên phim</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Ngày giao dịch</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Ghế</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">ID lịch chiếu</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Số vé</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Doanh thu</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Phương thức thanh toán</th>
+                                        <th className="p-4 text-center text-sm font-semibold text-gray-700">Thao tác</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {currentPayments.map((payment) => (
-                                        <tr key={payment.paymentId} className="border-b hover:bg-gray-50">
-                                            <td className="p-3 text-center">{payment.paymentId}</td>
-                                            <td className="p-3 font-medium text-center">{payment.movieName || 'N/A'}</td>
-                                            <td className="p-3 text-center">
+                                    {currentPayments.map((payment, index) => (
+                                        <tr key={payment.paymentId} className={`border-b border-gray-100 hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                            <td className="p-4 text-center text-gray-800">{payment.paymentId}</td>
+                                            <td className="p-4 font-medium text-center text-gray-800">{payment.movieName || 'N/A'}</td>
+                                            <td className="p-4 text-center text-gray-700">
                                                 {new Date(payment.dateTransaction).toLocaleString('vi-VN')}
                                             </td>
-                                            <td className="p-3 text-center">{payment.seatNames || 'N/A'}</td>
-                                            <td className="p-3 text-center">{payment.scheduleId || 'N/A'}</td>
-                                            {/* This represents showtimeId */}
-                                            <td className="p-3 text-center">{payment.sumTicket}</td>
-                                            <td className="p-3 text-center">{formatCurrency(payment.sumPrice)}</td>
-                                            <td className="p-3 text-center">{payment.methodPayment}</td>
-                                            <td className="p-3 text-center">
+                                            <td className="p-4 text-center text-gray-700">{payment.seatNames || 'N/A'}</td>
+                                            <td className="p-4 text-center text-gray-700">{payment.scheduleId || 'N/A'}</td>
+                                            <td className="p-4 text-center text-gray-700">{payment.sumTicket}</td>
+                                            <td className="p-4 text-center font-medium text-green-700">{formatCurrency(payment.sumPrice)}</td>
+                                            <td className="p-4 text-center">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                payment.methodPayment === 'VNPAY' ? 'bg-blue-100 text-blue-800' :
+                                    payment.methodPayment === 'CASH' ? 'bg-green-100 text-green-800' :
+                                        'bg-purple-100 text-purple-800'
+                            }`}>
+                                {payment.methodPayment}
+                            </span>
+                                            </td>
+                                            <td className="p-4 text-center">
                                                 <button
                                                     onClick={() => handleSeeShowtime(payment)}
-                                                    className="text-gray-600 hover:text-gray-800"
+                                                    className="text-blue-600 hover:text-blue-800 transition-colors duration-200 p-2 rounded-full hover:bg-blue-100"
                                                     disabled={detailsLoading}
+                                                    title="Xem chi tiết"
                                                 >
-                                                    <span className="material-icons">
-                                                        {detailsLoading ? "hourglass_empty" : "visibility"}
-                                                    </span>
+                                <span className="material-icons">
+                                    {detailsLoading ? "hourglass_empty" : "visibility"}
+                                </span>
                                                 </button>
                                             </td>
                                         </tr>
@@ -782,15 +863,17 @@ export default function DashBoardByTime() {
                             </div>
 
                             {/* Pagination */}
-                            <div className="flex justify-center mt-6">
-                                <nav className="w-full overflow-x-auto">
-                                    <ul className="flex justify-center md:justify-center flex-wrap md:flex-nowrap">
+                            <div className="flex justify-center mt-8">
+                                <nav className="w-full overflow-x-auto flex justify-center">
+                                    <ul className="flex space-x-1">
                                         <li>
                                             <button
                                                 onClick={() => paginate(Math.max(1, currentPage - 1))}
                                                 disabled={currentPage === 1}
-                                                className={`px-3 py-1 mx-1 border rounded ${
-                                                    currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100'
+                                                className={`px-4 py-2 rounded-md border transition-all duration-200 ${
+                                                    currentPage === 1
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300'
                                                 }`}
                                             >
                                                 &laquo;
@@ -800,8 +883,10 @@ export default function DashBoardByTime() {
                                             <li key={index}>
                                                 <button
                                                     onClick={() => paginate(index + 1)}
-                                                    className={`px-3 py-1 mx-1 border rounded ${
-                                                        currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+                                                    className={`px-4 py-2 mx-1 border rounded-md transition-all duration-200 ${
+                                                        currentPage === index + 1
+                                                            ? 'bg-blue-600 text-white border-blue-600'
+                                                            : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300'
                                                     }`}
                                                 >
                                                     {index + 1}
@@ -812,10 +897,10 @@ export default function DashBoardByTime() {
                                             <button
                                                 onClick={() => paginate(Math.min(Math.ceil(filteredPayments.length / itemsPerPage), currentPage + 1))}
                                                 disabled={currentPage === Math.ceil(filteredPayments.length / itemsPerPage)}
-                                                className={`px-3 py-1 mx-1 border rounded ${
+                                                className={`px-4 py-2 rounded-md border transition-all duration-200 ${
                                                     currentPage === Math.ceil(filteredPayments.length / itemsPerPage)
-                                                        ? 'bg-gray-100 text-gray-400'
-                                                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300'
                                                 }`}
                                             >
                                                 &raquo;
@@ -825,23 +910,25 @@ export default function DashBoardByTime() {
                                 </nav>
                             </div>
 
-                            {/* Summary */}
-                            <div className="mt-6 bg-gray-100 p-4 rounded-lg">
-                                <h2 className="text-lg font-bold mb-2">Tổng kết:</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="bg-white p-4 rounded shadow">
-                                        <h3 className="text-gray-500 text-sm">Tổng số giao dịch</h3>
-                                        <p className="text-2xl font-bold">{filteredPayments.length}</p>
+                            <div className="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl shadow-md border border-gray-200">
+                                <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                                    <span className="material-icons mr-2 text-blue-600">summarize</span>
+                                    Tổng kết
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 transform hover:-translate-y-1">
+                                        <h3 className="text-gray-500 text-sm font-medium mb-2">Tổng số giao dịch</h3>
+                                        <p className="text-3xl font-bold text-gray-800">{filteredPayments.length}</p>
                                     </div>
-                                    <div className="bg-white p-4 rounded shadow">
-                                        <h3 className="text-gray-500 text-sm">Tổng số vé</h3>
-                                        <p className="text-2xl font-bold">
+                                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 transform hover:-translate-y-1">
+                                        <h3 className="text-gray-500 text-sm font-medium mb-2">Tổng số vé</h3>
+                                        <p className="text-3xl font-bold text-gray-800">
                                             {filteredPayments.reduce((sum, payment) => sum + payment.sumTicket, 0)}
                                         </p>
                                     </div>
-                                    <div className="bg-white p-4 rounded shadow">
-                                        <h3 className="text-gray-500 text-sm">Tổng doanh thu</h3>
-                                        <p className="text-2xl font-bold text-green-600">
+                                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 transform hover:-translate-y-1">
+                                        <h3 className="text-gray-500 text-sm font-medium mb-2">Tổng doanh thu</h3>
+                                        <p className="text-3xl font-bold text-green-600">
                                             {formatCurrency(filteredPayments.reduce((sum, payment) => sum + payment.sumPrice, 0))}
                                         </p>
                                     </div>
@@ -849,107 +936,123 @@ export default function DashBoardByTime() {
                             </div>
                         </>
                     ) : (
-                        <div className="mt-6 p-4 bg-white rounded-lg shadow-md overflow-hidden">
-                            <h2 className="text-xl font-bold mb-4">Biểu đồ doanh thu</h2>
-                            <div className="w-full max-w-screen-md h-96 mx-auto flex justify-center items-center">
+                        <div className="mt-6 p-6 bg-white rounded-xl shadow-md border border-gray-100 transition-all duration-300 hover:shadow-lg">
+                            <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+                                <span className="material-icons mr-2 text-blue-600">bar_chart</span>
+                                Biểu đồ doanh thu
+                            </h2>
+                            <div className="w-full max-w-screen-md h-96 mx-auto flex justify-center items-center bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6">
                                 {chartType === 'pie' ? (
-                                    <Pie data={prepareChartDataPie()} options={chartOptions}/>
+                                    <Pie data={prepareChartDataPie()} options={{
+                                        ...chartOptions,
+                                        plugins: {
+                                            ...chartOptions.plugins,
+                                            legend: {
+                                                position: 'right',
+                                                labels: {
+                                                    font: {
+                                                        size: 12,
+                                                        family: "'Roboto', sans-serif"
+                                                    },
+                                                    padding: 20,
+                                                    usePointStyle: true,
+                                                    boxWidth: 10
+                                                }
+                                            },
+                                            tooltip: {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                titleFont: {
+                                                    size: 14,
+                                                    family: "'Roboto', sans-serif"
+                                                },
+                                                bodyFont: {
+                                                    size: 13,
+                                                    family: "'Roboto', sans-serif"
+                                                },
+                                                bodyColor: '#333',
+                                                titleColor: '#333',
+                                                borderColor: '#ddd',
+                                                borderWidth: 1,
+                                                boxPadding: 5,
+                                                usePointStyle: true,
+                                            }
+                                        },
+                                        animation: {
+                                            animateScale: true,
+                                            animateRotate: true,
+                                            duration: 1000,
+                                            easing: 'easeOutQuart'
+                                        }
+                                    }}/>
                                 ) : (
-                                    <Bar data={prepareChartDataBar()} options={chartOptions}/>
+                                    <Bar data={prepareChartDataBar()} options={{
+                                        ...chartOptions,
+                                        plugins: {
+                                            ...chartOptions.plugins,
+                                            legend: {
+                                                display: false
+                                            },
+                                            tooltip: {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                titleFont: {
+                                                    size: 14,
+                                                    family: "'Roboto', sans-serif"
+                                                },
+                                                bodyFont: {
+                                                    size: 13,
+                                                    family: "'Roboto', sans-serif"
+                                                },
+                                                bodyColor: '#333',
+                                                titleColor: '#333',
+                                                borderColor: '#ddd',
+                                                borderWidth: 1,
+                                                boxPadding: 5
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                grid: {
+                                                    color: 'rgba(0, 0, 0, 0.05)'
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        family: "'Roboto', sans-serif"
+                                                    }
+                                                }
+                                            },
+                                            x: {
+                                                grid: {
+                                                    display: false
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        family: "'Roboto', sans-serif"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        animation: {
+                                            duration: 1000,
+                                            easing: 'easeOutQuart'
+                                        }
+                                    }}/>
                                 )}
                             </div>
 
                             {chartGroupType === 'quarter' && (
-                                <div className="mt-6">
-                                    <h3 className="text-lg font-semibold mb-2">Tổng doanh thu theo quý</h3>
-                                    <table className="w-full border-collapse">
-                                        <thead>
-                                        <tr className="bg-gray-100">
-                                            <th className="p-2 border">Quý</th>
-                                            <th className="p-2 border">Doanh thu</th>
-                                            <th className="p-2 border">Tỷ lệ</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {prepareChartDataPie().labels.map((label, index) => {
-                                            const chartData = chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar();
-                                            const value = chartData.datasets[0].data[index];
-                                            const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
-                                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-
-                                            return (
-                                                <tr key={label} className="border">
-                                                    <td className="p-2 border text-center">{label}</td>
-                                                    <td className="p-2 border text-center">{formatCurrency(value)}</td>
-                                                    <td className="p-2 border text-center">{percentage}%</td>
-                                                </tr>
-                                            );
-                                        })}
-                                        <tr className="bg-gray-50 font-semibold">
-                                            <td className="p-2 border text-center">Tổng cộng</td>
-                                            <td className="p-2 border text-center">
-                                                {formatCurrency(
-                                                    (chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar())
-                                                        .datasets[0].data.reduce((a, b) => a + b, 0)
-                                                )}
-                                            </td>
-                                            <td className="p-2 border text-center">100%</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-
-                            {chartGroupType === 'month' && (
-                                <div className="mt-6">
-                                    <h3 className="text-lg font-semibold mb-2">Tổng doanh thu theo tháng</h3>
-                                    <table className="w-full border-collapse">
-                                        <thead>
-                                        <tr className="bg-gray-100">
-                                            <th className="p-2 border">Tháng</th>
-                                            <th className="p-2 border">Doanh thu</th>
-                                            <th className="p-2 border">Tỷ lệ</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {prepareChartDataPie().labels.map((label, index) => {
-                                            const chartData = chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar();
-                                            const value = chartData.datasets[0].data[index];
-                                            const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
-                                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-
-                                            return (
-                                                <tr key={label} className="border">
-                                                    <td className="p-2 border text-center">{label}</td>
-                                                    <td className="p-2 border text-center">{formatCurrency(value)}</td>
-                                                    <td className="p-2 border text-center">{percentage}%</td>
-                                                </tr>
-                                            );
-                                        })}
-                                        <tr className="bg-gray-50 font-semibold">
-                                            <td className="p-2 border text-center">Tổng cộng</td>
-                                            <td className="p-2 border text-center">
-                                                {formatCurrency(
-                                                    (chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar())
-                                                        .datasets[0].data.reduce((a, b) => a + b, 0)
-                                                )}
-                                            </td>
-                                            <td className="p-2 border text-center">100%</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                            {chartGroupType === 'year' && (
-                                <div className="mt-6">
-                                    <h3 className="text-lg font-semibold mb-2">Tổng doanh thu theo năm</h3>
-                                    {selectedYears.length > 0 ? (
-                                        <table className="w-full border-collapse">
+                                <div className="mt-8">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                                        <span className="material-icons mr-2 text-blue-600 text-xl">view_week</span>
+                                        Tổng doanh thu theo quý
+                                    </h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse rounded-lg overflow-hidden">
                                             <thead>
-                                            <tr className="bg-gray-100">
-                                                <th className="p-2 border">Năm</th>
-                                                <th className="p-2 border">Doanh thu</th>
-                                                <th className="p-2 border">Tỷ lệ</th>
+                                            <tr className="bg-gradient-to-r from-blue-50 to-blue-100">
+                                                <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Quý</th>
+                                                <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Doanh thu</th>
+                                                <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Tỷ lệ</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -960,27 +1063,144 @@ export default function DashBoardByTime() {
                                                 const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
                                                 return (
-                                                    <tr key={label} className="border">
-                                                        <td className="p-2 border text-center">{label}</td>
-                                                        <td className="p-2 border text-center">{formatCurrency(value)}</td>
-                                                        <td className="p-2 border text-center">{percentage}%</td>
+                                                    <tr key={label} className="hover:bg-blue-50 transition-colors duration-150">
+                                                        <td className="p-3 border border-blue-100 text-center font-medium text-gray-700">{label}</td>
+                                                        <td className="p-3 border border-blue-100 text-center text-gray-800">{formatCurrency(value)}</td>
+                                                        <td className="p-3 border border-blue-100 text-center">
+                                                            <div className="flex items-center justify-center">
+                                                                <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-24">
+                                                                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
+                                                                </div>
+                                                                <span className="text-gray-700">{percentage}%</span>
+                                                            </div>
+                                                        </td>
                                                     </tr>
                                                 );
                                             })}
-                                            <tr className="bg-gray-50 font-semibold">
-                                                <td className="p-2 border text-center">Tổng cộng</td>
-                                                <td className="p-2 border text-center">
+                                            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 font-semibold">
+                                                <td className="p-3 border border-blue-100 text-center text-gray-800">Tổng cộng</td>
+                                                <td className="p-3 border border-blue-100 text-center text-green-700">
                                                     {formatCurrency(
                                                         (chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar())
                                                             .datasets[0].data.reduce((a, b) => a + b, 0)
                                                     )}
                                                 </td>
-                                                <td className="p-2 border text-center">100%</td>
+                                                <td className="p-3 border border-blue-100 text-center text-gray-800">100%</td>
                                             </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {chartGroupType === 'month' && (
+                                <div className="mt-8">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                                        <span className="material-icons mr-2 text-blue-600 text-xl">calendar_today</span>
+                                        Tổng doanh thu theo tháng
+                                    </h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse rounded-lg overflow-hidden">
+                                            <thead>
+                                            <tr className="bg-gradient-to-r from-blue-50 to-blue-100">
+                                                <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Tháng</th>
+                                                <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Doanh thu</th>
+                                                <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Tỷ lệ</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {prepareChartDataPie().labels.map((label, index) => {
+                                                const chartData = chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar();
+                                                const value = chartData.datasets[0].data[index];
+                                                const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+
+                                                return (
+                                                    <tr key={label} className="hover:bg-blue-50 transition-colors duration-150">
+                                                        <td className="p-3 border border-blue-100 text-center font-medium text-gray-700">{label}</td>
+                                                        <td className="p-3 border border-blue-100 text-center text-gray-800">{formatCurrency(value)}</td>
+                                                        <td className="p-3 border border-blue-100 text-center">
+                                                            <div className="flex items-center justify-center">
+                                                                <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-24">
+                                                                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
+                                                                </div>
+                                                                <span className="text-gray-700">{percentage}%</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 font-semibold">
+                                                <td className="p-3 border border-blue-100 text-center text-gray-800">Tổng cộng</td>
+                                                <td className="p-3 border border-blue-100 text-center text-green-700">
+                                                    {formatCurrency(
+                                                        (chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar())
+                                                            .datasets[0].data.reduce((a, b) => a + b, 0)
+                                                    )}
+                                                </td>
+                                                <td className="p-3 border border-blue-100 text-center text-gray-800">100%</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                            {chartGroupType === 'year' && (
+                                <div className="mt-8">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                                        <span className="material-icons mr-2 text-blue-600 text-xl">date_range</span>
+                                        Tổng doanh thu theo năm
+                                    </h3>
+                                    {selectedYears.length > 0 ? (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full border-collapse rounded-lg overflow-hidden">
+                                                <thead>
+                                                <tr className="bg-gradient-to-r from-blue-50 to-blue-100">
+                                                    <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Năm</th>
+                                                    <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Doanh thu</th>
+                                                    <th className="p-3 border border-blue-200 text-gray-700 font-semibold">Tỷ lệ</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {prepareChartDataPie().labels.map((label, index) => {
+                                                    const chartData = chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar();
+                                                    const value = chartData.datasets[0].data[index];
+                                                    const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
+                                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+
+                                                    return (
+                                                        <tr key={label} className="hover:bg-blue-50 transition-colors duration-150">
+                                                            <td className="p-3 border border-blue-100 text-center font-medium text-gray-700">{label}</td>
+                                                            <td className="p-3 border border-blue-100 text-center text-gray-800">{formatCurrency(value)}</td>
+                                                            <td className="p-3 border border-blue-100 text-center">
+                                                                <div className="flex items-center justify-center">
+                                                                    <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-24">
+                                                                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
+                                                                    </div>
+                                                                    <span className="text-gray-700">{percentage}%</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 font-semibold">
+                                                    <td className="p-3 border border-blue-100 text-center text-gray-800">Tổng cộng</td>
+                                                    <td className="p-3 border border-blue-100 text-center text-green-700">
+                                                        {formatCurrency(
+                                                            (chartType === 'pie' ? prepareChartDataPie() : prepareChartDataBar())
+                                                                .datasets[0].data.reduce((a, b) => a + b, 0)
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3 border border-blue-100 text-center text-gray-800">100%</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     ) : (
-                                        <p className="text-center text-gray-500">Vui lòng chọn ít nhất một năm để hiển thị dữ liệu</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                                            <span className="material-icons text-gray-400 text-5xl mb-2">calendar_month</span>
+                                            <p className="text-gray-600">Vui lòng chọn ít nhất một năm để hiển thị dữ liệu</p>
+                                        </div>
                                     )}
                                 </div>
                             )}

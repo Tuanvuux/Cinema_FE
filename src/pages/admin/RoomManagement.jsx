@@ -2,13 +2,11 @@ import React, {useState, useEffect, useRef} from 'react';
 import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 
-
 export default function RoomManagement () {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showFilter, setShowFilter] = useState(false);
     const [error, setError] = useState(null);
-    // const [selectedRoom, setSelectedRoom] = useState(null);
     const [newRoom, setNewRoom] = useState({
         name: '',
         seatCount: 0,
@@ -17,7 +15,7 @@ export default function RoomManagement () {
         numberOfRows: 0
     });
 
-    const resetAddModalState = () =>{
+    const resetAddModalState = () => {
         setNewRoom({
             name: '',
             seatCount: 0,
@@ -36,7 +34,7 @@ export default function RoomManagement () {
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingRoom, setEditingRoom] = useState({ id: '', name: '', seatCount: '',numberOfColumns: '',
-                                                                    numberOfRows:'', status: '' , createdAt: ''});
+        numberOfRows:'', status: '' , createdAt: ''});
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedRoomId, setSelectedRoomId] = useState(null);
 
@@ -46,6 +44,7 @@ export default function RoomManagement () {
     const modalEditRef = useRef();
     const modalbulkDeRef = useRef();
     const modalAddRef = useRef();
+    const filterRef = useRef();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -62,17 +61,22 @@ export default function RoomManagement () {
                 resetAddModalState();
                 setShowAddModal(false);
             }
+
+            if (showFilter && filterRef.current && !filterRef.current.contains(event.target) &&
+                !event.target.closest('button[data-filter-toggle]')) {
+                setShowFilter(false);
+            }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [bulkDeleteModalOpen, showEditModal,showAddModal]);
+    }, [bulkDeleteModalOpen, showEditModal, showAddModal, showFilter]);
 
 
-    const handleOpenDeleteModal = (showtimeId) => {
-        setSelectedRoomId(showtimeId);
+    const handleOpenDeleteModal = (roomId) => {
+        setSelectedRoomId(roomId);
         setDeleteModalOpen(true);
     };
 
@@ -118,7 +122,6 @@ export default function RoomManagement () {
 
     const handleEditRoom = (room) => {
         setEditingRoom(room);
-        // setSelectedRoom(room);
         setShowEditModal(true);
     };
 
@@ -157,14 +160,9 @@ export default function RoomManagement () {
             })
             console.error("Lỗi khi cập nhật phòng:", error);
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
-
-        setShowEditModal(false);
-        setTimeout(() => {
-            setToast({show: false, message: '', type: 'success'});
-        }, 3000);
     };
 
     // Handle select all rooms
@@ -195,7 +193,7 @@ export default function RoomManagement () {
         if (selectedRooms.length === 0) {
             setToast({
                 show: true,
-                message: 'Vui lòng chọn ít nhất một lịch chiếu để xóa',
+                message: 'Vui lòng chọn ít nhất một phòng chiếu để xóa',
                 type: 'error'
             });
             return;
@@ -206,21 +204,22 @@ export default function RoomManagement () {
         setBulkDeleteModalOpen(true);
     };
 
-// Add this function to perform the actual bulk deletion
+    // Add this function to perform the actual bulk deletion
     const confirmBulkDelete = async () => {
         try {
-            // Delete each selected showtime
+            // Delete each selected room
             for (const roomId of selectedRooms) {
                 await deleteRoom(roomId);
             }
 
-            // Update local state by filtering out deleted showtimes
+            // Update local state by filtering out deleted rooms
             setRooms(prevRooms =>
                 prevRooms.filter(room => !selectedRooms.includes(room.id))
             );
 
             // Clear selection
             setSelectedRooms([]);
+            setSelectAll(false);
 
             // Show success notification
             setToast({
@@ -237,7 +236,7 @@ export default function RoomManagement () {
         } catch (error) {
             setToast({
                 show: true,
-                message: 'Xóa lịch chiếu thất bại',
+                message: 'Xóa phòng chiếu thất bại',
                 type: 'error'
             });
 
@@ -245,7 +244,7 @@ export default function RoomManagement () {
             console.error("Lỗi khi xóa nhiều phòng chiếu:", error);
 
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
     };
@@ -290,7 +289,9 @@ export default function RoomManagement () {
             setNewRoom({
                 name: '',
                 seatCount: 0,
-                status: 'ACTIVE'
+                status: 'ACTIVE',
+                numberOfColumns: 0,
+                numberOfRows: 0
             });
             setShowAddModal(false);
             // Automatically hide toast after 3 seconds
@@ -308,7 +309,7 @@ export default function RoomManagement () {
             console.error(err);
 
             setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
+                setToast({ show: false, message: '', type: 'error' });
             }, 3000);
         }
     };
@@ -324,13 +325,18 @@ export default function RoomManagement () {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-4 py-2 text-white rounded-md shadow-lg transition-all duration-300 ${typeStyles[type]}`}
+                className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
-                    opacity: show ? 1 : 0
+                    opacity: show ? 1 : 0,
+                    transform: 'translateY(0)',
+                    transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
-                {message}
+                <span className="material-icons mr-2 text-white">
+                    {type === 'success' ? 'check_circle' : 'error'}
+                </span>
+                <p className="text-white font-medium">{message}</p>
             </div>
         );
     };
@@ -345,13 +351,31 @@ export default function RoomManagement () {
 
                 // Update local state
                 setRooms(rooms.map(room => room.id === roomId ? { ...room, status } : room));
+
+                setToast({
+                    show: true,
+                    message: `Trạng thái phòng đã được chuyển thành ${status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}`,
+                    type: 'success'
+                });
+
+                setTimeout(() => {
+                    setToast({ show: false, message: '', type: 'success' });
+                }, 3000);
             }
         } catch (err) {
             setError('Failed to update room status');
+            setToast({
+                show: true,
+                message: 'Cập nhật trạng thái thất bại',
+                type: 'error'
+            });
             console.error(err);
+
+            setTimeout(() => {
+                setToast({ show: false, message: '', type: 'error' });
+            }, 3000);
         }
     };
-
 
     const filteredRooms = rooms.filter(room => {
         const matchesSearch = Object.values(room).some(value =>
@@ -359,12 +383,11 @@ export default function RoomManagement () {
         );
 
         const matchesStatus = statusFilter === 'all' ||
-                (statusFilter === 'active' && room.status === 'ACTIVE') ||
-                (statusFilter === 'inactive' && room.status === 'INACTIVE');
+            (statusFilter === 'active' && room.status === 'ACTIVE') ||
+            (statusFilter === 'inactive' && room.status === 'INACTIVE');
 
         return matchesSearch && matchesStatus;
     });
-
 
     // Calculate pagination
     const indexOfLastRoom = currentPage * itemsPerPage;
@@ -390,21 +413,28 @@ export default function RoomManagement () {
     };
 
     const handleInputChangeEdit = (e) => {
-        setEditingRoom({ ...editingRoom, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        const processedValue = name === 'seatCount' || name === 'numberOfColumns' || name === 'numberOfRows'
+            ? parseInt(value, 10) || 0
+            : value;
+        setEditingRoom({ ...editingRoom, [name]: processedValue });
     };
 
     // Handle input change for new room form
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        const processedValue = name === 'seatCount' || name === 'numberOfColumns' || name === 'numberOfRows'
+            ? parseInt(value, 10) || 0
+            : value;
         setNewRoom({
             ...newRoom,
-            [name]: name === 'seatCount' ? parseInt(value, 10) : value
+            [name]: processedValue
         });
     };
 
     return (
-        <div className="flex flex-col h-screen">
-            {/* Left sidebar - similar to the image */}
+        <div className="flex flex-col h-screen bg-gray-50">
+            {/* Toast notification */}
             <ToastNotification
                 message={toast.message}
                 type={toast.type}
@@ -416,76 +446,87 @@ export default function RoomManagement () {
                 <div className="flex-1 p-4 md:p-6 overflow-auto">
                     {/* Header section */}
                     <div
-                        className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-                        <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ PHÒNG CHIẾU</h1>
+                        className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-200">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">QUẢN LÝ PHÒNG CHIẾU</h1>
                         <div
-                            className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
-                            <div className="relative w-full md:w-64">
+                            className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4 mt-4 md:mt-0">
+                            <div className="relative w-full md:w-64 group">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm phòng chiếu"
-                                    className="border rounded-md py-2 px-4 pl-10 w-full"
+                                    className="border border-gray-300 rounded-lg py-2 px-4 pl-10 w-full transition-all focus:border-gray-500 focus:ring-2 focus:ring-gray-200 outline-none"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
+                                <span
+                                    className="material-icons absolute left-3 top-2 text-gray-400 group-hover:text-gray-600">search</span>
                             </div>
                             <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
 
                     {/* Filters and Add Button */}
-                    <div className="flex flex-col md:flex-row justify-between mb-6 relative gap-4">
+                    <div className="flex justify-between mb-6 relative">
                         <div className="flex items-center">
-                        <button className="mr-2 p-2 border rounded hover:bg-gray-100"
-                                    onClick={() => setShowFilter(!showFilter)}>
-                                <span className="material-icons">filter_list</span>
+                            <button
+                                className="mr-2 p-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all flex items-center"
+                                onClick={() => setShowFilter(!showFilter)}
+                                data-filter-toggle
+                            >
+                                <span className="material-icons text-gray-600">filter_list</span>
+                                <span className="ml-2 text-gray-700">Bộ lọc</span>
                             </button>
                             {/* Dropdown filter */}
                             {showFilter && (
-                                <div className="absolute z-10 bg-white border rounded shadow-md p-3 top-12 left-0 w-64">
-                                    <div className="flex flex-col space-x-2">
-                                        <label className="flex items-center">
+                                <div ref={filterRef}
+                                     className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-4 top-14 left-0 w-64 animate-fadeIn">
+                                    <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Lọc theo trạng
+                                        thái</h3>
+                                    <div className="flex flex-col space-y-3">
+                                        <label
+                                            className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                                             <input
                                                 type="radio"
                                                 name="status"
                                                 value="all"
                                                 checked={statusFilter === 'all'}
                                                 onChange={() => setStatusFilter('all')}
-                                                className="mr-1"
+                                                className="mr-2 h-4 w-4 accent-gray-900"
                                             />
-                                            <span>Tất cả</span>
+                                            <span className="text-gray-700">Tất cả</span>
                                         </label>
-                                        <label className="flex items-center">
+                                        <label
+                                            className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                                             <input
                                                 type="radio"
                                                 name="status"
                                                 value="active"
                                                 checked={statusFilter === 'active'}
                                                 onChange={() => setStatusFilter('active')}
-                                                className="mr-1"
+                                                className="mr-2 h-4 w-4 accent-gray-900"
                                             />
-                                            <span>Mở</span>
+                                            <span className="text-gray-700">Hoạt động</span>
                                         </label>
-                                        <label className="flex items-center">
+                                        <label
+                                            className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                                             <input
                                                 type="radio"
                                                 name="status"
                                                 value="inactive"
                                                 checked={statusFilter === 'inactive'}
                                                 onChange={() => setStatusFilter('inactive')}
-                                                className="mr-1"
+                                                className="mr-2 h-4 w-4 accent-gray-900"
                                             />
-                                            <span>Khóa</span>
+                                            <span className="text-gray-700">Không hoạt động</span>
                                         </label>
                                     </div>
                                 </div>
                             )}
                         </div>
-
-                        <div className="flex flex-col sm:flex-row justify-between gap-2 w-full md:w-auto">
+                    </div>
+                    <div className="flex flex-col md:flex-row justify-between mb-6 relative gap-4">
                             <button
-                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center justify-center"
+                                className="bg-gray-900 text-white px-5 py-2.5 rounded-lg flex items-center shadow-md hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1"
                                 onClick={() => setShowAddModal(true)}
                             >
                                 <span className="material-icons mr-1">add</span>
@@ -493,66 +534,94 @@ export default function RoomManagement () {
                             </button>
 
                             <button
-                                className={`${selectedRooms.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center justify-center`}
+                                className={`${selectedRooms.length > 0 ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'
+                                } text-white px-5 py-2.5 rounded-lg flex items-center shadow-md transition-all duration-300 transform ${
+                                    selectedRooms.length > 0 ? 'hover:-translate-y-1' : ''
+                                }`}
                                 onClick={handleBulkDelete}
                                 disabled={selectedRooms.length === 0}
                             >
                                 <span className="material-icons mr-1">delete</span>
-                                <span className="hidden sm:inline">Xóa phòng lịch chiếu đã chọn</span>
+                                <span className="hidden sm:inline">Xóa phòng đã chọn</span>
                                 <span className="sm:hidden">Xóa đã chọn</span>
-                                ({selectedRooms.length})
+                                {selectedRooms.length > 0 && (
+                                    <span
+                                        className="ml-1 bg-white text-red-600 rounded-full px-2 py-0.5 text-xs font-bold">
+                                        {selectedRooms.length}
+                                    </span>
+                                )}
                             </button>
-                        </div>
                     </div>
 
                     {/* Room Table */}
                     {loading ? (
                         <div className="text-center py-10">
                             <div
-                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className="mt-2">Đang tải dữ liệu...</p>
+                                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
+                            <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
                         </div>
                     ) : error ? (
-                        <div className="text-center py-10 text-red-500">{error}</div>
+                        <div className="text-center py-10 text-red-500 bg-red-50 rounded-lg p-4">
+                            <span className="material-icons text-3xl mb-2">error</span>
+                            <p>{error}</p>
+                        </div>
+                    ) : filteredRooms.length === 0 ? (
+                        <div className="text-center py-10 bg-gray-50 rounded-lg p-6">
+                            <span className="material-icons text-5xl text-gray-400 mb-3">meeting_room</span>
+                            <h3 className="text-xl font-medium text-gray-700 mb-1">Không tìm thấy phòng chiếu</h3>
+                            <p className="text-gray-500">Không có phòng chiếu nào phù hợp với tiêu chí tìm kiếm</p>
+                        </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white border">
+                        <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
+                            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <thead>
                                 <tr className="bg-gray-100 border-b">
-                                    <th className="p-2 md:p-3 text-left w-10">
+                                    <th className="p-3 text-left w-10">
                                         <input
                                             type="checkbox"
-                                            className="form-checkbox h-4 w-4 md:h-5 md:w-5"
-                                            checked={selectAll || (currentRooms.length > 0 && currentRooms.every(room => currentRooms.includes(room.id)))}
+                                            className="form-checkbox h-5 w-5 text-gray-700 rounded transition-all duration-300"
+                                            checked={selectAll || (currentRooms.length > 0 && selectedRooms.length === currentRooms.length)}
                                             onChange={handleSelectAllRooms}
                                         />
                                     </th>
-                                    <th className="p-2 md:p-3 text-center">ID</th>
-                                    <th className="p-2 md:p-3 text-center">Tên phòng</th>
-                                    <th className="p-2 md:p-3 text-center hidden sm:table-cell">Sức chứa</th>
-                                    <th className="p-2 md:p-3 text-center hidden sm:table-cell">Số cột</th>
-                                    <th className="p-2 md:p-3 text-center hidden sm:table-cell">Số hàng</th>
-                                    <th className="p-2 md:p-3 text-center">Trạng thái</th>
-                                    <th className="p-2 md:p-3 text-center">Thao tác</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">ID</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">Tên
+                                        phòng
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Sức
+                                        chứa
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Số
+                                        cột
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Số
+                                        hàng
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">Trạng
+                                        thái
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">Thao
+                                        tác
+                                    </th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-gray-200">
                                 {currentRooms.map((room) => (
-                                    <tr key={room.id} className="border-b hover:bg-gray-50">
-                                        <td className="p-2 md:p-3">
+                                    <tr key={room.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-3">
                                             <input
                                                 type="checkbox"
-                                                className="form-checkbox h-4 w-4 md:h-5 md:w-5"
+                                                className="form-checkbox h-5 w-5 text-gray-700 rounded transition-all duration-300"
                                                 checked={selectedRooms.includes(room.id)}
                                                 onChange={() => handleRoomSelect(room.id)}
                                             />
                                         </td>
-                                        <td className="p-2 md:p-3 font-medium text-center">{room.id}</td>
-                                        <td className="p-2 md:p-3 font-medium text-center">{room.name}</td>
-                                        <td className="p-2 md:p-3 text-center hidden sm:table-cell">{room.seatCount}</td>
-                                        <td className="p-2 md:p-3 text-center hidden sm:table-cell">{room.numberOfColumns}</td>
-                                        <td className="p-2 md:p-3 text-center hidden sm:table-cell">{room.numberOfRows}</td>
-                                        <td className="p-2 md:p-3 text-center">
+                                        <td className="p-3 font-medium text-center text-gray-900">{room.id}</td>
+                                        <td className="p-3 font-medium text-center text-gray-900">{room.name}</td>
+                                        <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{room.seatCount}</td>
+                                        <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{room.numberOfColumns}</td>
+                                        <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{room.numberOfRows}</td>
+                                        <td className="p-3 text-center">
                                             <div className="flex justify-center">
                                                 <label className="relative inline-flex items-center cursor-pointer">
                                                     <input
@@ -565,43 +634,35 @@ export default function RoomManagement () {
                                                         )}
                                                     />
                                                     <div
-                                                        className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+                                                        className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900">
+                                                    </div>
+                                                    <span
+                                                        className={`ms-3 text-sm font-medium hidden md:inline-block ${
+                                                            room.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'
+                                                        }`}
+                                                    >
+                                                        {room.status === 'ACTIVE' ? 'Đang hoạt động' : 'Không hoạt động'}
+                                                    </span>
+
                                                 </label>
                                             </div>
                                         </td>
-                                        <td className="p-2 md:p-3 text-center">
-                                            <div className="flex justify-center space-x-2">
+                                        <td className="p-3 text-center">
+                                            <div className="flex justify-center space-x-3">
                                                 <button
                                                     onClick={() => handleEditRoom(room)}
-                                                    className="text-gray-600 hover:text-gray-800"
+                                                    className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
                                                     aria-label="Edit"
                                                 >
-                                                    <span className="material-icons">edit</span>
+                                                    <span className="material-icons text-sm">edit</span>
                                                 </button>
-                                                {isDeleteModalOpen && (
-                                                    <div
-                                                        className="fixed inset-0 bg-gray-800/5 flex items-center justify-center z-50">
-                                                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                                                            <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
-                                                            <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu này
-                                                                không?</p>
-                                                            <div className="flex justify-end gap-4">
-                                                                <button
-                                                                    onClick={handleCloseModal}
-                                                                    className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                                >
-                                                                    Hủy
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteRoom(room.id)}
-                                                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                                                                >
-                                                                    Xóa
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                {/*<button*/}
+                                                {/*    onClick={() => handleOpenDeleteModal(room.id)}*/}
+                                                {/*    className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"*/}
+                                                {/*    aria-label="Delete"*/}
+                                                {/*>*/}
+                                                {/*    <span className="material-icons text-sm">delete</span>*/}
+                                                {/*</button>*/}
                                             </div>
                                         </td>
                                     </tr>
@@ -612,13 +673,13 @@ export default function RoomManagement () {
                     )}
 
                     {/* Pagination */}
-                    <div className="flex flex-wrap justify-center mt-6 gap-1">
-                        <div className="flex flex-wrap justify-center items-center gap-1">
+                    <div className="flex flex-wrap justify-center mt-8 gap-2">
+                        <div className="flex flex-wrap justify-center items-center gap-2">
                             {/* Nút về trang đầu tiên */}
                             <button
                                 onClick={() => setCurrentPage(1)}
                                 disabled={currentPage === 1}
-                                className="mx-1 px-2 py-1 md:px-3 md:py-1 rounded border disabled:opacity-50 text-sm md:text-base"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang đầu"
                             >
                                 &laquo;
@@ -628,7 +689,7 @@ export default function RoomManagement () {
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
-                                className="mx-1 px-2 py-1 md:px-3 md:py-1 rounded border disabled:opacity-50 text-sm md:text-base"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 &lt;
                             </button>
@@ -638,12 +699,12 @@ export default function RoomManagement () {
                                 <>
                                     <button
                                         onClick={() => setCurrentPage(1)}
-                                        className="mx-1 px-2 py-1 md:px-3 md:py-1 rounded border text-sm md:text-base"
+                                        className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         1
                                     </button>
                                     {getPageNumbers()[0] > 2 && (
-                                        <span className="mx-1 px-2 py-1 text-sm md:text-base">...</span>
+                                        <span className="mx-1 px-2 py-1.5 text-sm md:text-base text-gray-500">...</span>
                                     )}
                                 </>
                             )}
@@ -653,11 +714,11 @@ export default function RoomManagement () {
                                 <button
                                     key={pageNumber}
                                     onClick={() => setCurrentPage(pageNumber)}
-                                    className={`mx-1 px-2 py-1 md:px-3 md:py-1 rounded ${
+                                    className={`mx-1 px-3 py-1.5 rounded-md transition-all duration-200 ease-in-out ${
                                         currentPage === pageNumber
-                                            ? 'bg-gray-900 text-white'
-                                            : 'border'
-                                    } text-sm md:text-base`}
+                                            ? 'bg-gray-900 text-white shadow-md transform scale-105'
+                                            : 'border border-gray-300 hover:bg-gray-100'
+                                    } text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-gray-400`}
                                 >
                                     {pageNumber}
                                 </button>
@@ -667,11 +728,11 @@ export default function RoomManagement () {
                             {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
                                 <>
                                     {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
-                                        <span className="mx-1 px-2 py-1 text-sm md:text-base">...</span>
+                                        <span className="mx-1 px-2 py-1.5 text-sm md:text-base text-gray-500">...</span>
                                     )}
                                     <button
                                         onClick={() => setCurrentPage(totalPages)}
-                                        className="mx-1 px-2 py-1 md:px-3 md:py-1 rounded border text-sm md:text-base"
+                                        className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         {totalPages}
                                     </button>
@@ -682,7 +743,7 @@ export default function RoomManagement () {
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
-                                className="mx-1 px-2 py-1 md:px-3 md:py-1 rounded border disabled:opacity-50 text-sm md:text-base"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 &gt;
                             </button>
@@ -691,7 +752,7 @@ export default function RoomManagement () {
                             <button
                                 onClick={() => setCurrentPage(totalPages)}
                                 disabled={currentPage === totalPages}
-                                className="mx-1 px-2 py-1 md:px-3 md:py-1 rounded border disabled:opacity-50 text-sm md:text-base"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang cuối"
                             >
                                 &raquo;
@@ -704,20 +765,24 @@ export default function RoomManagement () {
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteModalOpen && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-96 mx-4">
-                        <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
-                        <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu đã chọn
+                    <div
+                        ref={modalbulkDeRef}
+                        className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100"
+                    >
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Xác nhận xóa hàng loạt</h2>
+                        <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu
+                            đã chọn
                             không?</p>
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => setBulkDeleteModalOpen(false)}
-                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={confirmBulkDelete}
-                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                             >
                                 Xóa
                             </button>
@@ -728,22 +793,25 @@ export default function RoomManagement () {
 
             {/* Edit Modal */}
             {showEditModal && (
-                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50 p-4">
-                    <div ref={modalEditRef} className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                    <div
+                        ref={modalEditRef}
+                        className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
+                    >
                         <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-bold">Chỉnh sửa phòng chiếu</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Chỉnh sửa phòng chiếu</h2>
                                 <button
                                     onClick={() => setShowEditModal(false)}
-                                    className="text-gray-500 hover:text-gray-700"
+                                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
                                 >
                                     <span className="material-icons">close</span>
                                 </button>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Tên phòng
                                     </label>
                                     <input
@@ -752,13 +820,14 @@ export default function RoomManagement () {
                                         name="name"
                                         value={editingRoom.name}
                                         onChange={handleInputChangeEdit}
-                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <label htmlFor="seatCount" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="seatCount"
+                                           className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Sức chứa (số ghế)
                                     </label>
                                     <input
@@ -767,7 +836,7 @@ export default function RoomManagement () {
                                         name="seatCount"
                                         value={editingRoom.seatCount}
                                         onChange={handleInputChangeEdit}
-                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                         min="1"
                                         required
                                     />
@@ -775,7 +844,7 @@ export default function RoomManagement () {
                                 <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfColumns"
-                                               className="block text-sm font-medium text-gray-700 mb-1">
+                                               className="block text-sm font-medium text-gray-700 mb-1.5">
                                             Số cột ghế
                                         </label>
                                         <input
@@ -785,13 +854,13 @@ export default function RoomManagement () {
                                             value={editingRoom.numberOfColumns}
                                             onChange={handleInputChangeEdit}
                                             placeholder="Nhập số cột ghế"
-                                            className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
                                     </div>
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfRows"
-                                               className="block text-sm font-medium text-gray-700 mb-1">
+                                               className="block text-sm font-medium text-gray-700 mb-1.5">
                                             Số dòng ghế
                                         </label>
                                         <input
@@ -801,14 +870,14 @@ export default function RoomManagement () {
                                             value={editingRoom.numberOfRows}
                                             onChange={handleInputChangeEdit}
                                             placeholder="Nhập số dòng ghế"
-                                            className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="createdAt" className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Ngày tạo
                                     </label>
                                     <input
@@ -817,17 +886,17 @@ export default function RoomManagement () {
                                         name="createdAt"
                                         value={editingRoom.createdAt}
                                         placeholder="Nhập loại màn hình chiếu"
-                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 bg-gray-50 text-gray-500 shadow-sm"
                                         required
                                         readOnly
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Trạng thái
                                     </label>
-                                    <div className="flex items-center space-x-4">
-                                        <label className="inline-flex items-center relative cursor-pointer">
+                                    <div className="flex items-center space-x-6">
+                                        <label className="inline-flex items-center relative cursor-pointer group">
                                             <input
                                                 type="radio"
                                                 name="status"
@@ -836,17 +905,17 @@ export default function RoomManagement () {
                                                 onChange={() => setEditingRoom({...editingRoom, status: 'ACTIVE'})}
                                                 className="absolute opacity-0 cursor-pointer"
                                             />
-                                            <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                        ${editingRoom.status === 'ACTIVE'
-                                                ? 'bg-gray-900 border-gray-900'
-                                                : 'bg-white border-gray-300'}`}>
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200 
+                                ${editingRoom.status === 'ACTIVE'
+                                                ? 'bg-gray-900 border-gray-900 scale-110'
+                                                : 'bg-white border-gray-400 group-hover:border-gray-600'}`}>
                                                 {editingRoom.status === 'ACTIVE' && (
                                                     <span className="text-white text-xs">✓</span>
                                                 )}
                                             </div>
-                                            <span>Hoạt động</span>
+                                            <span className="text-gray-800">Hoạt động</span>
                                         </label>
-                                        <label className="inline-flex items-center relative cursor-pointer">
+                                        <label className="inline-flex items-center relative cursor-pointer group">
                                             <input
                                                 type="radio"
                                                 name="status"
@@ -855,15 +924,15 @@ export default function RoomManagement () {
                                                 onChange={() => setEditingRoom({...editingRoom, status: 'INACTIVE'})}
                                                 className="absolute opacity-0 cursor-pointer"
                                             />
-                                            <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                        ${editingRoom.status === 'INACTIVE'
-                                                ? 'bg-gray-900 border-gray-900'
-                                                : 'bg-white border-gray-300'}`}>
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200
+                                ${editingRoom.status === 'INACTIVE'
+                                                ? 'bg-gray-900 border-gray-900 scale-110'
+                                                : 'bg-white border-gray-400 group-hover:border-gray-600'}`}>
                                                 {editingRoom.status === 'INACTIVE' && (
                                                     <span className="text-white text-xs">✓</span>
                                                 )}
                                             </div>
-                                            <span>Không hoạt động</span>
+                                            <span className="text-gray-800">Không hoạt động</span>
                                         </label>
                                     </div>
                                 </div>
@@ -872,13 +941,13 @@ export default function RoomManagement () {
                             <div className="flex justify-end mt-6 gap-3">
                                 <button
                                     onClick={() => setShowEditModal(false)}
-                                    className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 >
                                     Hủy
                                 </button>
                                 <button
                                     onClick={handleSaveEdit}
-                                    className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                                    className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600"
                                     disabled={!editingRoom.name || editingRoom.seatCount <= 0}
                                 >
                                     Cập nhật
@@ -891,22 +960,25 @@ export default function RoomManagement () {
 
             {/* Add Room Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50 p-4">
-                    <div ref={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                    <div
+                        ref={modalAddRef}
+                        className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
+                    >
                         <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-bold">Thêm phòng chiếu mới</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Thêm phòng chiếu mới</h2>
                                 <button
                                     onClick={() => setShowAddModal(false)}
-                                    className="text-gray-500 hover:text-gray-700"
+                                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
                                 >
                                     <span className="material-icons">close</span>
                                 </button>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Tên phòng
                                     </label>
                                     <input
@@ -916,13 +988,13 @@ export default function RoomManagement () {
                                         value={newRoom.name}
                                         onChange={handleInputChange}
                                         placeholder="Nhập tên phòng chiếu"
-                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <label htmlFor="seatCount" className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="seatCount" className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Sức chứa (số ghế)
                                     </label>
                                     <input
@@ -932,7 +1004,7 @@ export default function RoomManagement () {
                                         value={newRoom.seatCount}
                                         onChange={handleInputChange}
                                         placeholder="Nhập số lượng ghế"
-                                        className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                         min="1"
                                         required
                                     />
@@ -941,7 +1013,7 @@ export default function RoomManagement () {
                                 <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfColumns"
-                                               className="block text-sm font-medium text-gray-700 mb-1">
+                                               className="block text-sm font-medium text-gray-700 mb-1.5">
                                             Số cột ghế
                                         </label>
                                         <input
@@ -951,13 +1023,13 @@ export default function RoomManagement () {
                                             value={newRoom.numberOfColumns}
                                             onChange={handleInputChange}
                                             placeholder="Nhập số cột ghế"
-                                            className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
                                     </div>
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfRows"
-                                               className="block text-sm font-medium text-gray-700 mb-1">
+                                               className="block text-sm font-medium text-gray-700 mb-1.5">
                                             Số dòng ghế
                                         </label>
                                         <input
@@ -967,18 +1039,18 @@ export default function RoomManagement () {
                                             value={newRoom.numberOfRows}
                                             onChange={handleInputChange}
                                             placeholder="Nhập số dòng ghế"
-                                            className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Trạng thái
                                     </label>
-                                    <div className="flex items-center space-x-4">
-                                        <label className="inline-flex items-center relative cursor-pointer">
+                                    <div className="flex items-center space-x-6">
+                                        <label className="inline-flex items-center relative cursor-pointer group">
                                             <input
                                                 type="radio"
                                                 name="status"
@@ -987,17 +1059,17 @@ export default function RoomManagement () {
                                                 onChange={() => setNewRoom({...newRoom, status: 'ACTIVE'})}
                                                 className="absolute opacity-0 cursor-pointer"
                                             />
-                                            <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                        ${newRoom.status === 'ACTIVE'
-                                                ? 'bg-gray-900 border-gray-900'
-                                                : 'bg-white border-gray-300'}`}>
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200 
+                                ${newRoom.status === 'ACTIVE'
+                                                ? 'bg-gray-900 border-gray-900 scale-110'
+                                                : 'bg-white border-gray-400 group-hover:border-gray-600'}`}>
                                                 {newRoom.status === 'ACTIVE' && (
                                                     <span className="text-white text-xs">✓</span>
                                                 )}
                                             </div>
-                                            <span>Hoạt động</span>
+                                            <span className="text-gray-800">Hoạt động</span>
                                         </label>
-                                        <label className="inline-flex items-center relative cursor-pointer">
+                                        <label className="inline-flex items-center relative cursor-pointer group">
                                             <input
                                                 type="radio"
                                                 name="status"
@@ -1006,30 +1078,30 @@ export default function RoomManagement () {
                                                 onChange={() => setNewRoom({...newRoom, status: 'INACTIVE'})}
                                                 className="absolute opacity-0 cursor-pointer"
                                             />
-                                            <div className={`w-5 h-5 rounded-full border-2 mr-2 flex items-center justify-center 
-                                        ${newRoom.status === 'INACTIVE'
-                                                ? 'bg-gray-900 border-gray-900'
-                                                : 'bg-white border-gray-300'}`}>
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200
+                                ${newRoom.status === 'INACTIVE'
+                                                ? 'bg-gray-900 border-gray-900 scale-110'
+                                                : 'bg-white border-gray-400 group-hover:border-gray-600'}`}>
                                                 {newRoom.status === 'INACTIVE' && (
                                                     <span className="text-white text-xs">✓</span>
                                                 )}
                                             </div>
-                                            <span>Không hoạt động</span>
+                                            <span className="text-gray-800">Không hoạt động</span>
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end mt-6 gap-3">
+                            <div className="flex justify-end mt-8 gap-3">
                                 <button
                                     onClick={handleCancel}
-                                    className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 >
                                     Hủy
                                 </button>
                                 <button
                                     onClick={handleAddRoom}
-                                    className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                                    className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600"
                                     disabled={!newRoom.name || newRoom.seatCount <= 0}
                                 >
                                     Thêm phòng
