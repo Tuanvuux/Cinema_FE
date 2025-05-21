@@ -12,10 +12,13 @@ const DashboardByMovie = () => {
     const [viewsData, setViewsData] = useState([]);
     const [detailData, setDetailData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('revenue');
+    const [animateCharts, setAnimateCharts] = useState(false);
 
     const fetchReports = async () => {
         try {
             setLoading(true);
+            setAnimateCharts(false);
 
             // Fetch all reports in parallel
             const [revenueResponse, viewsResponse, detailResponse] = await Promise.all([
@@ -47,6 +50,9 @@ const DashboardByMovie = () => {
             setRevenueData(processedRevenueData);
             setViewsData(processedViewsData);
             setDetailData(detailResponse);
+
+            // Trigger animation after data is loaded
+            setTimeout(() => setAnimateCharts(true), 100);
         } catch (error) {
             console.error("Error fetching reports:", error);
         } finally {
@@ -72,26 +78,36 @@ const DashboardByMovie = () => {
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-white p-3 border border-gray-300 shadow-md rounded">
-                    <p className="font-bold">{payload[0].payload.fullName || label}</p>
+                <div className="bg-white p-3 border border-gray-300 shadow-lg rounded-md transition-all duration-300">
+                    <p className="font-bold mb-1 text-gray-800">{payload[0].payload.fullName || label}</p>
                     {payload[0].name === "revenue" &&
-                        <p>{`Doanh thu: ${formatCurrency(payload[0].value)} VND`}</p>}
+                        <p className="text-blue-800">{`Doanh thu: ${formatCurrency(payload[0].value)} VND`}</p>}
                     {payload[0].name === "views" &&
-                        <p>{`Số vé bán: ${formatCurrency(payload[0].value)}`}</p>}
+                        <p className="text-blue-600">{`Số vé bán: ${formatCurrency(payload[0].value)}`}</p>}
                 </div>
             );
         }
         return null;
     };
 
+    // Calculate total values for summary
+    const totalRevenue = detailData.reduce((sum, movie) => sum + movie.revenue, 0);
+    const totalTickets = detailData.reduce((sum, movie) => sum + movie.ticketCount, 0);
+    const totalShowtimes = detailData.reduce((sum, movie) => sum + movie.showtimeCount, 0);
+    const avgOccupancyRate = detailData.length > 0
+        ? (detailData.reduce((sum, movie) => sum + movie.occupancyRate, 0) / detailData.length).toFixed(2)
+        : 0;
+
     return (
-        <div className="container mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-                <h1 className="text-xl md:text-2xl font-bold">BÁO CÁO DOANH THU THEO PHIM</h1>
+        <div className="container mx-auto px-4 py-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                    BÁO CÁO DOANH THU THEO PHIM
+                </h1>
                 <UserInfo className="w-full md:w-auto"/>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-8 transition-all duration-300 hover:shadow-xl">
                 <div className="flex flex-col md:flex-row gap-4 mb-6">
                     {/* Từ ngày */}
                     <div className="flex-1">
@@ -102,7 +118,7 @@ const DashboardByMovie = () => {
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            className="shadow appearance-none border border-gray-300 rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                         />
                     </div>
 
@@ -115,7 +131,7 @@ const DashboardByMovie = () => {
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            className="shadow appearance-none border border-gray-300 rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                         />
                     </div>
 
@@ -124,30 +140,76 @@ const DashboardByMovie = () => {
                         <button
                             onClick={handleGenerateReport}
                             disabled={loading}
-                            className={`w-full md:w-auto ${loading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
+                            className={`w-full md:w-auto ${loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-800'} text-white font-bold py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-300 transform hover:scale-105`}
                         >
-                            {loading ? 'Đang tải...' : 'Xem báo cáo'}
+                            {loading ? (
+                                <div className="flex items-center justify-center">
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Đang tải...
+                                </div>
+                            ) : 'Xem báo cáo'}
                         </button>
                     </div>
                 </div>
 
+                {/* Dashboard Summary Cards */}
+                {!loading && detailData.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div className={`bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-md p-4 text-white transition-all duration-500 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                            <h3 className="text-lg font-semibold mb-2">Tổng doanh thu</h3>
+                            <p className="text-2xl font-bold">{formatCurrency(totalRevenue)} VND</p>
+                        </div>
+                        <div className={`bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-100 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                            <h3 className="text-lg font-semibold mb-2">Tổng số vé bán</h3>
+                            <p className="text-2xl font-bold">{formatCurrency(totalTickets)}</p>
+                        </div>
+                        <div className={`bg-gradient-to-r from-blue-300 to-blue-500 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-200 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                            <h3 className="text-lg font-semibold mb-2">Tổng suất chiếu</h3>
+                            <p className="text-2xl font-bold">{formatCurrency(totalShowtimes)}</p>
+                        </div>
+                        <div className={`bg-gradient-to-r from-blue-200 to-blue-400 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-300 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                            <h3 className="text-lg font-semibold mb-2">Tỷ lệ lấp đầy TB</h3>
+                            <p className="text-2xl font-bold">{avgOccupancyRate}%</p>
+                        </div>
+                    </div>
+                )}
 
+                {/* Chart Section with Tabs */}
                 <div className="mb-8">
-                    <h2 className="text-xl font-bold mb-4">Top phim doanh thu cao nhất</h2>
-                    <div className="h-80 bg-gray-50 rounded-lg border border-gray-200">
-                        {revenueData.length > 0 ? (
+                    <div className="flex mb-4 border-b">
+                        <button
+                            className={`py-2 px-4 font-medium ${activeTab === 'revenue' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
+                            onClick={() => setActiveTab('revenue')}
+                        >
+                            Top phim doanh thu cao nhất
+                        </button>
+                        <button
+                            className={`py-2 px-4 font-medium ${activeTab === 'views' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
+                            onClick={() => setActiveTab('views')}
+                        >
+                            Top phim có lượt xem cao nhất
+                        </button>
+                    </div>
+
+                    <div className={`h-96 bg-gray-50 rounded-lg border border-gray-200 shadow-inner transition-opacity duration-500 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                        {activeTab === 'revenue' && revenueData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={revenueData}
                                     margin={{top: 20, right: 30, left: 20, bottom: 60}}
+                                    barSize={40}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3"/>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                     <XAxis
                                         dataKey="name"
                                         angle={-45}
                                         textAnchor="end"
                                         height={70}
                                         tick={{fontSize: 12}}
+                                        stroke="#6b7280"
                                     />
                                     <YAxis
                                         tickFormatter={(value) => value >= 1000000
@@ -155,49 +217,61 @@ const DashboardByMovie = () => {
                                             : value >= 1000
                                                 ? `${(value / 1000).toFixed(1)}K`
                                                 : value}
+                                        stroke="#6b7280"
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
-                                    <Bar dataKey="revenue" name="Doanh thu" fill="#1E40AF" />
+                                    <Legend wrapperStyle={{paddingTop: 10}} />
+                                    <Bar
+                                        dataKey="revenue"
+                                        name="Doanh thu"
+                                        fill="#1E40AF"
+                                        radius={[4, 4, 0, 0]}
+                                        animationDuration={1500}
+                                        animationEasing="ease-in-out"
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex items-center justify-center">
-                                <p className="text-gray-500">
-                                    {loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu trong khoảng thời gian đã chọn'}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mb-8">
-                    <h2 className="text-xl font-bold mb-4">Top phim có lượt xem cao nhất</h2>
-                    <div className="h-80 bg-gray-50 rounded-lg border border-gray-200">
-                        {viewsData.length > 0 ? (
+                        ) : activeTab === 'views' && viewsData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={viewsData}
                                     margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    barSize={40}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                     <XAxis
                                         dataKey="name"
                                         angle={-45}
                                         textAnchor="end"
                                         height={70}
                                         tick={{ fontSize: 12 }}
+                                        stroke="#6b7280"
                                     />
-                                    <YAxis />
+                                    <YAxis stroke="#6b7280" />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
-                                    <Bar dataKey="views" name="Số vé bán" fill="#3B82F6" />
+                                    <Legend wrapperStyle={{paddingTop: 10}} />
+                                    <Bar
+                                        dataKey="views"
+                                        name="Số vé bán"
+                                        fill="#3B82F6"
+                                        radius={[4, 4, 0, 0]}
+                                        animationDuration={1500}
+                                        animationEasing="ease-in-out"
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
                             <div className="h-full flex items-center justify-center">
                                 <p className="text-gray-500">
-                                    {loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu trong khoảng thời gian đã chọn'}
+                                    {loading ? (
+                                        <div className="flex items-center">
+                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Đang tải dữ liệu...
+                                        </div>
+                                    ) : 'Không có dữ liệu trong khoảng thời gian đã chọn'}
                                 </p>
                             </div>
                         )}
@@ -205,36 +279,67 @@ const DashboardByMovie = () => {
                 </div>
 
                 <div>
-                    <h2 className="text-xl font-bold mb-4">Chi tiết theo phim</h2>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white">
+                    <h2 className="text-xl font-bold mb-4 text-gray-800">Chi tiết theo phim</h2>
+                    <div className="overflow-x-auto bg-white rounded-lg shadow">
+                        <table className="min-w-full">
                             <thead>
-                            <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                                <th className="py-3 px-6 text-left">Tên phim</th>
+                            <tr className="bg-gradient-to-r from-blue-600 to-blue-800 text-white uppercase text-sm leading-normal">
+                                <th className="py-3 px-6 text-left rounded-tl-lg">Tên phim</th>
                                 <th className="py-3 px-6 text-right">Doanh thu (VND)</th>
                                 <th className="py-3 px-6 text-right">Số vé bán</th>
                                 <th className="py-3 px-6 text-right">Số suất chiếu</th>
-                                <th className="py-3 px-6 text-right">Tỷ lệ lấp đầy</th>
+                                <th className="py-3 px-6 text-right rounded-tr-lg">Tỷ lệ lấp đầy</th>
                             </tr>
                             </thead>
                             <tbody className="text-gray-600 text-sm">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="py-4 text-center">Đang tải dữ liệu...</td>
+                                    <td colSpan="5" className="py-4 text-center">
+                                        <div className="flex items-center justify-center">
+                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Đang tải dữ liệu...
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : detailData.length > 0 ? (
                                 detailData.map((movie, index) => (
-                                    <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                                        <td className="py-3 px-6 text-left">{movie.movieName}</td>
-                                        <td className="py-3 px-6 text-right">{formatCurrency(movie.revenue)}</td>
-                                        <td className="py-3 px-6 text-right">{movie.ticketCount}</td>
+                                    <tr
+                                        key={index}
+                                        className={`border-b border-gray-200 hover:bg-blue-50 transition-colors duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+                                    >
+                                        <td className="py-3 px-6 text-left whitespace-nowrap font-medium">{movie.movieName}</td>
+                                        <td className="py-3 px-6 text-right text-blue-800 font-medium">{formatCurrency(movie.revenue)}</td>
+                                        <td className="py-3 px-6 text-right">{formatCurrency(movie.ticketCount)}</td>
                                         <td className="py-3 px-6 text-right">{movie.showtimeCount}</td>
-                                        <td className="py-3 px-6 text-right">{movie.occupancyRate}%</td>
+                                        <td className="py-3 px-6 text-right">
+                                            <div className="flex items-center justify-end">
+                                                <div className="mr-2">{movie.occupancyRate}%</div>
+                                                <div className="w-16 bg-gray-200 rounded-full h-2.5">
+                                                    <div
+                                                        className="bg-blue-600 h-2.5 rounded-full"
+                                                        style={{ width: `${movie.occupancyRate}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="py-4 text-center">Không có dữ liệu trong khoảng thời gian đã chọn</td>
+                                    <td colSpan="5" className="py-8 text-center text-gray-500">Không có dữ liệu trong khoảng thời gian đã chọn</td>
+                                </tr>
+                            )}
+
+                            {detailData.length > 0 && (
+                                <tr className="bg-blue-50 font-bold text-blue-800 border-t-2 border-blue-300">
+                                    <td className="py-3 px-6 text-left">Tổng cộng</td>
+                                    <td className="py-3 px-6 text-right">{formatCurrency(totalRevenue)}</td>
+                                    <td className="py-3 px-6 text-right">{formatCurrency(totalTickets)}</td>
+                                    <td className="py-3 px-6 text-right">{formatCurrency(totalShowtimes)}</td>
+                                    <td className="py-3 px-6 text-right">{avgOccupancyRate}%</td>
                                 </tr>
                             )}
                             </tbody>

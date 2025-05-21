@@ -8,7 +8,7 @@ import {
     deleteLockSeat
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
-
+import { CheckCircle, AlertCircle, X } from "lucide-react";
 
 export default function LockSeatByShowTime () {
     const [seatsLock, setSeatsLock] = useState([]);
@@ -56,6 +56,14 @@ export default function LockSeatByShowTime () {
 
     const [selectedRoomId, setSelectedRoomId] = useState("");
     const [selectedShowtimeId, setSelectedShowtimeId] = useState("");
+
+    // const [toast, setToast] = useState({
+    //     show: false,
+    //     message: '',
+    //     type: 'success'
+    // });
+
+    const [toast, setToast] = useState([]);
 
     const modalConfirmRef = useRef();
     const modalbulkDeRef = useRef();
@@ -172,9 +180,7 @@ export default function LockSeatByShowTime () {
                 type: 'success'
             });
             handleCloseModal();
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Xóa ghế thành công!', 'success');
         } catch (error) {
             setToast({
                 show: true,
@@ -183,9 +189,7 @@ export default function LockSeatByShowTime () {
             })
             handleCloseModal();
             console.error("Lỗi khi xóa ghế:", error);
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
+            addToast('Xóa ghế thất bại', 'error');
         }
     };
 
@@ -220,11 +224,7 @@ export default function LockSeatByShowTime () {
     // Add this function to handle bulk deletion
     const handleBulkDelete = () => {
         if (selectedSeats.length === 0) {
-            setToast({
-                show: true,
-                message: 'Vui lòng chọn ít nhất một lịch chiếu để xóa',
-                type: 'error'
-            });
+            addToast('Vui lòng chọn ít nhất một lịch chiếu để xóa', 'error');
             return;
         }
 
@@ -232,8 +232,6 @@ export default function LockSeatByShowTime () {
         setSelectedSeatIds(selectedSeats); // Store all selected IDs
         setBulkDeleteModalOpen(true);
     };
-
-
 
 // Add this function to perform the actual bulk deletion
     const confirmBulkDelete = async () => {
@@ -251,41 +249,17 @@ export default function LockSeatByShowTime () {
             // Clear selection
             setSelectedSeats([]);
 
-            // Show success notification
-            setToast({
-                show: true,
-                message: `Đã xóa ${selectedSeats.length} ghế thành công!`,
-                type: 'success'
-            });
-
+            addToast(`Đã xóa ${selectedSeats.length} ghế thành công!`, 'success');
             setBulkDeleteModalOpen(false);
 
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa lịch chiếu thất bại',
-                type: 'error'
-            });
+            addToast('Xóa lịch chiếu thất bại', 'error');
 
             setBulkDeleteModalOpen(false);
             console.error("Lỗi khi xóa nhiều phòng chiếu:", error);
 
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3000);
         }
     };
-
-    // New state for toast notification
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
-
 
     useEffect(() => {
         const fetchSeats = async () => {
@@ -332,11 +306,7 @@ export default function LockSeatByShowTime () {
         try {
             // Đảm bảo ghế có tất cả dữ liệu cần thiết
             if (!newSeat.seatId || !newSeat.roomId || !newSeat.showtimeId) {
-                setToast({
-                    show: true,
-                    message: 'Vui lòng điền đầy đủ thông tin!',
-                    type: 'error'
-                });
+                addToast('Vui lòng điền đầy đủ thông tin!', 'error');
                 return;
             }
 
@@ -357,38 +327,79 @@ export default function LockSeatByShowTime () {
             setSeatsLock([...seatsLock, completeSeat]);
 
             // Show success toast
-            setToast({
-                show: true,
-                message: 'Thêm ghế thành công!',
-                type: 'success'
-            });
+            addToast('Thêm ghế thành công!', 'success');
 
             // Đặt lại form và đóng modal
             resetAddModalState();
             setShowAddModal(false);
 
-            // Tự động ẩn thông báo sau 3 giây
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: '' });
-            }, 3000);
         } catch (err) {
             // Hiển thị thông báo lỗi
-            setToast({
-                show: true,
-                message: 'Thêm ghế thất bại!',
-                type: 'error'
-            });
-
+            addToast('Thêm ghế thất bại!', 'error');
             console.error("Error adding seat:", err);
-
-            setTimeout(() => {
-                setToast({ show: false, message: '', type: '' });
-            }, 3000);
         }
     };
 
-    // Toast Notification Component
-    const ToastNotification = ({ message, type, show }) => {
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            5% { opacity: 1; transform: translateY(0); }
+            95% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+          }
+        `;
+        document.head.appendChild(style);
+
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
+    // Hàm thêm toast mới
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
+
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
         if (!show) return null;
 
         const typeStyles = {
@@ -398,17 +409,55 @@ export default function LockSeatByShowTime () {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-50 px-4 py-2 text-white rounded-md shadow-lg transition-all duration-300 ${typeStyles[type]}`}
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
                 style={{
-                    animation: 'fadeInOut 3s ' +
-                        'ease-in-out',
-                    opacity: show ? 1 : 0
+                    animation: 'fadeInOut 3s ease-in-out',
+                    opacity: show ? 1 : 0,
+                    transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
-                {message}
+                <div className="flex items-center">
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
+                </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
         );
     };
+    // // Toast Notification Component
+    // const ToastNotification = ({ message, type, show }) => {
+    //     if (!show) return null;
+    //
+    //     const typeStyles = {
+    //         success: 'bg-green-500',
+    //         error: 'bg-red-500'
+    //     };
+    //
+    //     return (
+    //         <div
+    //             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
+    //             style={{
+    //                 animation: 'fadeInOut 3s ease-in-out',
+    //                 opacity: show ? 1 : 0,
+    //                 transform: 'translateY(0)',
+    //                 transition: 'opacity 0.3s ease, transform 0.3s ease'
+    //             }}
+    //         >
+    //             <span className="material-icons mr-2 text-white">
+    //                 {type === 'success' ? 'check_circle' : 'error'}
+    //             </span>
+    //             <p className="text-white font-medium">{message}</p>
+    //         </div>
+    //     );
+    // };
 
     const filteredSeats = seatsLock.filter(seat => {
         const matchesSearch = Object.values(seat).some(value =>
@@ -442,44 +491,47 @@ export default function LockSeatByShowTime () {
     };
 
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen bg-gray-50">
             {/* Left sidebar - similar to the image */}
-
-            <ToastNotification
-                message={toast.message}
-                type={toast.type}
-                show={toast.show}
-            />
+            <ToastContainer />
+            {/*<ToastNotification*/}
+            {/*    message={toast.message}*/}
+            {/*    type={toast.type}*/}
+            {/*    show={toast.show}*/}
+            {/*/>*/}
 
             <div className="flex h-full">
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-                        <h1 className="text-xl md:text-2xl font-bold">QUẢN LÝ TRẠNG THÁI GHẾ</h1>
-                        <div className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4">
-                            <div className="relative w-full md:w-64">
+                    <div
+                        className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-200">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">QUẢN LÝ TRẠNG THÁI GHẾ</h1>
+                        <div
+                            className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4 mt-4 md:mt-0">
+                            <div className="relative w-full md:w-64 group">
                                 <input
                                     type="text"
                                     placeholder="Tìm kiếm ghế ngồi"
-                                    className="border rounded-md py-2 px-4 pl-10 w-64"
+                                    className="border border-gray-300 rounded-lg py-2 px-4 pl-10 w-full transition-all focus:border-gray-500 focus:ring-2 focus:ring-gray-200 outline-none"
                                     value={searchTerm}
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
                                         setCurrentPage(1);
                                     }}
                                 />
-                                <span className="material-icons absolute left-3 top-2 text-gray-400">search</span>
+                                <span
+                                    className="material-icons absolute left-3 top-2.5 text-gray-400 group-hover:text-gray-600 transition-colors duration-300">search</span>
                             </div>
                             <UserInfo className="w-full md:w-auto"/>
                         </div>
                     </div>
 
                     {/* Filters and Add Button */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                             <button
-                                className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center"
+                                className="bg-gray-900 text-white px-5 py-2.5 rounded-lg flex items-center shadow-md hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1"
                                 onClick={() => setShowAddModal(true)}
                             >
                                 <span className="material-icons mr-1">add</span>
@@ -488,12 +540,22 @@ export default function LockSeatByShowTime () {
                         </div>
 
                         <button
-                            className={`${selectedSeats.length > 0 ? 'bg-red-600' : 'bg-gray-400'} text-white px-4 py-2 rounded-md flex items-center`}
+                            className={`${selectedSeats.length > 0 ? 'bg-red-600' : 'bg-gray-400'} 
+                            text-white px-5 py-2.5 rounded-lg flex items-center shadow-md transition-all duration-300 transform  ${
+                                selectedSeats.length > 0 ? 'hover:-translate-y-1' : ''
+                            }`}
                             onClick={handleBulkDelete}
                             disabled={selectedSeats.length === 0}
                         >
                             <span className="material-icons mr-1">delete</span>
-                            Xóa ghế đã chọn ({selectedSeats.length})
+                            <span className="hidden sm:inline">Xóa ghế đã chọn</span>
+                            <span className="sm:hidden">Ghế đã chọn</span>
+                            {selectedSeats.length > 0 && (
+                                <span
+                                    className="ml-1 bg-white text-red-600 rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
+                                        {selectedSeats.length}
+                                    </span>
+                            )}
                         </button>
                     </div>
 
@@ -505,40 +567,59 @@ export default function LockSeatByShowTime () {
                             <p className="mt-2">Đang tải dữ liệu...</p>
                         </div>
                     ) : error ? (
-                        <div className="text-center py-10 text-red-500">{error}</div>
+                        <div className="text-center py-10 text-red-500 bg-red-50 rounded-lg p-4">
+                            <span className="material-icons text-3xl mb-2">error</span>
+                            <p>{error}</p>
+                        </div>
+                    ) : filteredSeats.length === 0 ? (
+                        <div className="text-center py-10 bg-gray-50 rounded-lg p-6">
+                            <span className="material-icons text-5xl text-gray-400 mb-3">event_seat</span>
+                            <h3 className="text-xl font-medium text-gray-700 mb-1">Không tìm thấy ghế</h3>
+                            <p className="text-gray-500">Không có ghế nào phù hợp với tiêu chí tìm kiếm</p>
+                        </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white border">
+                        <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
+                            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <thead>
                                 <tr className="bg-gray-100 border-b">
-                                    <th className="p-3 text-left w-12">
-                                        <input type="checkbox" className="form-checkbox h-5 w-5"
+                                    <th className="p-3 text-left w-10">
+                                        <input type="checkbox"
+                                               className="form-checkbox h-5 w-5 text-gray-700 rounded transition-all duration-300"
                                                checked={selectAll || (currentSeats.length > 0 && currentSeats.every(seat => selectedSeats.includes(seat.lockSeatId)))}
                                                onChange={handleSelectAllSeats}
                                         />
                                     </th>
-                                    <th className="p-3 text-center">ID</th>
-                                    <th className="p-3 text-center">Tên ghế</th>
-                                    <th className="p-3 text-center">Phòng</th>
-                                    <th className="p-3 text-center">ID Lịch chiếu</th>
-                                    <th className="p-3 text-center">Trạng thái</th>
-                                    <th className="p-3 text-center">Thao tác</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">ID</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider">Tên
+                                        ghế
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Phòng</th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">ID
+                                        Lịch chiếu
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Trạng
+                                        thái
+                                    </th>
+                                    <th className="p-3 text-center text-sm font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Thao
+                                        tác
+                                    </th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-gray-200">
                                 {currentSeats.map((Seatlock) => (
-                                    <tr key={Seatlock.lockSeatId} className="border-b hover:bg-gray-50">
+                                    <tr key={Seatlock.lockSeatId} className="hover:bg-gray-50 transition-colors">
                                         <td className="p-3">
-                                            <input type="checkbox" className="form-checkbox h-5 w-5"
+                                            <input type="checkbox"
+                                                   className="form-checkbox h-5 w-5 text-gray-700 rounded transition-all duration-300"
                                                    checked={selectedSeats.includes(Seatlock.lockSeatId)}
                                                    onChange={() => handleSeatSelect(Seatlock.lockSeatId)}
                                             />
                                         </td>
-                                        <td className="p-3 text-center">{Seatlock.lockSeatId}</td>
-                                        <td className="p-3 font-medium text-center">{Seatlock.seatName}</td>
-                                        <td className="p-3 text-center">{Seatlock.roomName}</td>
-                                        <td className="p-3 text-center">{Seatlock.showtimeId}</td>
-                                        <td className="p-3 text-center">
+                                        <td className="p-3 font-medium text-center text-gray-900">{Seatlock.lockSeatId}</td>
+                                        <td className="p-3 font-medium text-center text-gray-900">{Seatlock.seatName}</td>
+                                        <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Seatlock.roomName}</td>
+                                        <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Seatlock.showtimeId}</td>
+                                        <td className="p-3 text-center text-gray-700 hidden sm:table-cell">
                                             <span className={`
                                                 ${Seatlock.status === 'INVALID' ? 'text-red-600 font-medium' : ''}
                                             `}>
@@ -548,11 +629,10 @@ export default function LockSeatByShowTime () {
                                         <td className="p-3 text-center">
                                             <button
                                                 onClick={() => handleOpenDeleteModal(Seatlock)}
-                                                className="text-gray-600 hover:text-gray-800"
+                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
                                             >
                                                 <span className="material-icons">delete</span>
                                             </button>
-
                                         </td>
                                     </tr>
                                 ))}
@@ -562,13 +642,13 @@ export default function LockSeatByShowTime () {
                     )}
 
                     {/* Pagination.jsx */}
-                    <div className="flex flex-wrap justify-center mt-6 gap-1">
-                        <div className="flex flex-wrap justify-center items-center gap-1">
+                    <div className="flex flex-wrap justify-center mt-8 gap-2">
+                        <div className="flex flex-wrap justify-center items-center gap-2">
                             {/* Nút về trang đầu tiên */}
                             <button
                                 onClick={() => setCurrentPage(1)}
                                 disabled={currentPage === 1}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang đầu"
                             >
                                 &laquo;
@@ -578,7 +658,7 @@ export default function LockSeatByShowTime () {
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 &lt;
                             </button>
@@ -588,12 +668,12 @@ export default function LockSeatByShowTime () {
                                 <>
                                     <button
                                         onClick={() => setCurrentPage(1)}
-                                        className="mx-1 px-3 py-1 rounded border"
+                                        className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         1
                                     </button>
                                     {getPageNumbers()[0] > 2 && (
-                                        <span className="mx-1 px-3 py-1">...</span>
+                                        <span className="mx-1 px-2 py-1.5 text-sm md:text-base text-gray-500">...</span>
                                     )}
                                 </>
                             )}
@@ -603,11 +683,11 @@ export default function LockSeatByShowTime () {
                                 <button
                                     key={pageNumber}
                                     onClick={() => setCurrentPage(pageNumber)}
-                                    className={`mx-1 px-3 py-1 rounded ${
+                                    className={`mx-1 px-3 py-1.5 rounded-md transition-all duration-200 ease-in-out ${
                                         currentPage === pageNumber
-                                            ? 'bg-gray-900 text-white'
-                                            : 'border'
-                                    }`}
+                                            ? 'bg-gray-900 text-white shadow-md transform scale-105'
+                                            : 'border border-gray-300 hover:bg-gray-100'
+                                    } text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-gray-400`}
                                 >
                                     {pageNumber}
                                 </button>
@@ -617,11 +697,11 @@ export default function LockSeatByShowTime () {
                             {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
                                 <>
                                     {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
-                                        <span className="mx-1 px-3 py-1">...</span>
+                                        <span className="mx-1 px-2 py-1.5 text-sm md:text-base text-gray-500">...</span>
                                     )}
                                     <button
                                         onClick={() => setCurrentPage(totalPages)}
-                                        className="mx-1 px-3 py-1 rounded border"
+                                        className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     >
                                         {totalPages}
                                     </button>
@@ -632,7 +712,7 @@ export default function LockSeatByShowTime () {
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 &gt;
                             </button>
@@ -641,7 +721,7 @@ export default function LockSeatByShowTime () {
                             <button
                                 onClick={() => setCurrentPage(totalPages)}
                                 disabled={currentPage === totalPages}
-                                className="mx-1 px-3 py-1 rounded border disabled:opacity-50"
+                                className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang cuối"
                             >
                                 &raquo;
@@ -651,22 +731,22 @@ export default function LockSeatByShowTime () {
                 </div>
             </div>
 
-            {isDeleteModalOpen && selectedSeatForAction &&(
+            {isDeleteModalOpen && selectedSeatForAction && (
                 <div
                     className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div ref={modalConfirmRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-lg font-semibold mb-4">Xác nhận xóa</h2>
-                        <p className="mb-6">Bạn có chắc chắn muốn xóa ghế {selectedSeatForAction.lockSeatId} không?</p>
+                    <div ref={modalConfirmRef} className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Xác nhận xóa</h2>
+                        <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa ghế {selectedSeatForAction.lockSeatId} không?</p>
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={handleCloseModal}
-                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={() => handleDeleteSeat(selectedSeatForAction.lockSeatId)}
-                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                             >
                                 Xóa
                             </button>
@@ -678,20 +758,20 @@ export default function LockSeatByShowTime () {
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteModalOpen && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div ref={modalbulkDeRef} className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-lg font-semibold mb-4">Xác nhận xóa hàng loạt</h2>
-                        <p className="mb-6">Bạn có chắc chắn muốn xóa {selectedSeats.length} ghế đã chọn
+                    <div ref={modalbulkDeRef} className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Xác nhận xóa hàng loạt</h2>
+                        <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa {selectedSeats.length} ghế đã chọn
                             không?</p>
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => setBulkDeleteModalOpen(false)}
-                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={confirmBulkDelete}
-                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                             >
                                 Xóa
                             </button>
@@ -702,19 +782,21 @@ export default function LockSeatByShowTime () {
 
             {showAddModal && (
                 <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                    <div ref={modalAddRef} className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Thêm ghế cần khóa</h2>
-                            <button onClick={()=>setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">
-                                <span className="material-icons">close</span>
-                            </button>
-                        </div>
+                    <div ref={modalAddRef} className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Thêm ghế cần khóa</h2>
+                                <button onClick={() => setShowAddModal(false)}
+                                        className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
+                                    <span className="material-icons">close</span>
+                                </button>
+                            </div>
 
                         <div className="space-y-4">
                             {/* Phòng */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">Chọn phòng</label>
-                                <select value={selectedRoomId} onChange={handleRoomChange} className="w-full p-2 border rounded">
+                                <select value={selectedRoomId} onChange={handleRoomChange} className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200">
                                     <option value="">-- Chọn phòng --</option>
                                     {rooms.map(r=>(<option key={r.id} value={r.id}>{r.name}</option>))}
                                 </select>
@@ -724,7 +806,7 @@ export default function LockSeatByShowTime () {
                             <div>
                                 <label className="block text-sm font-medium mb-1">Chọn lịch chiếu</label>
                                 <select value={selectedShowtimeId} onChange={handleShowtimeChange} disabled={!selectedRoomId}
-                                        className="w-full p-2 border rounded disabled:bg-gray-100">
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 disabled:bg-gray-100">
                                     <option value="">-- Chọn lịch chiếu --</option>
                                     {availableShowtimes.map(st=> (<option key={st.showtimeId} value={st.showtimeId}>{st.startTime}</option>))}
                                 </select>
@@ -734,7 +816,7 @@ export default function LockSeatByShowTime () {
                             <div>
                                 <label className="block text-sm font-medium mb-1">Chọn ghế</label>
                                 <select value={newSeat.seatId} onChange={handleSeatChange} disabled={!selectedShowtimeId}
-                                        className="w-full p-2 border rounded disabled:bg-gray-100">
+                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 disabled:bg-gray-100">
                                     <option value="">-- Chọn ghế --</option>
                                     {availableSeats.map(seat=>(<option key={seat.seatId} value={seat.seatId}>{seat.seatName}</option>))}
                                 </select>
@@ -742,8 +824,9 @@ export default function LockSeatByShowTime () {
                         </div>
 
                         <div className="flex justify-end mt-6 gap-3">
-                            <button onClick={closeAddModal} className="px-4 py-2 border rounded-md hover:bg-gray-100">Hủy</button>
-                            <button onClick={handleAddSeat} className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800" disabled={!newSeat.seatId}>Thêm ghế</button>
+                            <button onClick={closeAddModal} className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200">Hủy</button>
+                            <button onClick={handleAddSeat} className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg" disabled={!newSeat.seatId}>Thêm ghế</button>
+                        </div>
                         </div>
                     </div>
                 </div>

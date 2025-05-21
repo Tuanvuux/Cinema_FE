@@ -2,12 +2,16 @@ import React, { useState, useEffect,useRef  } from "react";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { addEmployee } from "@/services/apiadmin.jsx";
 import Button from "@/components/ui/button.jsx";
+import {CheckCircle, AlertCircle, X } from "lucide-react";
+
 
 export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
     const modalRef = useRef();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [toast, setToast] = useState([]);
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
@@ -21,7 +25,48 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
         };
     }, [isOpen]);
 
-    const ToastNotification = ({ message, type, show }) => {
+    const addToast = (message, type = 'success') => {
+        const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
+        setToast(prev => [...prev, { id, message, type, show: true }]);
+
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            removeToast(id);
+        }, 3000);
+    };
+
+    // Hàm xóa toast
+    const removeToast = (id) => {
+        setToast(prev => prev.map(t =>
+            t.id === id ? { ...t, show: false } : t
+        ));
+
+        // Xóa toast khỏi mảng sau khi animation kết thúc
+        setTimeout(() => {
+            setToast(prev => prev.filter(t => t.id !== id));
+        }, 300);
+    };
+
+    // Component Toast Container để hiển thị nhiều toast
+    const ToastContainer = () => {
+        return (
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+                {toast.map((t) => (
+                    <ToastNotification
+                        key={t.id}
+                        id={t.id}
+                        message={t.message}
+                        type={t.type}
+                        show={t.show}
+                        onClose={() => removeToast(t.id)}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    // Component Toast Notification cập nhật
+    const ToastNotification = ({ id, message, type, show, onClose }) => {
         if (!show) return null;
 
         const typeStyles = {
@@ -31,22 +76,29 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
 
         return (
             <div
-                className={`fixed top-4 right-4 z-[9999] px-4 py-2 text-white rounded-md shadow-lg transition-all duration-300 ${typeStyles[type]}`}
+                className={`px-6 py-3 rounded-md shadow-lg flex items-center justify-between ${typeStyles[type]}`}
                 style={{
                     animation: 'fadeInOut 3s ease-in-out',
-                    opacity: show ? 1 : 0
+                    opacity: show ? 1 : 0,
+                    transition: 'opacity 0.3s ease, transform 0.3s ease'
                 }}
             >
-                {message}
+                <div className="flex items-center">
+                    {type === 'success' ?
+                        <CheckCircle className="mr-2 h-5 w-5 text-white" /> :
+                        <AlertCircle className="mr-2 h-5 w-5 text-white" />
+                    }
+                    <p className="text-white font-medium">{message}</p>
+                </div>
+                <button
+                    className="text-white opacity-70 hover:opacity-100"
+                    onClick={onClose}
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
         );
     };
-
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: 'success'
-    });
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -61,17 +113,13 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
             [e.target.name]: e.target.value
         });
     };
-    const showToast = (message, type = 'success') => {
-        setToast({ show: true, message, type });
-        setTimeout(() => setToast({ show: false, message: '', type }), 3000);
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Kiểm tra xác nhận mật khẩu
         if (formData.password !== formData.confirmPassword) {
-            showToast("Mật khẩu mới không khớp!", "error");
+            addToast("Mật khẩu mới không khớp!", "error");
             return;
         }
         setIsLoading(true);
@@ -82,37 +130,19 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                 username: formData.username,
                 password: formData.password
             });
-
-            setToast({
-                show: true,
-                message: 'Tạo tài khoản nhân viên thành công!',
-                type: 'success'
-            });
-
+            addToast('Tạo tài khoản nhân viên thành công!','success')
             // Reset form
             setFormData({ fullName:'',username: '', password: '', confirmPassword: '' });
         } catch (error) {
-            setToast({
-                show: true,
-                message: error.response?.data || 'Lỗi khi tạo tài khoản!',
-                type: 'error'
-            });
+            addToast(error.response?.data || 'Lỗi khi tạo tài khoản!','error')
         }
-
-        setTimeout(() => {
-            setToast({ ...toast, show: false });
-        }, 3000);
         setIsLoading(false);
     };
 
     return (
         <div className="flex flex-col h-screen">
             {/* Toast notification được đưa ra khỏi modal container */}
-            <ToastNotification
-                message={toast.message}
-                type={toast.type}
-                show={toast.show}
-            />
+            <ToastContainer/>
 
             <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                 <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
@@ -141,7 +171,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                             </div>
@@ -152,7 +182,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                             </div>
@@ -163,7 +193,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded pr-10"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                                 <span
@@ -199,7 +229,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full p-2 border rounded pr-10"
+                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                     required
                                 />
                                 <span
@@ -230,7 +260,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className={`w-full p-2 rounded-md flex justify-center items-center ${
+                                className={`w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 ${
                                     isLoading ? " cursor-not-allowed" : " "
                                 }`}
                             >
