@@ -12,6 +12,7 @@ import DashboardByMovie from '@/pages/admin/DashboardByMovie';
 import CreateAccountForEmployee from "@/pages/admin/CreateAccountForEmployeeModal.jsx";
 import { useAuth } from "../../contexts/AuthContext";
 import AccessDenied from "@/pages/admin/AccessDenied.jsx";
+import LockSeatByShowTime from "@/pages/admin/LockSeatByShowTime.jsx"
 
 export default function AdminLayout() {
     const { user } = useAuth();
@@ -57,6 +58,7 @@ export default function AdminLayout() {
             case 'moviemanagement': return <MovieManagement />;
             case 'accountmanagement': return <AccountManagement />;
             case 'seatmanagement': return <SeatManagement />;
+            case 'seat-lock': return <LockSeatByShowTime />;
             default: return <Dashboard onNavigate={handleNavigate} />;
         }
     };
