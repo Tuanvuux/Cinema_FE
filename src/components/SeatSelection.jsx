@@ -29,12 +29,46 @@ const SeatSelection = () => {
 
   const handleSeatUpdate = useCallback(
     (seatStatus) => {
+      // Nếu là dạng gửi nhiều ghế (từ BACKEND khi BOOKED), xử lý mảng seatIds
+      if (seatStatus.status === "BOOKED" && Array.isArray(seatStatus.seatIds)) {
+        setSeatMatrix((prevMatrix) =>
+          prevMatrix.map((row) =>
+            row.map((seat) => {
+              if (seat && seatStatus.seatIds.includes(seat.seatId)) {
+                return {
+                  ...seat,
+                  status: "BOOKED",
+                  isLocked: false,
+                  isLockedByMe: false,
+                };
+              }
+              return seat;
+            })
+          )
+        );
+
+        setBookedSeatIds((prev) => [
+          ...new Set([...prev, ...seatStatus.seatIds]),
+        ]);
+
+        setSelectedSeats((prev) =>
+          prev.filter((id) => !seatStatus.seatIds.includes(id))
+        );
+
+        updateTotalPrice(
+          selectedSeats.filter((id) => !seatStatus.seatIds.includes(id))
+        );
+
+        toast.info(`Ghế ${seatStatus.seatIds.join(", ")} đã được đặt.`);
+        return;
+      }
+
+      // Trường hợp bình thường (ghế được chọn / hủy giữ)
       setSeatMatrix((prevMatrix) =>
         prevMatrix.map((row) =>
           row.map((seat) => {
             if (seat && seat.seatId === seatStatus.seatId) {
               const isNowAvailable = seatStatus.status === "AVAILABLE";
-
               return {
                 ...seat,
                 status: seatStatus.status,
@@ -53,11 +87,10 @@ const SeatSelection = () => {
         seatStatus.status === "AVAILABLE" &&
         selectedSeats.includes(seatStatus.seatId)
       ) {
-        toast.dismiss(`seat-${seatStatus.seatId}`); // xóa toast cũ nếu có
+        toast.dismiss(`seat-${seatStatus.seatId}`);
         toast.info(`Ghế ${seatStatus.seatId} đã bị hủy do hết thời gian giữ.`, {
-          toastId: `seat-${seatStatus.seatId}`, // mỗi ghế có ID riêng, tránh hiển thị trùng
+          toastId: `seat-${seatStatus.seatId}`,
         });
-
         setSelectedSeats((prev) =>
           prev.filter((id) => id !== seatStatus.seatId)
         );
@@ -166,8 +199,15 @@ const SeatSelection = () => {
   const updateTotalPrice = (newSelectedSeats) => {
     const newTotal = seatMatrix
       .flat()
-      .filter((seat) => seat && newSelectedSeats.includes(seat.seatId))
+      .filter(
+        (seat) =>
+          seat &&
+          newSelectedSeats.includes(seat.seatId) &&
+          seat.isLockedByMe === true &&
+          seat.status === "SELECTED" // ✅ Ghế đang giữ, chưa BOOKED
+      )
       .reduce((sum, seat) => sum + seat.seatInfo.price, 0);
+
     setTotalPrice(newTotal);
   };
 

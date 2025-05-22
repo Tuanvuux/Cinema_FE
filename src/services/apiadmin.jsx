@@ -322,12 +322,16 @@ export const getLockSeatAdmin = async () => {
   return response.data;
 };
 export const getSeatsByShowtime = async (showtimeId) => {
-  const response = await api.get(`/lock-seat-admin/admin/getSeatByShowTime/${showtimeId}`);
+  const response = await api.get(
+    `/lock-seat-admin/admin/getSeatByShowTime/${showtimeId}`
+  );
   return response.data;
 };
 
 export const getShowTimeByRoom = async (roomId) => {
-  const response = await api.get(`/lock-seat-admin/admin/getShowTimeByRoom/${roomId}`);
+  const response = await api.get(
+    `/lock-seat-admin/admin/getShowTimeByRoom/${roomId}`
+  );
   return response.data;
 };
 
@@ -340,4 +344,3 @@ export const deleteLockSeat = async (seatId) => {
   const response = await api.delete(`/lock-seat-admin/admin/${seatId}`);
   return response.data;
 };
-
