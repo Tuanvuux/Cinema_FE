@@ -88,3 +88,23 @@ export const updateUserInfo = async (userId, data) => {
   const response = await api.put(`/user/userInfo/${userId}`, data);
   return response.data;
 };
+export const extendSeatLock = async ({ showtimeId, userId, seatIds }) => {
+  const response = await api.post("/seats/extend-lock", {
+    showtimeId,
+    userId,
+    seatIds,
+  });
+  return response.data;
+};
+
+export const addPayment = async (data) => {
+  const response = await api.post(`/payments/addPayment`, data);
+  return response.data;
+};
+
+export const paymentMomo = async (amount, orderId) => {
+  const response = await api.post(
+    `api/payment/momo?amount=${amount}&orderId=${orderId}`
+  );
+  return response.data;
+};
