@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import { BASE_URL } from "../constants/constant";
 
 export default function useSeatSocket(showtimeId, onSeatUpdate) {
   const stompClientRef = useRef(null);
@@ -13,9 +14,7 @@ export default function useSeatSocket(showtimeId, onSeatUpdate) {
 
   useEffect(() => {
     const client = new Client({
-      // webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-      webSocketFactory: () =>
-        new SockJS("https://cinema-be-yaoa.onrender.com/ws"),
+      webSocketFactory: () => new SockJS(`${BASE_URL}/ws`),
       debug: () => {},
       reconnectDelay: 5000,
       onConnect: () => {

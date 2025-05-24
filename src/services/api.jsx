@@ -1,8 +1,7 @@
 import axios from "axios";
-
+import { BASE_URL } from "../constants/constant";
 const api = axios.create({
-  // baseURL: "http://localhost:8080",
-  baseURL: "https://cinema-be-yaoa.onrender.com",
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -106,5 +105,10 @@ export const paymentMomo = async (amount, orderId) => {
   const response = await api.post(
     `api/payment/momo?amount=${amount}&orderId=${orderId}`
   );
+  return response.data;
+};
+
+export const getPaymentById = async (paymentId) => {
+  const response = await api.get(`/payments/${paymentId}`);
   return response.data;
 };
