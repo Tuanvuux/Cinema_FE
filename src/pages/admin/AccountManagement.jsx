@@ -705,7 +705,7 @@ const AccountManagement = () => {
                                       className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
                                       title="Khóa tài khoản"
                                   >
-                                    <span className="material-icons">delete</span>
+                                    <span className="material-icons">lock</span>
                                   </button>
                               ) : (
                                   <button
@@ -713,7 +713,7 @@ const AccountManagement = () => {
                                       className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors animate-pulse"
                                       title="Khôi phục phim"
                                   >
-                                    <span className="material-icons">restore_from_trash</span>
+                                    <span className="material-icons">lock_open</span>
                                   </button>
                               )}
                             </div>

@@ -165,7 +165,8 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                         <form onSubmit={handleSubmit}
                               className="bg-white p-8 rounded w-full max-w-md space-y-4">
                             <div>
-                                <label className="block font-medium">Họ tên</label>
+                                <label className="block font-medium">Họ tên <span
+                                    className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="fullName"
@@ -176,7 +177,8 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                 />
                             </div>
                             <div>
-                                <label className="block font-medium">Tên đăng nhập</label>
+                                <label className="block font-medium">Tên đăng nhập <span
+                                    className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="username"
@@ -187,7 +189,8 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                 />
                             </div>
                             <div className="relative">
-                                <label className="block font-medium">Mật khẩu</label>
+                                <label className="block font-medium">Mật khẩu <span
+                                    className="text-red-500">*</span></label>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="password"
@@ -223,7 +226,8 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                             </div>
 
                             <div className="relative">
-                                <label className="block font-medium">Xác nhận mật khẩu</label>
+                                <label className="block font-medium">Xác nhận mật khẩu <span
+                                    className="text-red-500">*</span></label>
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
                                     name="confirmPassword"

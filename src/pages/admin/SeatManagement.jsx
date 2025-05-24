@@ -1296,14 +1296,15 @@ export default function SeatManagement() {
               <div className="space-y-5">
                 <div>
                   <label
-                    htmlFor="seatName"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                      htmlFor="seatName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Tên Ghế
+                    Tên Ghế <span
+                      className="text-red-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    id="seatName"
+                      type="text"
+                      id="seatName"
                     name="seatName"
                     value={newSeat.seatName}
                     onChange={(e) => {
@@ -1318,14 +1319,15 @@ export default function SeatManagement() {
 
                 <div>
                   <label
-                    htmlFor="room"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                      htmlFor="room"
+                      className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Tên phòng
+                    Tên phòng <span
+                      className="text-red-500">*</span>
                   </label>
                   <select
-                    id="roomId"
-                    name="roomId"
+                      id="roomId"
+                      name="roomId"
                     value={newSeat.roomId}
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
@@ -1342,14 +1344,15 @@ export default function SeatManagement() {
                 <div className="flex space-x-4">
                   <div>
                     <label
-                      htmlFor="rowLabel"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                        htmlFor="rowLabel"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Tên hàng ghế
+                      Tên hàng ghế <span
+                        className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
-                      id="rowLabel"
+                        type="text"
+                        id="rowLabel"
                       name="rowLabel"
                       value={newSeat.rowLabel}
                       onChange={handleInputChange}
@@ -1360,14 +1363,15 @@ export default function SeatManagement() {
                   </div>
                   <div>
                     <label
-                      htmlFor="columnNumber"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                        htmlFor="columnNumber"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Số cột ghế
+                      Số cột ghế <span
+                        className="text-red-500">*</span>
                     </label>
                     <input
-                      type="number"
-                      id="columnNumber"
+                        type="number"
+                        id="columnNumber"
                       name="columnNumber"
                       value={newSeat.columnNumber}
                       onChange={handleInputChange}

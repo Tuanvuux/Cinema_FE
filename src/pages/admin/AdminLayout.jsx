@@ -9,10 +9,10 @@ import AccountManagement from '@/pages/admin/AccountManagement';
 import SeatManagement from '@/pages/admin/SeatManagement';
 import DashboardByTime from '@/pages/admin/DashboardByTime';
 import DashboardByMovie from '@/pages/admin/DashboardByMovie';
-import CreateAccountForEmployee from "@/pages/admin/CreateAccountForEmployeeModal.jsx";
 import { useAuth } from "../../contexts/AuthContext";
 import AccessDenied from "@/pages/admin/AccessDenied.jsx";
 import LockSeatByShowTime from "@/pages/admin/LockSeatByShowTime.jsx"
+import NewsManagement from "@/pages/admin/NewsManagement.jsx";
 
 export default function AdminLayout() {
     const { user } = useAuth();
@@ -59,6 +59,7 @@ export default function AdminLayout() {
             case 'accountmanagement': return <AccountManagement />;
             case 'seatmanagement': return <SeatManagement />;
             case 'seat-lock': return <LockSeatByShowTime />;
+            case 'newmanagement': return <NewsManagement />;
             default: return <Dashboard onNavigate={handleNavigate} />;
         }
     };

@@ -947,7 +947,7 @@ export default function RoomManagement () {
                             <div className="space-y-5">
                                 <div>
                                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Tên phòng
+                                        Tên phòng <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -962,8 +962,9 @@ export default function RoomManagement () {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="seatCount" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Sức chứa (số ghế)
+                                    <label htmlFor="seatCount"
+                                           className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Sức chứa (số ghế) <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="number"
@@ -982,7 +983,7 @@ export default function RoomManagement () {
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfColumns"
                                                className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Số cột ghế
+                                            Số cột ghế <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -998,7 +999,7 @@ export default function RoomManagement () {
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfRows"
                                                className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Số dòng ghế
+                                            Số dòng ghế <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -1015,7 +1016,7 @@ export default function RoomManagement () {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Trạng thái
+                                        Trạng thái <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex items-center space-x-6">
                                         <label className="inline-flex items-center relative cursor-pointer group">
@@ -1069,7 +1070,7 @@ export default function RoomManagement () {
                                 </button>
                                 <button
                                     onClick={handleAddRoom}
-                                    className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600"
+                                    className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
                                     disabled={!newRoom.name || newRoom.seatCount <= 0}
                                 >
                                     Thêm phòng

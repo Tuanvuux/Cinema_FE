@@ -795,7 +795,8 @@ export default function LockSeatByShowTime () {
                         <div className="space-y-4">
                             {/* Phòng */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Chọn phòng</label>
+                                <label className="block text-sm font-medium mb-1">Chọn phòng <span
+                                    className="text-red-500">*</span></label>
                                 <select value={selectedRoomId} onChange={handleRoomChange} className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200">
                                     <option value="">-- Chọn phòng --</option>
                                     {rooms.map(r=>(<option key={r.id} value={r.id}>{r.name}</option>))}
@@ -804,7 +805,8 @@ export default function LockSeatByShowTime () {
 
                             {/* Suất chiếu */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Chọn lịch chiếu</label>
+                                <label className="block text-sm font-medium mb-1">Chọn lịch chiếu <span
+                                    className="text-red-500">*</span></label>
                                 <select value={selectedShowtimeId} onChange={handleShowtimeChange} disabled={!selectedRoomId}
                                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 disabled:bg-gray-100">
                                     <option value="">-- Chọn lịch chiếu --</option>
@@ -814,7 +816,8 @@ export default function LockSeatByShowTime () {
 
                             {/* Ghế */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">Chọn ghế</label>
+                                <label className="block text-sm font-medium mb-1">Chọn ghế <span
+                                    className="text-red-500">*</span></label>
                                 <select value={newSeat.seatId} onChange={handleSeatChange} disabled={!selectedShowtimeId}
                                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 disabled:bg-gray-100">
                                     <option value="">-- Chọn ghế --</option>
