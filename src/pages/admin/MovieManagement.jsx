@@ -861,7 +861,7 @@ export default function MovieManagement() {
                               className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
                               title="Khóa phim"
                             >
-                              <span className="material-icons">delete</span>
+                              <span className="material-icons">lock</span>
                             </button>
                           ) : (
                             <button
@@ -872,7 +872,7 @@ export default function MovieManagement() {
                               title="Khôi phục phim"
                             >
                               <span className="material-icons">
-                                restore_from_trash
+                                lock_open
                               </span>
                             </button>
                           )}
@@ -943,9 +943,9 @@ export default function MovieManagement() {
                   </div>
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div className="mb-3">
-                      <label className="block mb-2">Tên phim</label>
+                      <label className="block mb-2">Tên phim <span className="text-red-500">*</span></label>
                       <input
-                        {...register("name", { required: true })}
+                          {...register("name", { required: true })}
                         type="text"
                         placeholder="Tên phim"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -953,9 +953,9 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Đạo diễn</label>
+                      <label className="block mb-2">Đạo diễn <span className="text-red-500">*</span></label>
                       <input
-                        {...register("director")}
+                          {...register("director")}
                         type="text"
                         placeholder="Đạo diễn"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -963,9 +963,9 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Diễn viên</label>
+                      <label className="block mb-2">Diễn viên <span className="text-red-500">*</span></label>
                       <input
-                        {...register("actor")}
+                          {...register("actor")}
                         type="text"
                         placeholder="Diễn viên"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -973,18 +973,18 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Mô tả phim</label>
+                      <label className="block mb-2">Mô tả phim <span className="text-red-500">*</span></label>
                       <textarea
-                        {...register("description")}
+                          {...register("description")}
                         placeholder="Mô tả phim"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                       ></textarea>
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Quốc gia</label>
+                      <label className="block mb-2">Quốc gia <span className="text-red-500">*</span></label>
                       <input
-                        {...register("country")}
+                          {...register("country")}
                         type="text"
                         placeholder="Quốc gia"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -992,9 +992,9 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Thời lượng (phút)</label>
+                      <label className="block mb-2">Thời lượng (phút) <span className="text-red-500">*</span></label>
                       <input
-                        {...register("duration", { required: true })}
+                          {...register("duration", { required: true })}
                         type="number"
                         placeholder="Thời lượng (phút)"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -1002,18 +1002,18 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Ngày phát hành</label>
+                      <label className="block mb-2">Ngày phát hành <span className="text-red-500">*</span></label>
                       <input
-                        {...register("releaseDate")}
+                          {...register("releaseDate")}
                         type="date"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Giới hạn tuổi</label>
+                      <label className="block mb-2">Giới hạn tuổi <span className="text-red-500">*</span></label>
                       <input
-                        {...register("ageLimit")}
+                          {...register("ageLimit")}
                         type="number"
                         placeholder="Giới hạn tuổi"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -1021,9 +1021,9 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Caption</label>
+                      <label className="block mb-2">Caption <span className="text-red-500">*</span></label>
                       <input
-                        {...register("caption")}
+                          {...register("caption")}
                         placeholder="Caption"
                         type="text"
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -1031,9 +1031,9 @@ export default function MovieManagement() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="block mb-2">Poster:</label>
+                      <label className="block mb-2">Poster: <span className="text-red-500">*</span></label>
                       <input
-                        type="file"
+                          type="file"
                         accept="image/*"
                         onChange={(e) =>
                           uploadImage(e.target.files[0], "posterUrl")
@@ -1054,9 +1054,9 @@ export default function MovieManagement() {
                     )}
 
                     <div className="mb-3">
-                      <label className="block mb-2">Banner:</label>
+                      <label className="block mb-2">Banner: <span className="text-red-500">*</span></label>
                       <input
-                        type="file"
+                          type="file"
                         accept="image/*"
                         onChange={(e) =>
                           uploadImage(e.target.files[0], "bannerUrl")
@@ -1077,9 +1077,9 @@ export default function MovieManagement() {
                     )}
 
                     <div className="mb-3">
-                      <label className="block mb-2">Trailer:</label>
+                      <label className="block mb-2">Trailer: <span className="text-red-500">*</span></label>
                       <input
-                        type="file"
+                          type="file"
                         accept="video/*"
                         onChange={(e) => uploadVideo(e.target.files[0])}
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
@@ -1096,9 +1096,9 @@ export default function MovieManagement() {
                     )}
 
                     <div className="mb-3">
-                      <label className="block mb-2">Thể loại:</label>
+                      <label className="block mb-2">Thể loại: <span className="text-red-500">*</span></label>
                       <select
-                        {...register("categoryId", { required: true })}
+                          {...register("categoryId", { required: true })}
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                       >
                         <option value="">Chọn thể loại</option>

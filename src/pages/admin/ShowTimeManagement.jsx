@@ -729,7 +729,8 @@ export default function ShowtimeManagement() {
 
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Tên phim</label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Tên
+                                                phim <span className="text-red-500">*</span></label>
                                             <select
                                                 onChange={(e) => {
                                                     const movieId = parseInt(e.target.value);
@@ -745,7 +746,8 @@ export default function ShowtimeManagement() {
                                                 }}
                                                 className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                                             >
-                                                <option value="">Chọn phim</option>
+                                                <option value="">Chọn phim
+                                                </option>
                                                 {movies.map(movie => (
                                                     <option key={movie.movieId} value={movie.movieId}>{movie.name}</option>
                                                 ))}
@@ -753,7 +755,8 @@ export default function ShowtimeManagement() {
                                         </div>
 
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Ngày chiếu</label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Ngày
+                                                chiếu <span className="text-red-500">*</span></label>
                                             <input
                                                 type="date"
                                                 onChange={(e) => setShowDate(e.target.value)}
@@ -762,7 +765,8 @@ export default function ShowtimeManagement() {
                                         </div>
 
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ bắt đầu</label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ bắt
+                                                đầu <span className="text-red-500">*</span></label>
                                             <input
                                                 type="time"
                                                 onChange={handleStartTimeChange}
@@ -771,7 +775,8 @@ export default function ShowtimeManagement() {
                                         </div>
 
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ kết thúc</label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ kết
+                                                thúc <span className="text-red-500">*</span></label>
                                             <input
                                                 type="time"
                                                 value={endTime}
@@ -781,7 +786,8 @@ export default function ShowtimeManagement() {
                                         </div>
 
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Chọn phòng</label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Chọn
+                                                phòng <span className="text-red-500">*</span></label>
                                             <select
                                                 onChange={(e) => setSelectedRoom(parseInt(e.target.value))}
                                                 className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
