@@ -90,6 +90,11 @@ export const addEmployee = async (request) => {
   return response.data;
 };
 
+export const checkEmployeeIsValid = async (username) => {
+  const response = await api.get(`/auth/admin/check-username/${username}`)
+  return response.data;
+};
+
 export const toggleDeleteUser = async (userId, isActive) => {
   const response = await api.put(`/accounts/admin/${userId}/toggle-delete`, {
     isActive: isActive,

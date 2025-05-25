@@ -8,6 +8,7 @@ export default function RoomManagement () {
     const [loading, setLoading] = useState(true);
     const [showFilter, setShowFilter] = useState(false);
     const [error, setError] = useState(null);
+    const [errors, setErrors] = useState({});
     const [newRoom, setNewRoom] = useState({
         name: '',
         seatCount: 0,
@@ -167,6 +168,7 @@ export default function RoomManagement () {
 
     const handleCancel = () => {
         resetAddModalState();
+        setErrors({});
         setShowAddModal(false);
     };
 
@@ -301,12 +303,22 @@ export default function RoomManagement () {
 
     // Handle adding a new room
     const handleAddRoom = async () => {
+        const newErrors = {};
+        if (!newRoom.name.trim()) newErrors.name = "Tên phòng là bắt buộc";
+        if (!newRoom.seatCount || newRoom.seatCount <= 0) newErrors.seatCount = "Số ghế phải lớn hơn 0";
+        if (!newRoom.numberOfColumns || newRoom.numberOfColumns <= 0) newErrors.numberOfColumns = "Số cột phải lớn hơn 0";
+        if (!newRoom.numberOfRows || newRoom.numberOfRows <= 0) newErrors.numberOfRows = "Số dòng phải lớn hơn 0";
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
         try {
             const addedRoom = await addRoom(newRoom);
             setRooms([...rooms, addedRoom]);
-            // Show success toast
-            addToast('Thêm phòng thành công!','success')
-            // Reset form and close modal
+            addToast('Thêm phòng thành công!', 'success');
+
             setNewRoom({
                 name: '',
                 seatCount: 0,
@@ -314,14 +326,14 @@ export default function RoomManagement () {
                 numberOfColumns: 0,
                 numberOfRows: 0
             });
+            setErrors({});
             setShowAddModal(false);
-
         } catch (err) {
-            // Show error toast
-            addToast('Thêm phòng thất bại!','error')
+            addToast('Thêm phòng thất bại!', 'error');
             console.error(err);
         }
     };
+
 
     // Toast Notification Component
 
@@ -397,6 +409,9 @@ export default function RoomManagement () {
             ...newRoom,
             [name]: processedValue
         });
+        if (errors[name]) {
+            setErrors({ ...errors, [name]: undefined });
+        }
     };
 
     return (
@@ -619,7 +634,7 @@ export default function RoomManagement () {
                                             <div className="flex justify-center space-x-3">
                                                 <button
                                                     onClick={() => handleEditRoom(room)}
-                                                    className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
+                                                    className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
                                                     aria-label="Edit"
                                                 >
                                                     <span className="material-icons text-sm">edit</span>
@@ -829,7 +844,7 @@ export default function RoomManagement () {
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfRows"
                                                className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Số dòng ghế
+                                            Số hàng ghế
                                         </label>
                                         <input
                                             type="number"
@@ -837,7 +852,7 @@ export default function RoomManagement () {
                                             name="numberOfRows"
                                             value={editingRoom.numberOfRows}
                                             onChange={handleInputChangeEdit}
-                                            placeholder="Nhập số dòng ghế"
+                                            placeholder="Nhập số hàng ghế"
                                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
@@ -956,9 +971,10 @@ export default function RoomManagement () {
                                         value={newRoom.name}
                                         onChange={handleInputChange}
                                         placeholder="Nhập tên phòng chiếu"
-                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                        className={`w-full border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500' : 'focus:ring-gray-600'} focus:border-gray-600 shadow-sm transition-all duration-200`}
                                         required
                                     />
+                                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                                 </div>
 
                                 <div>
@@ -973,10 +989,11 @@ export default function RoomManagement () {
                                         value={newRoom.seatCount}
                                         onChange={handleInputChange}
                                         placeholder="Nhập số lượng ghế"
-                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                        className={`w-full border ${errors.seatCount ? 'border-red-500' : 'border-gray-300'} rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 ${errors.seatCount ? 'focus:ring-red-500' : 'focus:ring-gray-600'} focus:border-gray-600 shadow-sm transition-all duration-200`}
                                         min="1"
                                         required
                                     />
+                                    {errors.seatCount && <p className="text-red-500 text-sm mt-1">{errors.seatCount}</p>}
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
@@ -992,14 +1009,15 @@ export default function RoomManagement () {
                                             value={newRoom.numberOfColumns}
                                             onChange={handleInputChange}
                                             placeholder="Nhập số cột ghế"
-                                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                            className={`w-full border ${errors.numberOfColumns ? 'border-red-500' : 'border-gray-300'} rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 ${errors.numberOfColumns ? 'focus:ring-red-500' : 'focus:ring-gray-600'} focus:border-gray-600 shadow-sm transition-all duration-200`}
                                             required
                                         />
+                                        {errors.numberOfColumns && <p className="text-red-500 text-sm mt-1">{errors.numberOfColumns}</p>}
                                     </div>
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfRows"
                                                className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Số dòng ghế <span className="text-red-500">*</span>
+                                            Số hàng ghế <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -1007,16 +1025,17 @@ export default function RoomManagement () {
                                             name="numberOfRows"
                                             value={newRoom.numberOfRows}
                                             onChange={handleInputChange}
-                                            placeholder="Nhập số dòng ghế"
-                                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                            placeholder="Nhập số hàng ghế"
+                                            className={`w-full border ${errors.numberOfRows ? 'border-red-500' : 'border-gray-300'} rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 ${errors.numberOfRows ? 'focus:ring-red-500' : 'focus:ring-gray-600'} focus:border-gray-600 shadow-sm transition-all duration-200`}
                                             required
                                         />
+                                        {errors.numberOfRows && <p className="text-red-500 text-sm mt-1">{errors.numberOfRows}</p>}
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Trạng thái <span className="text-red-500">*</span>
+                                        Trạng thái
                                     </label>
                                     <div className="flex items-center space-x-6">
                                         <label className="inline-flex items-center relative cursor-pointer group">
@@ -1071,7 +1090,7 @@ export default function RoomManagement () {
                                 <button
                                     onClick={handleAddRoom}
                                     className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
-                                    disabled={!newRoom.name || newRoom.seatCount <= 0}
+                                    //  disabled={!newRoom.name || newRoom.seatCount <= 0}
                                 >
                                     Thêm phòng
                                 </button>

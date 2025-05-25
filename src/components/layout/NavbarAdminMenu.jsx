@@ -27,7 +27,7 @@ const navItems = [
             { key: 'seat-lock',icon: 'lock',label: 'Khóa ghế theo suất' }
         ]
     },
-    { key: 'newmanagement', icon: 'article', label: 'Quản lý bài viết' },
+    // { key: 'newmanagement', icon: 'article', label: 'Quản lý bài viết' },
 ];
 
 const NavbarAdminMenu = ({ currentPage, onNavigate }) => {

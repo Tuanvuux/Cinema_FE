@@ -39,6 +39,8 @@ export default function ShowtimeManagement() {
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedShowtimeIds] = useState([]);
+    const [validationErrors, setValidationErrors] = useState({});
+
 
     const modalConfirmRef = useRef();
     const modalEditRef = useRef();
@@ -232,7 +234,48 @@ export default function ShowtimeManagement() {
         }
     };
 
+    const validateForm = () => {
+        const errors = {};
+
+        if (!selectedMovie) {
+            errors.movie = "Vui lòng chọn phim";
+        }
+
+        if (!showDate) {
+            errors.showDate = "Vui lòng chọn ngày chiếu";
+        }
+
+        if (!startTime) {
+            errors.startTime = "Vui lòng chọn giờ bắt đầu";
+        }
+
+        if (!selectedRoom) {
+            errors.room = "Vui lòng chọn phòng";
+        }
+
+        // Kiểm tra ngày chiếu không được trong quá khứ
+        if (showDate) {
+            const today = new Date();
+            const selectedDate = new Date(showDate);
+            if (selectedDate < today.setHours(0, 0, 0, 0)) {
+                errors.showDate = "Ngày chiếu không được trong quá khứ";
+            }
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async () => {
+        // Reset errors trước khi validate
+        setValidationErrors({});
+
+        // Validate form
+        if (!validateForm()) {
+            addToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            return;
+        }
+
         try {
             const formattedStartTime = startTime.includes(":") ?
                 (startTime.includes(".") ? startTime :
@@ -260,6 +303,7 @@ export default function ShowtimeManagement() {
             setStartTime("");
             setEndTime("");
             setSelectedRoom("");
+            setValidationErrors({}); // Reset validation errors
 
             await getShowtimes().then(data => {
                 setShowtime(data);
@@ -271,7 +315,6 @@ export default function ShowtimeManagement() {
             addToast('Có lỗi xảy ra khi thêm lịch chiếu','error')
         }
     };
-
     const isRoomDisabled = (roomId) => {
         // Nếu không có ngày hoặc giờ bắt đầu hoặc giờ kết thúc được chọn, trả về false
         if (!showDate || !startTime || !endTime) {
@@ -636,20 +679,23 @@ export default function ShowtimeManagement() {
                                                 <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Showtime.startTime}</td>
                                                 <td className="p-3 text-center text-gray-700 hidden sm:table-cell">{Showtime.endTime}</td>
                                                 <td className="p-3 text-center text-gray-700 hidden sm:table-cell">
-                                                    <button
-                                                        onClick={() => handleEditShowtime(Showtime)}
-                                                        className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
-                                                        disabled={isPast}
-                                                    >
-                                                        <span className="material-icons">edit</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleOpenDeleteModal(Showtime)}
-                                                        className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                                        disabled={isPast}
-                                                    >
-                                                        <span className="material-icons">delete</span>
-                                                    </button>
+                                                    <div className="flex justify-center space-x-1">
+                                                        <button
+                                                            onClick={() => handleEditShowtime(Showtime)}
+                                                            className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+                                                            disabled={isPast}
+                                                        >
+                                                            <span className="material-icons">edit</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleOpenDeleteModal(Showtime)}
+                                                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+                                                            disabled={isPast}
+                                                        >
+                                                            <span className="material-icons">delete</span>
+                                                        </button>
+                                                    </div>
+
                                                 </td>
                                             </tr>
                                         );
@@ -664,10 +710,12 @@ export default function ShowtimeManagement() {
                     {isDeleteModalOpen && selectedShowTimeForAction && (
                         <div
                             className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-                            <div ref={modalConfirmRef} className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
+                            <div ref={modalConfirmRef}
+                                 className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
                                 <h2 className="text-lg font-semibold mb-4">Xác nhận
                                     xóa</h2>
-                                <p className="mb-6">Bạn có chắc chắn muốn xóa lịch chiếu {selectedShowTimeForAction.showtimeId} không?</p>
+                                <p className="mb-6">Bạn có chắc chắn muốn xóa lịch
+                                    chiếu {selectedShowTimeForAction.showtimeId} không?</p>
                                 <div className="flex justify-end gap-4">
                                     <button
                                         onClick={handleCloseModal}
@@ -728,13 +776,19 @@ export default function ShowtimeManagement() {
                                     </div>
 
                                     <div className="space-y-4">
+                                        {/* Tên phim */}
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Tên
-                                                phim <span className="text-red-500">*</span></label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                                                Tên phim <span className="text-red-500">*</span>
+                                            </label>
                                             <select
                                                 onChange={(e) => {
                                                     const movieId = parseInt(e.target.value);
                                                     setSelectedMovie(movieId);
+                                                    // Clear error khi user chọn
+                                                    if (validationErrors.movie) {
+                                                        setValidationErrors(prev => ({ ...prev, movie: undefined }));
+                                                    }
                                                     if (startTime && movieId) {
                                                         const movie = movies.find(m => m.movieId === movieId);
                                                         if (movie) {
@@ -744,39 +798,83 @@ export default function ShowtimeManagement() {
                                                         }
                                                     }
                                                 }}
-                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                                className={`appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                                    validationErrors.movie
+                                                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                        : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                                }`}
+                                                style={{
+                                                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                                    backgroundRepeat: 'no-repeat',
+                                                    backgroundPosition: 'right 0.75rem center',
+                                                    backgroundSize: '1.25em'
+                                                }}
                                             >
-                                                <option value="">Chọn phim
-                                                </option>
+                                                <option value="">Chọn phim</option>
                                                 {movies.map(movie => (
                                                     <option key={movie.movieId} value={movie.movieId}>{movie.name}</option>
                                                 ))}
                                             </select>
+                                            {validationErrors.movie && (
+                                                <p className="text-red-500 text-sm mt-1">{validationErrors.movie}</p>
+                                            )}
                                         </div>
 
+                                        {/* Ngày chiếu */}
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Ngày
-                                                chiếu <span className="text-red-500">*</span></label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                                                Ngày chiếu <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 type="date"
-                                                onChange={(e) => setShowDate(e.target.value)}
-                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                                onChange={(e) => {
+                                                    setShowDate(e.target.value);
+                                                    // Clear error khi user nhập
+                                                    if (validationErrors.showDate) {
+                                                        setValidationErrors(prev => ({ ...prev, showDate: undefined }));
+                                                    }
+                                                }}
+                                                className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                                    validationErrors.showDate
+                                                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                        : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                                }`}
                                             />
+                                            {validationErrors.showDate && (
+                                                <p className="text-red-500 text-sm mt-1">{validationErrors.showDate}</p>
+                                            )}
                                         </div>
 
+                                        {/* Giờ bắt đầu */}
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ bắt
-                                                đầu <span className="text-red-500">*</span></label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                                                Giờ bắt đầu <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 type="time"
-                                                onChange={handleStartTimeChange}
-                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                                onChange={(e) => {
+                                                    handleStartTimeChange(e);
+                                                    // Clear error khi user nhập
+                                                    if (validationErrors.startTime) {
+                                                        setValidationErrors(prev => ({ ...prev, startTime: undefined }));
+                                                    }
+                                                }}
+                                                className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                                    validationErrors.startTime
+                                                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                        : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                                }`}
                                             />
+                                            {validationErrors.startTime && (
+                                                <p className="text-red-500 text-sm mt-1">{validationErrors.startTime}</p>
+                                            )}
                                         </div>
 
+                                        {/* Giờ kết thúc */}
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ kết
-                                                thúc <span className="text-red-500">*</span></label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                                                Giờ kết thúc <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 type="time"
                                                 value={endTime}
@@ -785,12 +883,30 @@ export default function ShowtimeManagement() {
                                             />
                                         </div>
 
+                                        {/* Chọn phòng */}
                                         <div>
-                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">Chọn
-                                                phòng <span className="text-red-500">*</span></label>
+                                            <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                                                Chọn phòng <span className="text-red-500">*</span>
+                                            </label>
                                             <select
-                                                onChange={(e) => setSelectedRoom(parseInt(e.target.value))}
-                                                className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                                                onChange={(e) => {
+                                                    setSelectedRoom(parseInt(e.target.value));
+                                                    // Clear error khi user chọn
+                                                    if (validationErrors.room) {
+                                                        setValidationErrors(prev => ({ ...prev, room: undefined }));
+                                                    }
+                                                }}
+                                                className={`appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                                    validationErrors.movie
+                                                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                        : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                                }`}
+                                                style={{
+                                                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                                    backgroundRepeat: 'no-repeat',
+                                                    backgroundPosition: 'right 0.75rem center',
+                                                    backgroundSize: '1.25em'
+                                                }}
                                             >
                                                 <option value="">Chọn phòng</option>
                                                 {rooms.map(room => (
@@ -799,6 +915,9 @@ export default function ShowtimeManagement() {
                                                     </option>
                                                 ))}
                                             </select>
+                                            {validationErrors.room && (
+                                                <p className="text-red-500 text-sm mt-1">{validationErrors.room}</p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -820,7 +939,6 @@ export default function ShowtimeManagement() {
                             </div>
                         </div>
                     )}
-
 
                     {showEditModal && (
                         <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">

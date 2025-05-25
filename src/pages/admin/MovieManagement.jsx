@@ -29,7 +29,7 @@ export default function MovieManagement() {
   const [selectedMovie, setSelectedMovie] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState("");
@@ -264,6 +264,22 @@ export default function MovieManagement() {
   };
 
   const onSubmit = async (data) => {
+    // Validation cho file uploads
+    if (!posterPreview) {
+      addToast("Vui lòng chọn poster!", "error");
+      return;
+    }
+
+    if (!bannerPreview) {
+      addToast("Vui lòng chọn banner!", "error");
+      return;
+    }
+
+    if (!videoPreview) {
+      addToast("Vui lòng chọn trailer!", "error");
+      return;
+    }
+
     const formattedData = {
       ...data,
       category: { categoryId: data.categoryId },
@@ -274,12 +290,10 @@ export default function MovieManagement() {
       setMovie((prevMovies) => [...prevMovies, newMovie]);
       console.log("Dữ liệu phim gửi đi:", formattedData);
       setMessage("Thêm phim thành công!");
-      // reset();
-      // setVideoPreview("");
       setShowAddModal(false);
       addToast("Thêm phim thành công!", "success");
     } catch (error) {
-      addToast("Thêm phòng thất bại!", "error");
+      addToast("Thêm phim thất bại!", "error");
       console.error(error);
     }
   };
@@ -840,41 +854,38 @@ export default function MovieManagement() {
                       <td className="p-3 text-center text-gray-600 hidden sm:table-cell">
                         <div className="flex justify-center space-x-1">
                           <button
-                            onClick={() => handleEditShowtime(movie)}
-                            className={`text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors ${
-                              movie.isDelete ? "opacity-75" : ""
-                            }`}
-                            title={
-                              movie.isDelete
-                                ? "Chỉnh sửa phim đã khóa"
-                                : "Chỉnh sửa"
-                            }
+                              onClick={() => handleEditShowtime(movie)}
+                              className={`text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
+                                  movie.isDelete ? "opacity-75" : ""
+                              }`}
+                              title={movie.isDelete ? "Chỉnh sửa phim đã khóa" : "Chỉnh sửa"}
                           >
                             <span className="material-icons">edit</span>
                           </button>
 
+
                           {!movie.isDelete ? (
-                            <button
-                              onClick={() =>
-                                handleOpenConfirmModal(movie, "delete")
-                              }
-                              className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                              title="Khóa phim"
-                            >
-                              <span className="material-icons">lock</span>
-                            </button>
+                              <button
+                                  onClick={() =>
+                                      handleOpenConfirmModal(movie, "delete")
+                                  }
+                                  className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+                                  title="Khóa phim"
+                              >
+                                <span className="material-icons">lock</span>
+                              </button>
                           ) : (
-                            <button
-                              onClick={() =>
-                                handleOpenConfirmModal(movie, "restore")
-                              }
-                              className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors animate-pulse"
-                              title="Khôi phục phim"
-                            >
+                              <button
+                                  onClick={() =>
+                                      handleOpenConfirmModal(movie, "restore")
+                                  }
+                                  className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors animate-pulse"
+                                  title="Khôi phục phim"
+                              >
                               <span className="material-icons">
                                 lock_open
                               </span>
-                            </button>
+                              </button>
                           )}
                         </div>
                       </td>
@@ -886,8 +897,8 @@ export default function MovieManagement() {
           )}
           {/* Modal Xác Nhận Kh/Khôi phục */}
           {isConfirmModalOpen && selectedMovieForAction && (
-            <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-              <div
+              <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                <div
                 ref={modalConfirmRef}
                 className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100"
               >
@@ -924,222 +935,330 @@ export default function MovieManagement() {
           )}
 
           {showAddModal && (
-            <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-              <div
-                ref={modalAddRef}
-                className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-semibold mb-4">
-                      Thêm Phim Mới
-                    </h2>
-                    <button
-                      onClick={() => setShowAddModal(false)}
-                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
-                    >
-                      <span className="material-icons">close</span>
-                    </button>
-                  </div>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="mb-3">
-                      <label className="block mb-2">Tên phim <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("name", { required: true })}
-                        type="text"
-                        placeholder="Tên phim"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
+              <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                <div
+                    ref={modalAddRef}
+                    className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-semibold mb-4">
+                        Thêm phim mới
+                      </h2>
+                      <button
+                          onClick={() => setShowAddModal(false)}
+                          className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
+                      >
+                        <span className="material-icons">close</span>
+                      </button>
                     </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Đạo diễn <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("director")}
-                        type="text"
-                        placeholder="Đạo diễn"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Diễn viên <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("actor")}
-                        type="text"
-                        placeholder="Diễn viên"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Mô tả phim <span className="text-red-500">*</span></label>
-                      <textarea
-                          {...register("description")}
-                        placeholder="Mô tả phim"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      ></textarea>
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Quốc gia <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("country")}
-                        type="text"
-                        placeholder="Quốc gia"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Thời lượng (phút) <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("duration", { required: true })}
-                        type="number"
-                        placeholder="Thời lượng (phút)"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Ngày phát hành <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("releaseDate")}
-                        type="date"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Giới hạn tuổi <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("ageLimit")}
-                        type="number"
-                        placeholder="Giới hạn tuổi"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Caption <span className="text-red-500">*</span></label>
-                      <input
-                          {...register("caption")}
-                        placeholder="Caption"
-                        type="text"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Poster: <span className="text-red-500">*</span></label>
-                      <input
-                          type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          uploadImage(e.target.files[0], "posterUrl")
-                        }
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    {posterPreview && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
-                        <img
-                          src={posterPreview}
-                          alt="Poster Preview"
-                          className="max-h-48 rounded border"
-                        />
-                      </div>
-                    )}
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Banner: <span className="text-red-500">*</span></label>
-                      <input
-                          type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          uploadImage(e.target.files[0], "bannerUrl")
-                        }
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    {bannerPreview && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
-                        <img
-                          src={bannerPreview}
-                          alt="Banner Preview"
-                          className="w-full max-h-32 object-cover rounded border"
-                        />
-                      </div>
-                    )}
-
-                    <div className="mb-3">
-                      <label className="block mb-2">Trailer: <span className="text-red-500">*</span></label>
-                      <input
-                          type="file"
-                        accept="video/*"
-                        onChange={(e) => uploadVideo(e.target.files[0])}
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      />
-                    </div>
-
-                    {videoPreview && (
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                      {/* Tên phim */}
                       <div className="mb-3">
-                        <video className="w-full mt-2" controls>
-                          <source src={videoPreview} type="video/mp4" />
-                          Trình duyệt của bạn không hỗ trợ video.
-                        </video>
+                        <label className="block mb-2">Tên phim <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("name", {
+                              required: "Tên phim là bắt buộc"
+                            })}
+                            type="text"
+                            placeholder="Tên phim"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.name
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.name && (
+                            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                        )}
                       </div>
-                    )}
 
-                    <div className="mb-3">
-                      <label className="block mb-2">Thể loại: <span className="text-red-500">*</span></label>
-                      <select
-                          {...register("categoryId", { required: true })}
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
-                      >
-                        <option value="">Chọn thể loại</option>
-                        {categories.map((category) => (
-                          <option
-                            key={category.categoryId}
-                            value={category.categoryId}
-                          >
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      {/* Đạo diễn */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Đạo diễn <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("director", {
+                              required: "Đạo diễn là bắt buộc"
+                            })}
+                            type="text"
+                            placeholder="Đạo diễn"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.director
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.director && (
+                            <p className="text-red-500 text-sm mt-1">{errors.director.message}</p>
+                        )}
+                      </div>
 
-                    <div className="flex justify-end mt-6 gap-3">
-                      <button
-                        type="submit"
-                        disabled={uploading}
-                        className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
-                      >
-                        {uploading ? "Đang tải..." : "Thêm Phim"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancel}
-                        className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                      >
-                        Hủy
-                      </button>
-                    </div>
-                  </form>
+                      {/* Diễn viên */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Diễn viên <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("actor", {
+                              required: "Diễn viên là bắt buộc"
+                            })}
+                            type="text"
+                            placeholder="Diễn viên"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.actor
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.actor && (
+                            <p className="text-red-500 text-sm mt-1">{errors.actor.message}</p>
+                        )}
+                      </div>
+
+                      {/* Mô tả phim */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Mô tả phim <span className="text-red-500">*</span></label>
+                        <textarea
+                            {...register("description", {
+                              required: "Mô tả phim là bắt buộc"
+                            })}
+                            placeholder="Mô tả phim"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.description
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        ></textarea>
+                        {errors.description && (
+                            <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+                        )}
+                      </div>
+
+                      {/* Quốc gia */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Quốc gia <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("country", {
+                              required: "Quốc gia là bắt buộc"
+                            })}
+                            type="text"
+                            placeholder="Quốc gia"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.country
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.country && (
+                            <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>
+                        )}
+                      </div>
+
+                      {/* Thời lượng */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Thời lượng (phút) <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("duration", {
+                              required: "Thời lượng là bắt buộc",
+                              min: { value: 1, message: "Thời lượng phải lớn hơn 0" }
+                            })}
+                            type="number"
+                            placeholder="Thời lượng (phút)"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.duration
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.duration && (
+                            <p className="text-red-500 text-sm mt-1">{errors.duration.message}</p>
+                        )}
+                      </div>
+
+                      {/* Ngày phát hành */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Ngày phát hành <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("releaseDate", {
+                              required: "Ngày phát hành là bắt buộc"
+                            })}
+                            type="date"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.releaseDate
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.releaseDate && (
+                            <p className="text-red-500 text-sm mt-1">{errors.releaseDate.message}</p>
+                        )}
+                      </div>
+
+                      {/* Giới hạn tuổi */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Giới hạn tuổi <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("ageLimit", {
+                              required: "Giới hạn tuổi là bắt buộc",
+                              min: { value: 0, message: "Giới hạn tuổi không được âm" }
+                            })}
+                            type="number"
+                            placeholder="Giới hạn tuổi"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.ageLimit
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.ageLimit && (
+                            <p className="text-red-500 text-sm mt-1">{errors.ageLimit.message}</p>
+                        )}
+                      </div>
+
+                      {/* Caption */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Caption <span className="text-red-500">*</span></label>
+                        <input
+                            {...register("caption", {
+                              required: "Caption là bắt buộc"
+                            })}
+                            placeholder="Caption"
+                            type="text"
+                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.caption
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                        />
+                        {errors.caption && (
+                            <p className="text-red-500 text-sm mt-1">{errors.caption.message}</p>
+                        )}
+                      </div>
+
+                      {/* Poster */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Poster: <span className="text-red-500">*</span></label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => uploadImage(e.target.files[0], "posterUrl")}
+                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                        />
+                      </div>
+
+                      {posterPreview && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
+                            <img
+                                src={posterPreview}
+                                alt="Poster Preview"
+                                className="max-h-48 rounded border"
+                            />
+                          </div>
+                      )}
+
+                      {/* Banner */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Banner: <span className="text-red-500">*</span></label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => uploadImage(e.target.files[0], "bannerUrl")}
+                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                        />
+                      </div>
+
+                      {bannerPreview && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
+                            <img
+                                src={bannerPreview}
+                                alt="Banner Preview"
+                                className="w-full max-h-32 object-cover rounded border"
+                            />
+                          </div>
+                      )}
+
+                      {/* Trailer */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Trailer: <span className="text-red-500">*</span></label>
+                        <input
+                            type="file"
+                            accept="video/*"
+                            onChange={(e) => uploadVideo(e.target.files[0])}
+                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                        />
+                      </div>
+
+                      {videoPreview && (
+                          <div className="mb-3">
+                            <video className="w-full mt-2" controls>
+                              <source src={videoPreview} type="video/mp4" />
+                              Trình duyệt của bạn không hỗ trợ video.
+                            </video>
+                          </div>
+                      )}
+
+                      {/* Thể loại */}
+                      <div className="mb-3">
+                        <label className="block mb-2">Thể loại: <span className="text-red-500">*</span></label>
+                        <select
+                            {...register("categoryId", {
+                              required: "Thể loại là bắt buộc"
+                            })}
+                            className={`appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                errors.categoryId
+                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                            }`}
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right 0.75rem center',
+                              backgroundSize: '1.25em'
+                            }}
+                        >
+                          <option value="">Chọn thể loại</option>
+                          {categories.map((category) => (
+                              <option
+                                  key={category.categoryId}
+                                  value={category.categoryId}
+                              >
+                                {category.name}
+                              </option>
+                          ))}
+                        </select>
+                        {errors.categoryId && (
+                            <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end mt-6 gap-3">
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                        >
+                          Hủy
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={uploading}
+                            className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                        >
+                          {uploading ? "Đang tải..." : "Thêm phim"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </div>
-            </div>
           )}
+
 
           {/* Edit Modal - Add this to your component's return statement */}
           {showEditModal && selectedMovieForAction && (
-            <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-              <div
-                ref={modalEditRef}
+              <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+                <div
+                    ref={modalEditRef}
                 className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
               >
                 <div className="p-6">
