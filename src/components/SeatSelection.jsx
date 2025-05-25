@@ -366,7 +366,7 @@ const SeatSelection = () => {
             <p>Tổng tiền: {totalPrice} VNĐ</p>
             <button
               className="mt-4 bg-white text-gray-900 border-1 border-gray-900 py-2 px-8 mr-4 rounded-full hover:text-white hover:bg-gray-900"
-              onClick={handlePayment}
+              onClick={() => navigate(-1)}
             >
               Hủy
             </button>
