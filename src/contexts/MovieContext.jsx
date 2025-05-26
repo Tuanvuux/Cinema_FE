@@ -13,8 +13,10 @@ export const MovieProvider = ({ children }) => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const data = await getMovies(); // chỉ gọi 1 lần duy nhất
-        setMovies(data);
+        const data = await getMovies();
+        // Lọc phim không bị xóa
+        const filteredMovies = data.filter((movie) => movie.isDelete !== true);
+        setMovies(filteredMovies);
       } catch (error) {
         console.error("Lỗi khi tải danh sách phim:", error);
       } finally {

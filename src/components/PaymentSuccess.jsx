@@ -4,6 +4,7 @@ import { getPaymentById } from "../services/api";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import QRCode from "qrcode";
+import { formatTime, formatDate } from "../utils/helpers";
 
 const PaymentSuccess = () => {
   const [paymentData, setPaymentData] = useState(null);
@@ -33,6 +34,8 @@ const PaymentSuccess = () => {
   }, [orderId]);
 
   const isOwner = user && paymentData && user.userId === paymentData.userId;
+  const formattedDate = formatDate(paymentData.showDate);
+  const formattedTime = formatTime(paymentData.startTime);
 
   const handleGetTicket = async () => {
     if (!paymentData) return;
@@ -64,13 +67,7 @@ const PaymentSuccess = () => {
       doc.text("Dia Chi: 71 Ngu Hanh Son, Son Tra, Da Nang", 20, 30);
       doc.text(`Phim: ${paymentData.movieTitle}`, 20, 45);
       doc.text(`Phong chieu: ${paymentData.roomName}`, 20, 55);
-      const [hour, minute] = paymentData.startTime.split(":");
-      const dateObj = new Date(paymentData.showDate);
-      const day = String(dateObj.getDate()).padStart(2, "0");
-      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-      const year = dateObj.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
-      doc.text(`Thoi gian: ${hour}:${minute} - ${formattedDate}`, 20, 65);
+      doc.text(`Thoi gian: ${formattedTime} - ${formattedDate}`, 20, 65);
       doc.text(`Ghe: ${ticket.seatName}`, 20, 75);
     }
 
@@ -111,8 +108,7 @@ const PaymentSuccess = () => {
           <strong>Phòng:</strong> {paymentData.roomName}
         </p>
         <p>
-          <strong>Thời gian:</strong> {paymentData.showDate} lúc{" "}
-          {paymentData.startTime}
+          <strong>Thời gian:</strong> {formattedTime}-{formattedDate}
         </p>
         <p>
           <strong>Số vé:</strong> {paymentData.sumTicket}

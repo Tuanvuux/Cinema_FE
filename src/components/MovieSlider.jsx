@@ -5,6 +5,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { useNavigate } from "react-router-dom";
 import { useMovies } from "../contexts/MovieContext";
+import { formatDate } from "../utils/helpers";
 
 export default function MovieSlider() {
   const navigate = useNavigate();
@@ -72,12 +73,24 @@ export default function MovieSlider() {
               className="w-full h-72 object-cover rounded-lg"
             />
             <div className="mt-2 text-center text-black">
-              <p className="font-bold">{movie.name}</p>
-              <p className="text-sm">
-                {movie.duration} |{" "}
-                <span className="text-green-400">{movie.ageLimit}</span>
+              <p className="font-bold truncate w-full max-w-[200px] mx-auto">
+                {movie.name}
               </p>
-              <p className="text-sm">KHỞI CHIẾU {movie.releaseDate}</p>
+              <p className="text-sm">
+                {movie.duration} phút |{" "}
+                <span
+                  className={
+                    !movie.ageLimit
+                      ? "text-green-400 font-bold"
+                      : "text-red-500 font-bold"
+                  }
+                >
+                  {!movie.ageLimit ? "P" : "C" + movie.ageLimit}
+                </span>
+              </p>
+              <p className="text-sm">
+                KHỞI CHIẾU {formatDate(movie.releaseDate)}
+              </p>
               <div className="flex justify-center gap-2 mt-2">
                 <button
                   onClick={() => navigate(`/movieDetail/${movie.movieId}`)}

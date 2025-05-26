@@ -7,7 +7,12 @@ import React, {
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShowtime } from "../contexts/ShowtimeContext";
-import { getRoomById, getBookedSeat, getLockedSeat } from "../services/api";
+import {
+  getRoomById,
+  getBookedSeat,
+  getLockedSeat,
+  getMaintenanceSeat,
+} from "../services/api";
 import { getShowtimeById } from "../utils/showtimeUtils";
 import useSeatSocket from "../hooks/useSeatSocket";
 import MovieInfo from "./MovieInfo";
@@ -139,11 +144,13 @@ const SeatSelection = () => {
       try {
         setIsLoading(true);
 
-        const [roomData, bookedSeats, lockedSeats] = await Promise.all([
-          getRoomById(roomId),
-          getBookedSeat(showtimeId),
-          getLockedSeat(showtimeId), // [{ seatId, userId }]
-        ]);
+        const [roomData, bookedSeats, lockedSeats, maintenanceSeats] =
+          await Promise.all([
+            getRoomById(roomId),
+            getBookedSeat(showtimeId),
+            getLockedSeat(showtimeId), // [{ seatId, userId }]
+            getMaintenanceSeat(showtimeId),
+          ]);
 
         const { numberOfRows, numberOfColumns, seats } = roomData;
         const bookedIds = bookedSeats || [];
@@ -159,6 +166,8 @@ const SeatSelection = () => {
           let status = "AVAILABLE";
           if (bookedIds.includes(seat.seatId)) {
             status = "BOOKED";
+          } else if (maintenanceSeats.includes(seat.seatId)) {
+            status = "MAINTENANCE"; // 👉 gán trạng thái bảo trì
           } else if (isLockedByMe) {
             status = "SELECTED";
           }
@@ -300,31 +309,43 @@ const SeatSelection = () => {
             {seatMatrix.map((row, rowIndex) => (
               <div
                 key={rowIndex}
-                className="seat-row flex justify-center space-x-2"
+                className="seat-row grid justify-center gap-x-2"
+                style={{
+                  gridTemplateColumns: `repeat(${row.length}, minmax(32px, 32px))`,
+                }}
               >
                 {row.map((seat, colIndex) =>
                   seat ? (
                     <button
                       key={seat.seatId}
-                      className={`w-${
-                        seat.seatInfo.name === "COUPLE" ? "16" : "8"
-                      } h-8 rounded-lg text-black border-2 ${
-                        seat.status === "BOOKED"
-                          ? "bg-black text-white cursor-not-allowed"
-                          : seat.isLocked && !seat.isLockedByMe
-                          ? "bg-gray-300 text-white cursor-not-allowed"
-                          : seat.isLockedByMe
-                          ? "bg-blue-900 text-white"
-                          : "bg-white hover:bg-blue-900"
-                      } ${
-                        seat.seatInfo.name === "VIP"
-                          ? "border-yellow-300"
-                          : seat.seatInfo.name === "COUPLE"
-                          ? "border-pink-400 w-16"
-                          : "border-gray-300"
-                      }`}
+                      className={`relative h-8 rounded-lg border-2 text-black flex items-center justify-center
+          ${
+            seat.status === "MAINTENANCE"
+              ? "bg-white text-black cursor-not-allowed"
+              : seat.status === "BOOKED"
+              ? "bg-black text-white cursor-not-allowed"
+              : seat.isLocked && !seat.isLockedByMe
+              ? "bg-gray-300 text-white cursor-not-allowed"
+              : seat.isLockedByMe
+              ? "bg-blue-900 text-white"
+              : "bg-white hover:bg-blue-900"
+          }
+          ${
+            seat.seatInfo.name === "VIP"
+              ? "border-yellow-300"
+              : seat.seatInfo.name === "COUPLE"
+              ? "border-pink-400"
+              : "border-gray-300"
+          }
+        `}
+                      style={
+                        seat.seatInfo.name === "COUPLE"
+                          ? { gridColumn: "span 2" }
+                          : {}
+                      }
                       disabled={
                         seat.status === "BOOKED" ||
+                        seat.status === "MAINTENANCE" ||
                         (seat.isLocked && !seat.isLockedByMe)
                       }
                       onClick={() => {
@@ -335,7 +356,15 @@ const SeatSelection = () => {
                         }
                       }}
                     >
-                      {seat.seatName}
+                      <span className="relative z-10">{seat.seatName}</span>
+                      {seat.status === "MAINTENANCE" && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                          <div className="w-full h-full relative">
+                            <span className="absolute w-[2px] h-full bg-gray-500 rotate-45 left-1/2 top-0 transform -translate-x-1/2" />
+                            <span className="absolute w-[2px] h-full bg-gray-500 -rotate-45 left-1/2 top-0 transform -translate-x-1/2" />
+                          </div>
+                        </div>
+                      )}
                     </button>
                   ) : (
                     <div key={colIndex} />
