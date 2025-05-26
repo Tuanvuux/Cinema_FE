@@ -5,6 +5,7 @@ import Badge from "./ui/badge";
 import Button from "./ui/button";
 import { Medal } from "lucide-react";
 import { useMovies } from "../contexts/MovieContext";
+import { formatDate } from "../utils/helpers";
 
 const MovieList = () => {
   const navigate = useNavigate();
@@ -85,10 +86,18 @@ const MovieList = () => {
               </p>
               <p className="text-sm">
                 {movie.duration} phút |{" "}
-                <Badge variant="outline">{movie.ageLimit}</Badge>
+                <span
+                  className={
+                    !movie.ageLimit
+                      ? "text-green-400 font-bold"
+                      : "text-red-500 font-bold"
+                  }
+                >
+                  {!movie.ageLimit ? "P" : "C" + movie.ageLimit}
+                </span>
               </p>
               <p className="text-sm text-gray-600">
-                Khởi chiếu: {movie.releaseDate}
+                Khởi chiếu: {formatDate(movie.releaseDate)}
               </p>
               <Button
                 className="mt-3 mr-2"
