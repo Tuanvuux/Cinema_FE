@@ -5,7 +5,7 @@ import {
     getSeatsByShowtime,
     getShowTimeByRoom,
     addLockSeatAdmin,
-    deleteLockSeat
+    deleteLockSeat, checkSeatBooked
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { CheckCircle, AlertCircle, X } from "lucide-react";
@@ -84,6 +84,7 @@ export default function LockSeatByShowTime () {
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
                 resetAddModalState();
+                setErrors({});
                 setShowAddModal(false);
             }
         };
@@ -137,7 +138,7 @@ export default function LockSeatByShowTime () {
             setAvailableSeats([]);
         }
     };
-    const validateForm = () => {
+    const validateForm = async () => {
         const newErrors = {};
 
         if (!selectedRoomId) {
@@ -150,6 +151,16 @@ export default function LockSeatByShowTime () {
 
         if (!newSeat.seatId) {
             newErrors.seatId = 'Vui lòng chọn ghế';
+        } else {
+            try {
+                const seatExists = await checkSeatBooked(newSeat.seatId);
+                if (seatExists) {
+                    newErrors.seatId = 'Tên ghế này đã được đặt';
+                }
+            } catch (error) {
+                console.error('Lỗi kiểm tra ghế:', error);
+                newErrors.seatId = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
+            }
         }
 
         setErrors(newErrors);
@@ -359,9 +370,8 @@ export default function LockSeatByShowTime () {
     // Handle adding a new Seat
     const handleAddSeat = async () => {
         // Validate form trước
-        if (!validateForm()) {
-            return;
-        }
+        const isValid = await validateForm();
+        if (!isValid) return;
 
         try {
             // Prepare data to send to backend
@@ -487,32 +497,6 @@ export default function LockSeatByShowTime () {
             </div>
         );
     };
-    // // Toast Notification Component
-    // const ToastNotification = ({ message, type, show }) => {
-    //     if (!show) return null;
-    //
-    //     const typeStyles = {
-    //         success: 'bg-green-500',
-    //         error: 'bg-red-500'
-    //     };
-    //
-    //     return (
-    //         <div
-    //             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
-    //             style={{
-    //                 animation: 'fadeInOut 3s ease-in-out',
-    //                 opacity: show ? 1 : 0,
-    //                 transform: 'translateY(0)',
-    //                 transition: 'opacity 0.3s ease, transform 0.3s ease'
-    //             }}
-    //         >
-    //             <span className="material-icons mr-2 text-white">
-    //                 {type === 'success' ? 'check_circle' : 'error'}
-    //             </span>
-    //             <p className="text-white font-medium">{message}</p>
-    //         </div>
-    //     );
-    // };
 
     const filteredSeats = seatsLock.filter(seat => {
         const matchesSearch = Object.values(seat).some(value =>
@@ -549,12 +533,6 @@ export default function LockSeatByShowTime () {
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Left sidebar - similar to the image */}
             <ToastContainer />
-            {/*<ToastNotification*/}
-            {/*    message={toast.message}*/}
-            {/*    type={toast.type}*/}
-            {/*    show={toast.show}*/}
-            {/*/>*/}
-
             <div className="flex h-full">
 
                 {/* Main content */}
@@ -858,11 +836,17 @@ export default function LockSeatByShowTime () {
                                     <select
                                         value={selectedRoomId}
                                         onChange={handleRoomChange}
-                                        className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                                             errors.roomId
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
                                         }`}
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
                                     >
                                         <option value="">-- Chọn phòng --</option>
                                         {rooms.map(r => (
@@ -883,11 +867,17 @@ export default function LockSeatByShowTime () {
                                         value={selectedShowtimeId}
                                         onChange={handleShowtimeChange}
                                         disabled={!selectedRoomId}
-                                        className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 disabled:bg-gray-100 ${
+                                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm disabled:bg-gray-100 ${
                                             errors.showtimeId
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
                                         }`}
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
                                     >
                                         <option value="">-- Chọn lịch chiếu --</option>
                                         {availableShowtimes.map(st => (
@@ -908,11 +898,17 @@ export default function LockSeatByShowTime () {
                                         value={newSeat.seatId}
                                         onChange={handleSeatChange}
                                         disabled={!selectedShowtimeId}
-                                        className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 disabled:bg-gray-100 ${
+                                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm disabled:bg-gray-100 ${
                                             errors.seatId
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
                                         }`}
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
                                     >
                                         <option value="">-- Chọn ghế --</option>
                                         {availableSeats.map(seat => (

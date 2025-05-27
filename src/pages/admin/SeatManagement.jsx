@@ -6,7 +6,7 @@ import {
   deleteSeat,
   getRooms,
   getSeatInfo,
-  updateSeatInfo,
+  updateSeatInfo,checkSeatExists
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { CheckCircle, AlertCircle, X } from "lucide-react";
@@ -102,6 +102,7 @@ export default function SeatManagement() {
         modalEditPriceRef.current &&
         !modalEditPriceRef.current.contains(event.target)
       ) {
+        setErrors({});
         setShowEditPriceModal(false);
       }
 
@@ -110,6 +111,7 @@ export default function SeatManagement() {
         modalEditRef.current &&
         !modalEditRef.current.contains(event.target)
       ) {
+        setErrors({});
         setShowEditModal(false);
       }
       if (
@@ -127,6 +129,7 @@ export default function SeatManagement() {
         !modalAddRef.current.contains(event.target)
       ) {
         resetAddModalState();
+        setErrors({});
         setShowAddModal(false);
       }
     };
@@ -204,6 +207,9 @@ export default function SeatManagement() {
   }, []);
 
   const handleSaveEdit = async () => {
+    const isValid = await validateFormEdit();
+    if (!isValid) return;
+
     try {
       const updatedSeat = await updateSeat(editingSeat.seatId, {
         seatName: editingSeat.seatName,
@@ -357,9 +363,9 @@ export default function SeatManagement() {
   // Handle adding a new Seat
   const handleAddSeat = async () => {
     // Validate form trước
-    if (!validateForm()) {
-      return;
-    }
+
+    const isValid = await validateForm();
+    if (!isValid) return;
 
     try {
       // Prepare data to send to backend
@@ -393,6 +399,7 @@ export default function SeatManagement() {
 
   const handleCancel = () => {
     resetAddModalState();
+    setErrors({});
     setShowAddModal(false);
   };
 
@@ -533,7 +540,7 @@ export default function SeatManagement() {
 
   // Handle input change for new Seat form
 
-  const validateForm = () => {
+  const validateForm = async () => {
     const newErrors = {};
 
     if (!newSeat.seatName?.trim()) {
@@ -551,6 +558,54 @@ export default function SeatManagement() {
     if (!newSeat.columnNumber || newSeat.columnNumber <= 0) {
       newErrors.columnNumber = 'Vui lòng nhập số cột ghế hợp lệ';
     }
+
+    // Nếu không có lỗi cơ bản, kiểm tra trùng tên ghế
+    if (!newErrors.seatName && !newErrors.roomId) {
+      try {
+        const seatExists = await checkSeatExists(newSeat.seatName.trim(), newSeat.roomId);
+        if (seatExists) {
+          newErrors.seatName = 'Tên ghế đã tồn tại trong phòng này';
+        }
+      } catch (error) {
+        console.error('Lỗi kiểm tra trùng tên ghế:', error);
+        newErrors.seatName = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const validateFormEdit = async () => {
+    const newErrors = {};
+
+    if (!editingSeat.seatName?.trim()) {
+      newErrors.seatName = 'Vui lòng nhập tên ghế';
+    }
+
+    if (!editingSeat.room) {
+      newErrors.room = 'Vui lòng chọn phòng';
+    }
+
+    if (!editingSeat.rowLabel?.trim()) {
+      newErrors.rowLabel = 'Vui lòng nhập tên hàng ghế';
+    }
+
+    if (!editingSeat.columnNumber || editingSeat.columnNumber <= 0) {
+      newErrors.columnNumber = 'Vui lòng nhập số cột ghế hợp lệ';
+    }
+
+    // // Nếu không có lỗi cơ bản, kiểm tra trùng tên ghế
+    // if (!newErrors.seatName && !newErrors.room) {
+    //   try {
+    //     const seatExists = await checkSeatExists(editingSeat.seatName.trim(), editingSeat.room);
+    //     if (seatExists) {
+    //       newErrors.seatName = 'Tên ghế đã tồn tại trong phòng này';
+    //     }
+    //   } catch (error) {
+    //     console.error('Lỗi kiểm tra trùng tên ghế:', error);
+    //     newErrors.seatName = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
+    //   }
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -1066,6 +1121,9 @@ export default function SeatManagement() {
                     className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                     required
                   />
+                  {errors.seatName && (
+                      <p className="text-red-500 text-sm mt-1">{errors.seatName}</p>
+                  )}
                 </div>
 
                 <div>
@@ -1079,7 +1137,13 @@ export default function SeatManagement() {
                     name="room"
                     value={editingSeat.room || ""}
                     onChange={handleInputChangeEdit}
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                    className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundSize: '1.25em'
+                    }}
                   >
                     <option value="">Chọn phòng</option>
                     {rooms.map((room) => (
@@ -1088,6 +1152,9 @@ export default function SeatManagement() {
                       </option>
                     ))}
                   </select>
+                  {errors.room && (
+                      <p className="text-red-500 text-sm mt-1">{errors.room}</p>
+                  )}
                 </div>
                 <div className="flex space-x-4">
                   <div>
@@ -1107,6 +1174,9 @@ export default function SeatManagement() {
                       min="1"
                       required
                     />
+                    {errors.rowLabel && (
+                        <p className="text-red-500 text-sm mt-1">{errors.rowLabel}</p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -1125,6 +1195,9 @@ export default function SeatManagement() {
                       className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                       required
                     />
+                    {errors.columnNumber && (
+                        <p className="text-red-500 text-sm mt-1">{errors.columnNumber}</p>
+                    )}
                   </div>
                 </div>
 
@@ -1283,7 +1356,8 @@ export default function SeatManagement() {
 
               <div className="flex justify-end mt-8 gap-3">
                 <button
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {setShowEditModal(false);
+                    setErrors({});}}
                   className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                 >
                   Hủy
@@ -1362,11 +1436,17 @@ export default function SeatManagement() {
                         name="roomId"
                         value={newSeat.roomId}
                         onChange={handleInputChange}
-                        className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                             errors.roomId
                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                 : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
                         }`}
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '1.25em'
+                        }}
                     >
                       <option value="">Chọn phòng</option>
                       {rooms.map((room) => (
@@ -1483,8 +1563,16 @@ export default function SeatManagement() {
                       name="id"
                       value={editSeatInfo.id}
                       onChange={handleInputChangeEditSeatInfo}
-                      className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.75rem center',
+                        backgroundSize: '1.25em',
+                        width: '150px'
+                      }}
+                      className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                     >
+
                       <option value="">Chọn loại ghế</option>
                       {seatInfo.map((seatinfo) => (
                         <option key={seatinfo.id} value={seatinfo.id}>

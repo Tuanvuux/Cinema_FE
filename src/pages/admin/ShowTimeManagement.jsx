@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getShowtimes, deleteShowtime, getRooms, addShowtime, updateShowtime, getAvailableRooms } from "../../services/apiadmin.jsx";
+import { getShowtimes, deleteShowtime, getRooms, addShowtime, updateShowtime, getReleaseDate,checkShowTimeExists } from "../../services/apiadmin.jsx";
 import { getMovies } from "../../services/api.jsx";
 import { Link } from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
@@ -17,6 +17,7 @@ export default function ShowtimeManagement() {
     const [showDate, setShowDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
+    const [releaseDate, setReleaseDate] = useState(null);
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [showPastShowtimes, setShowPastShowtimes] = useState(false);
 
@@ -139,6 +140,7 @@ export default function ShowtimeManagement() {
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
                 setshowAddModal(false);
+                setValidationErrors({});
             }
         };
 
@@ -154,7 +156,22 @@ export default function ShowtimeManagement() {
         getShowtimes().then(setShowtime);
         document.title = 'Quản lý lịch chiếu';
     }, []);
+    useEffect(() => {
+        const fetchReleaseDate = async () => {
+            if (selectedMovie) {
+                try {
+                    const date = await getReleaseDate(selectedMovie);
+                    setReleaseDate(new Date(date));
+                    console.log("ngày phát hành",setReleaseDate)
+                } catch (error) {
+                    console.error("Lỗi khi lấy ngày phát hành:", error);
+                    setReleaseDate(null);
+                }
+            }
+        };
 
+        fetchReleaseDate();
+    }, [selectedMovie]);
     const isPastShowtime = (showDate) => {
         const today = new Date();
         const showDateObj = new Date(showDate);
@@ -168,6 +185,7 @@ export default function ShowtimeManagement() {
         setEndTime("");
         setSelectedRoom("");
         setshowAddModal(false);
+        setValidationErrors({})
         setshowEditModal(false)
     };
 
@@ -260,6 +278,9 @@ export default function ShowtimeManagement() {
             if (selectedDate < today.setHours(0, 0, 0, 0)) {
                 errors.showDate = "Ngày chiếu không được trong quá khứ";
             }
+            if (releaseDate && selectedDate < releaseDate) {
+                errors.showDate = "Ngày chiếu không được trước ngày phát hành của phim";
+            }
         }
 
         setValidationErrors(errors);
@@ -272,7 +293,7 @@ export default function ShowtimeManagement() {
 
         // Validate form
         if (!validateForm()) {
-            addToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            // addToast('Vui lòng điền đầy đủ thông tin!', 'error');
             return;
         }
 
@@ -376,6 +397,13 @@ export default function ShowtimeManagement() {
 
     const handleEditSubmit = async () => {
         try {
+            const isBooked = await checkShowTimeExists(editingShowtime.showtimeId);
+            if (isBooked) {
+                addToast("Lịch chiếu đã có vé đặt, không thể chỉnh sửa!", "error");
+                setshowEditModal(false);
+                return;
+            }
+
             const formattedStartTime = editingShowtime.startTime.includes(":") ?
                 (editingShowtime.startTime.includes(".") ? startTime :
                     (editingShowtime.startTime.split(":").length === 2 ? editingShowtime.startTime + ":00" : editingShowtime.startTime)) :
@@ -950,8 +978,13 @@ export default function ShowtimeManagement() {
                                         name="movieId"
                                         value={editingShowtime.movieId || ""}
                                         onChange={handleInputChangeEdit}
-                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                                    >
+                                        className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}>
                                         <option value="">Chọn phim</option>
                                         {movies.map(movie => (
                                             <option key={movie.movieId} value={movie.movieId}>
@@ -1003,7 +1036,13 @@ export default function ShowtimeManagement() {
                                             ...editingShowtime,
                                             roomId: parseInt(e.target.value)
                                         })}
-                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                                        className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
                                     >
                                         <option value="">Chọn phòng</option>
                                         {rooms.map(room => (

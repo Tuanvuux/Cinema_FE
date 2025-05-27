@@ -6,7 +6,7 @@ import {
   addMovie,
   getCategories,
   updateMovie,
-  toggleDeleteStatus,
+  toggleDeleteStatus,checkMovieNameByShowtime
 } from "@/services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { CheckCircle, AlertCircle, X } from "lucide-react";
@@ -337,7 +337,15 @@ export default function MovieManagement() {
     const newStatus = !movie.isDelete;
 
     try {
-      const newStatus = !movie.isDelete;
+      // const newStatus = !movie.isDelete;
+      if (newStatus) {
+        const isUsed = await checkMovieNameByShowtime(movie.movieId);
+        if (isUsed) {
+          addToast("Không thể khóa phim vì đang có suất chiếu!", "error");
+          setConfirmModalOpen(false);
+          return;
+        }
+      }
       await toggleDeleteStatus(movie.movieId, newStatus);
 
       setMovie((prevMovies) =>
@@ -412,39 +420,55 @@ export default function MovieManagement() {
     }
 
     try {
-      // Create an array of promises for each movie update
-      const updatePromises = selectedMovie.map((movieId) => {
-        // Find the movie object
-        const movieToUpdate = movies.find((movie) => movie.movieId === movieId);
-        if (movieToUpdate) {
-          // Toggle isDelete to true for each selected movie
-          return toggleDeleteStatus(movieId, true);
-        }
-        return Promise.resolve(); // If movie not found, resolve empty promise
-      });
-
-      // Wait for all promises to complete
-      await Promise.all(updatePromises);
-
-      // Update local state to reflect changes
-      setMovie((prevMovies) =>
-        prevMovies.map((movie) =>
-          selectedMovie.includes(movie.movieId)
-            ? { ...movie, isDelete: true }
-            : movie
-        )
+      // Bước 1: Lọc ra các phim KHÔNG có suất chiếu
+      const checkResults = await Promise.all(
+          selectedMovie.map(async (movieId) => {
+            const hasShowtime = await checkMovieNameByShowtime(movieId);
+            return { movieId, canDelete: !hasShowtime }; // chỉ xóa nếu không có suất chiếu
+          })
       );
 
-      // Close modal and show success message
+      const deletableMovies = checkResults.filter((result) => result.canDelete).map((r) => r.movieId);
+      const blockedMovies = checkResults.filter((result) => !result.canDelete).map((r) => r.movieId);
+
+      if (deletableMovies.length === 0) {
+        addToast("Tất cả phim được chọn đều đang có suất chiếu và không thể khóa.", "error");
+        setBulkDeleteModalOpen(false);
+        return;
+      }
+
+      // Bước 2: Gửi yêu cầu xóa cho các phim được phép
+      const updatePromises = deletableMovies.map((movieId) => toggleDeleteStatus(movieId, true));
+      await Promise.all(updatePromises);
+
+      // Bước 3: Cập nhật state
+      setMovie((prevMovies) =>
+          prevMovies.map((movie) =>
+              deletableMovies.includes(movie.movieId)
+                  ? { ...movie, isDelete: true }
+                  : movie
+          )
+      );
+
       setBulkDeleteModalOpen(false);
-      setSelectedMovie([]); // Clear selection after delete
-      addToast(`Đã khóa ${selectedMovie.length} phim thành công!`, "success");
+      setSelectedMovie([]);
+
+      if (blockedMovies.length > 0) {
+        addToast(
+            `${deletableMovies.length} phim đã được khóa. ${blockedMovies.length} phim có suất chiếu và không bị khóa.`,
+            "warning"
+        );
+      } else {
+        addToast(`Đã khóa ${deletableMovies.length} phim thành công!`, "success");
+      }
+
     } catch (error) {
       console.error("Lỗi khi khóa nhiều phim:", error);
       setBulkDeleteModalOpen(false);
-      addToast("Khóa phim thất bại!", error);
+      addToast("Khóa phim thất bại!", "error");
     }
   };
+
   // Add this function to handle bulk deletion
   const handleBulkDelete = () => {
     if (selectedMovie.length === 0) {
@@ -1142,6 +1166,9 @@ export default function MovieManagement() {
                             onChange={(e) => uploadImage(e.target.files[0], "posterUrl")}
                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                         />
+                        {errors.posterUrl && (
+                            <p className="text-red-500 text-sm mt-1">{errors.posterUrl.message}</p>
+                        )}
                       </div>
 
                       {posterPreview && (
@@ -1164,6 +1191,9 @@ export default function MovieManagement() {
                             onChange={(e) => uploadImage(e.target.files[0], "bannerUrl")}
                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                         />
+                        {errors.bannerUrl && (
+                            <p className="text-red-500 text-sm mt-1">{errors.bannerUrl.message}</p>
+                        )}
                       </div>
 
                       {bannerPreview && (
@@ -1186,6 +1216,9 @@ export default function MovieManagement() {
                             onChange={(e) => uploadVideo(e.target.files[0])}
                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                         />
+                        {errors.trailerUrl && (
+                            <p className="text-red-500 text-sm mt-1">{errors.trailerUrl.message}</p>
+                        )}
                       </div>
 
                       {videoPreview && (
@@ -1435,7 +1468,13 @@ export default function MovieManagement() {
                       <label className="block mb-2">Thể loại:</label>
                       <select
                         {...register("categoryId", { required: true })}
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                        className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '1.25em'
+                        }}
                       >
                         <option value="">Chọn thể loại</option>
                         {categories.map((category) => (

@@ -16,7 +16,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmplo
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
-                onClose(); // Đóng modal
+                handleCancel(); // Đóng modal
             }
         };
 
@@ -152,6 +152,9 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmplo
         if (!formData.confirmPassword.trim()) {
             newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
         }
+        else if (formData.confirmPassword !== formData.password ) {
+            newErrors.confirmPassword = 'Mật khẩu mới không khớp';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -160,20 +163,18 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmplo
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate form trước
-        if (!validateForm()) {
-            return;
-        }
+        const isValid = await validateForm();
+        if (!isValid) return;
 
-        // Kiểm tra xác nhận mật khẩu
-        if (formData.password !== formData.confirmPassword) {
-            addToast("Mật khẩu mới không khớp!", "error");
-            setErrors(prev => ({
-                ...prev,
-                confirmPassword: 'Mật khẩu không khớp'
-            }));
-            return;
-        }
+        // // Kiểm tra xác nhận mật khẩu
+        // if (formData.password !== formData.confirmPassword) {
+        //     addToast("Mật khẩu mới không khớp!", "error");
+        //     setErrors(prev => ({
+        //         ...prev,
+        //         confirmPassword: 'Mật khẩu không khớp'
+        //     }));
+        //     return;
+        // }
 
         setIsLoading(true);
 
@@ -194,11 +195,15 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmplo
             // // Đóng modal
             setTimeout(() => {
                 onClose();
-            }, 1000);
+            }, 10);
         } catch (error) {
             // addToast(error.response?.data || 'Lỗi khi tạo tài khoản!','error')
         }
         setIsLoading(false);
+    };
+    const handleCancel = () => {
+        setErrors({});  // reset lỗi
+        onClose();      // gọi hàm đóng modal
     };
 
     return (
@@ -352,7 +357,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmplo
                             <div className="flex justify-end gap-4 pt-4 mt-8">
                                 <button
                                     type="button" // Changed to type="button" to prevent form submission
-                                    onClick={onClose}
+                                    onClick={handleCancel}
                                     className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                                 >
                                     Hủy

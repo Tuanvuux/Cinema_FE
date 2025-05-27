@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {getRooms, addRoom, updateRoom, deleteRoom} from "../../services/apiadmin.jsx";
+import {getRooms, addRoom, updateRoom, deleteRoom,canChangeRoomStatus} from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import {AlertCircle, CheckCircle, X} from "lucide-react";
 
@@ -59,11 +59,13 @@ export default function RoomManagement () {
 
             if (showEditModal && modalEditRef.current && !modalEditRef.current.contains(event.target)) {
                 resetAddModalState();
+                setErrors({});
                 setShowEditModal(false);
             }
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
                 // resetAddModalState();
+                setErrors({});
                 setShowAddModal(false);
             }
 
@@ -305,10 +307,20 @@ export default function RoomManagement () {
     const handleAddRoom = async () => {
         const newErrors = {};
         if (!newRoom.name.trim()) newErrors.name = "Tên phòng là bắt buộc";
-        if (!newRoom.seatCount || newRoom.seatCount <= 0) newErrors.seatCount = "Số ghế phải lớn hơn 0";
+        if (!newRoom.seatCount || newRoom.seatCount <= 0) {
+            newErrors.seatCount = "Số ghế phải lớn hơn 0";
+        }
         if (!newRoom.numberOfColumns || newRoom.numberOfColumns <= 0) newErrors.numberOfColumns = "Số cột phải lớn hơn 0";
         if (!newRoom.numberOfRows || newRoom.numberOfRows <= 0) newErrors.numberOfRows = "Số dòng phải lớn hơn 0";
 
+        const seatCount = Number(newRoom.seatCount);
+        const totalPositions = Number(newRoom.numberOfRows) * Number(newRoom.numberOfColumns);
+
+        if (seatCount <= totalPositions){
+            // newErrors.seatCount = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
+            newErrors.numberOfRows = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
+            newErrors.numberOfColumns = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
+        }
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -333,13 +345,18 @@ export default function RoomManagement () {
             console.error(err);
         }
     };
-
-
     // Toast Notification Component
 
     // Handle updating a room's status
     const handleStatusChange = async (roomId, status) => {
         try {
+            const canChange = await canChangeRoomStatus(roomId);
+
+            if (!canChange) {
+                addToast('Phòng đang có lịch chiếu hoặc lịch chiếu đã có người đặt ghế, không thể đổi trạng thái!', 'error');
+                return; // dừng hàm, không tiếp tục update trạng thái
+            }
+
             const roomToUpdate = rooms.find(room => room.id === roomId);
             if (roomToUpdate) {
                 const updatedRoom = { ...roomToUpdate, status };
@@ -885,35 +902,55 @@ export default function RoomManagement () {
                                                 name="status"
                                                 value="ACTIVE"
                                                 checked={editingRoom.status === 'ACTIVE'}
-                                                onChange={() => setEditingRoom({...editingRoom, status: 'ACTIVE'})}
+                                                onChange={async () => {
+                                                    // Gọi kiểm tra trước khi đổi
+                                                    const canChange = await canChangeRoomStatus(editingRoom.id);
+                                                    if (canChange) {
+                                                        setEditingRoom({...editingRoom, status: 'ACTIVE'});
+                                                    } else {
+                                                        addToast('Phòng đang có lịch chiếu hoặc đã có người đặt ghế, không thể đổi trạng thái!', 'error');
+                                                        setShowEditModal(false);
+                                                        // Không đổi trạng thái, giữ nguyên
+                                                    }
+                                                }}
                                                 className="absolute opacity-0 cursor-pointer"
                                             />
-                                            <div className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200 
-                                ${editingRoom.status === 'ACTIVE'
-                                                ? 'bg-gray-900 border-gray-900 scale-110'
-                                                : 'bg-white border-gray-400 group-hover:border-gray-600'}`}>
-                                                {editingRoom.status === 'ACTIVE' && (
-                                                    <span className="text-white text-xs">✓</span>
-                                                )}
+                                            <div
+                                                className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200 
+                                                ${editingRoom.status === 'ACTIVE'
+                                                    ? 'bg-gray-900 border-gray-900 scale-110'
+                                                    : 'bg-white border-gray-400 group-hover:border-gray-600'}`}
+                                            >
+                                                {editingRoom.status === 'ACTIVE' &&
+                                                    <span className="text-white text-xs">✓</span>}
                                             </div>
                                             <span className="text-gray-800">Hoạt động</span>
                                         </label>
+
                                         <label className="inline-flex items-center relative cursor-pointer group">
                                             <input
                                                 type="radio"
                                                 name="status"
                                                 value="INACTIVE"
                                                 checked={editingRoom.status === 'INACTIVE'}
-                                                onChange={() => setEditingRoom({...editingRoom, status: 'INACTIVE'})}
+                                                onChange={async () => {
+                                                    const canChange = await canChangeRoomStatus(editingRoom.id);
+                                                    if (canChange) {
+                                                        setEditingRoom({ ...editingRoom, status: 'INACTIVE' });
+                                                    } else {
+                                                        addToast('Phòng đang có lịch chiếu hoặc đã có người đặt ghế, không thể đổi trạng thái!', 'error');
+                                                        setShowEditModal(false);
+                                                    }
+                                                }}
                                                 className="absolute opacity-0 cursor-pointer"
                                             />
-                                            <div className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200
-                                ${editingRoom.status === 'INACTIVE'
-                                                ? 'bg-gray-900 border-gray-900 scale-110'
-                                                : 'bg-white border-gray-400 group-hover:border-gray-600'}`}>
-                                                {editingRoom.status === 'INACTIVE' && (
-                                                    <span className="text-white text-xs">✓</span>
-                                                )}
+                                            <div
+                                                className={`w-5 h-5 rounded-full border-2 mr-2.5 flex items-center justify-center transition-all duration-200
+                                                ${editingRoom.status === 'INACTIVE'
+                                                    ? 'bg-gray-900 border-gray-900 scale-110'
+                                                    : 'bg-white border-gray-400 group-hover:border-gray-600'}`}
+                                            >
+                                                {editingRoom.status === 'INACTIVE' && <span className="text-white text-xs">✓</span>}
                                             </div>
                                             <span className="text-gray-800">Không hoạt động</span>
                                         </label>
@@ -923,7 +960,9 @@ export default function RoomManagement () {
 
                             <div className="flex justify-end mt-6 gap-3">
                                 <button
-                                    onClick={() => setShowEditModal(false)}
+                                    onClick={() => {setShowEditModal(false);
+                                        setErrors({});
+                                }}
                                     className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 >
                                     Hủy

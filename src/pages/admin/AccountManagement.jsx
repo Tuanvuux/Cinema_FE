@@ -494,26 +494,29 @@ const AccountManagement = () => {
   const refreshAccountData = async () => {
     try {
       setLoading(true);
-      // Thay tên API function phù hợp với project của bạn
-      const response = await getListEmployee(); // hoặc getUsers(), getEmployees()
 
-      // Đảm bảo response.data là array
-      if (response && Array.isArray(response.data)) {
-        setAccount(response.data);
-      } else if (response && Array.isArray(response)) {
-        setAccount(response);
-      } else {
-        console.error('API response không phải là array:', response);
-        setAccount([]);
-      }
+      // Gọi song song cả hai API
+      const [userResponse, employeeResponse] = await Promise.all([
+        getListUser(),
+        getListEmployee(),
+      ]);
+
+      const users = Array.isArray(userResponse?.data) ? userResponse.data : userResponse;
+      const employees = Array.isArray(employeeResponse?.data) ? employeeResponse.data : employeeResponse;
+
+      // Kết hợp cả hai mảng lại
+      const mergedAccounts = [...(users || []), ...(employees || [])];
+
+      setAccount(mergedAccounts);
     } catch (error) {
-      console.error('Error refreshing data:', error);
-      setError('Lỗi khi tải lại dữ liệu');
-      setAccount([]); // Set empty array nếu có lỗi
+      console.error("Error refreshing data:", error);
+      setError("Lỗi khi tải lại dữ liệu");
+      setAccount([]); // Rỗng khi lỗi
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     refreshAccountData();
   }, []);
