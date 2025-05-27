@@ -5,7 +5,7 @@ import {
     getSeatsByShowtime,
     getShowTimeByRoom,
     addLockSeatAdmin,
-    deleteLockSeat
+    deleteLockSeat, checkSeatBooked
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { CheckCircle, AlertCircle, X } from "lucide-react";
@@ -56,6 +56,8 @@ export default function LockSeatByShowTime () {
 
     const [selectedRoomId, setSelectedRoomId] = useState("");
     const [selectedShowtimeId, setSelectedShowtimeId] = useState("");
+    const [errors, setErrors] = useState({});
+
 
     // const [toast, setToast] = useState({
     //     show: false,
@@ -82,6 +84,7 @@ export default function LockSeatByShowTime () {
 
             if (showAddModal && modalAddRef.current && !modalAddRef.current.contains(event.target)) {
                 resetAddModalState();
+                setErrors({});
                 setShowAddModal(false);
             }
         };
@@ -95,6 +98,7 @@ export default function LockSeatByShowTime () {
     const closeAddModal = () => {
         setShowAddModal(false);
         resetAddModalState();
+        setErrors({});
     };
 
 
@@ -134,6 +138,34 @@ export default function LockSeatByShowTime () {
             setAvailableSeats([]);
         }
     };
+    const validateForm = async () => {
+        const newErrors = {};
+
+        if (!selectedRoomId) {
+            newErrors.roomId = 'Vui lòng chọn phòng';
+        }
+
+        if (!selectedShowtimeId) {
+            newErrors.showtimeId = 'Vui lòng chọn lịch chiếu';
+        }
+
+        if (!newSeat.seatId) {
+            newErrors.seatId = 'Vui lòng chọn ghế';
+        } else {
+            try {
+                const seatExists = await checkSeatBooked(newSeat.seatId);
+                if (seatExists) {
+                    newErrors.seatId = 'Tên ghế này đã được đặt';
+                }
+            } catch (error) {
+                console.error('Lỗi kiểm tra ghế:', error);
+                newErrors.seatId = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
     // khi chọn phòng → nạp suất chiếu
     const handleRoomChange = async (e)=>{
         const value = e.target.value;
@@ -147,6 +179,21 @@ export default function LockSeatByShowTime () {
         } else {
             setAvailableShowtimes([]);
         }
+        if (errors.roomId) {
+            setErrors(prev => ({
+                ...prev,
+                roomId: ''
+            }));
+        }
+
+        // Reset showtime và seat khi thay đổi phòng
+        setSelectedShowtimeId('');
+        // Xóa lỗi của showtime và seat khi reset
+        setErrors(prev => ({
+            ...prev,
+            showtimeId: '',
+            seatId: ''
+        }));
     };
 
     // khi chọn suất → nạp ghế
@@ -159,6 +206,19 @@ export default function LockSeatByShowTime () {
         } else {
             setAvailableSeats([]);
         }
+
+        if (errors.showtimeId) {
+            setErrors(prev => ({
+                ...prev,
+                showtimeId: ''
+            }));
+        }
+
+        // Xóa lỗi của seat khi reset
+        setErrors(prev => ({
+            ...prev,
+            seatId: ''
+        }));
     };
 
     // khi chọn ghế
@@ -166,6 +226,12 @@ export default function LockSeatByShowTime () {
         const value = e.target.value;
         const seatObj = availableSeats.find(s=>s.id === value);
         setNewSeat(prev=>({...prev, seatId:value, seatName: seatObj?.name || ""}));
+        if (errors.seatId ) {
+            setErrors(prev => ({
+                ...prev,
+                seatId: ''
+            }));
+        }
     };
 
     const handleDeleteSeat = async (SeatId) =>  {
@@ -194,7 +260,7 @@ export default function LockSeatByShowTime () {
     };
 
     useEffect(() => {
-        document.title = 'Quản lý trạng thái ghế';
+        document.title = 'Quản lý Ghế cần khóa';
     }, []);
 
 
@@ -303,13 +369,11 @@ export default function LockSeatByShowTime () {
 
     // Handle adding a new Seat
     const handleAddSeat = async () => {
-        try {
-            // Đảm bảo ghế có tất cả dữ liệu cần thiết
-            if (!newSeat.seatId || !newSeat.roomId || !newSeat.showtimeId) {
-                addToast('Vui lòng điền đầy đủ thông tin!', 'error');
-                return;
-            }
+        // Validate form trước
+        const isValid = await validateForm();
+        if (!isValid) return;
 
+        try {
             // Prepare data to send to backend
             const seatData = {
                 ...newSeat,
@@ -331,6 +395,7 @@ export default function LockSeatByShowTime () {
 
             // Đặt lại form và đóng modal
             resetAddModalState();
+            setErrors({}); // Reset errors
             setShowAddModal(false);
 
         } catch (err) {
@@ -432,32 +497,6 @@ export default function LockSeatByShowTime () {
             </div>
         );
     };
-    // // Toast Notification Component
-    // const ToastNotification = ({ message, type, show }) => {
-    //     if (!show) return null;
-    //
-    //     const typeStyles = {
-    //         success: 'bg-green-500',
-    //         error: 'bg-red-500'
-    //     };
-    //
-    //     return (
-    //         <div
-    //             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg flex items-center ${typeStyles[type]}`}
-    //             style={{
-    //                 animation: 'fadeInOut 3s ease-in-out',
-    //                 opacity: show ? 1 : 0,
-    //                 transform: 'translateY(0)',
-    //                 transition: 'opacity 0.3s ease, transform 0.3s ease'
-    //             }}
-    //         >
-    //             <span className="material-icons mr-2 text-white">
-    //                 {type === 'success' ? 'check_circle' : 'error'}
-    //             </span>
-    //             <p className="text-white font-medium">{message}</p>
-    //         </div>
-    //     );
-    // };
 
     const filteredSeats = seatsLock.filter(seat => {
         const matchesSearch = Object.values(seat).some(value =>
@@ -494,19 +533,13 @@ export default function LockSeatByShowTime () {
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Left sidebar - similar to the image */}
             <ToastContainer />
-            {/*<ToastNotification*/}
-            {/*    message={toast.message}*/}
-            {/*    type={toast.type}*/}
-            {/*    show={toast.show}*/}
-            {/*/>*/}
-
             <div className="flex h-full">
 
                 {/* Main content */}
                 <div className="flex-1 p-6 overflow-auto">
                     <div
                         className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-200">
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">QUẢN LÝ TRẠNG THÁI GHẾ</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">QUẢN LÝ GHẾ CẦN KHÓA</h1>
                         <div
                             className="flex flex-col-reverse md:flex-row items-start md:items-center w-full md:w-auto gap-4 mt-4 md:mt-0">
                             <div className="relative w-full md:w-64 group">
@@ -626,13 +659,15 @@ export default function LockSeatByShowTime () {
                                                 {Seatlock.status}
                                             </span>
                                         </td>
-                                        <td className="p-3 text-center">
-                                            <button
-                                                onClick={() => handleOpenDeleteModal(Seatlock)}
-                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                            >
-                                                <span className="material-icons">delete</span>
-                                            </button>
+                                        <td className="p-3 text-center text-gray-600 hidden sm:table-cell">
+                                            <div className="flex justify-center space-x-1">
+                                                <button
+                                                    onClick={() => handleOpenDeleteModal(Seatlock)}
+                                                    className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+                                                >
+                                                    <span className="material-icons">delete</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -792,44 +827,114 @@ export default function LockSeatByShowTime () {
                                 </button>
                             </div>
 
-                        <div className="space-y-4">
-                            {/* Phòng */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Chọn phòng <span
-                                    className="text-red-500">*</span></label>
-                                <select value={selectedRoomId} onChange={handleRoomChange} className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200">
-                                    <option value="">-- Chọn phòng --</option>
-                                    {rooms.map(r=>(<option key={r.id} value={r.id}>{r.name}</option>))}
-                                </select>
+                            <div className="space-y-4">
+                                {/* Phòng */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Chọn phòng <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={selectedRoomId}
+                                        onChange={handleRoomChange}
+                                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                                            errors.roomId
+                                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                        }`}
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
+                                    >
+                                        <option value="">-- Chọn phòng --</option>
+                                        {rooms.map(r => (
+                                            <option key={r.id} value={r.id}>{r.name}</option>
+                                        ))}
+                                    </select>
+                                    {errors.roomId && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.roomId}</p>
+                                    )}
+                                </div>
+
+                                {/* Suất chiếu */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Chọn lịch chiếu <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={selectedShowtimeId}
+                                        onChange={handleShowtimeChange}
+                                        disabled={!selectedRoomId}
+                                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm disabled:bg-gray-100 ${
+                                            errors.showtimeId
+                                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                        }`}
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
+                                    >
+                                        <option value="">-- Chọn lịch chiếu --</option>
+                                        {availableShowtimes.map(st => (
+                                            <option key={st.showtimeId} value={st.showtimeId}>{st.startTime}</option>
+                                        ))}
+                                    </select>
+                                    {errors.showtimeId && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.showtimeId}</p>
+                                    )}
+                                </div>
+
+                                {/* Ghế */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Chọn ghế <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={newSeat.seatId}
+                                        onChange={handleSeatChange}
+                                        disabled={!selectedShowtimeId}
+                                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm disabled:bg-gray-100 ${
+                                            errors.seatId
+                                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                        }`}
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1.25em'
+                                        }}
+                                    >
+                                        <option value="">-- Chọn ghế --</option>
+                                        {availableSeats.map(seat => (
+                                            <option key={seat.seatId} value={seat.seatId}>{seat.seatName}</option>
+                                        ))}
+                                    </select>
+                                    {errors.seatId && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.seatId}</p>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Suất chiếu */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Chọn lịch chiếu <span
-                                    className="text-red-500">*</span></label>
-                                <select value={selectedShowtimeId} onChange={handleShowtimeChange} disabled={!selectedRoomId}
-                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 disabled:bg-gray-100">
-                                    <option value="">-- Chọn lịch chiếu --</option>
-                                    {availableShowtimes.map(st=> (<option key={st.showtimeId} value={st.showtimeId}>{st.startTime}</option>))}
-                                </select>
+                            <div className="flex justify-end mt-6 gap-3">
+                                <button
+                                    onClick={closeAddModal}
+                                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleAddSeat}
+                                    className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                                >
+                                    Thêm ghế
+                                </button>
                             </div>
-
-                            {/* Ghế */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Chọn ghế <span
-                                    className="text-red-500">*</span></label>
-                                <select value={newSeat.seatId} onChange={handleSeatChange} disabled={!selectedShowtimeId}
-                                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 disabled:bg-gray-100">
-                                    <option value="">-- Chọn ghế --</option>
-                                    {availableSeats.map(seat=>(<option key={seat.seatId} value={seat.seatId}>{seat.seatName}</option>))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end mt-6 gap-3">
-                            <button onClick={closeAddModal} className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200">Hủy</button>
-                            <button onClick={handleAddSeat} className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg" disabled={!newSeat.seatId}>Thêm ghế</button>
-                        </div>
                         </div>
                     </div>
                 </div>

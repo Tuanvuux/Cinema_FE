@@ -47,6 +47,17 @@ export const toggleDeleteStatus = async (movieId, isDelete) => {
   return response.data;
 };
 
+export const getReleaseDate = async (movieId) => {
+  const response = await api.get(`/movies/admin/${movieId}/release-date`);
+  return response.data;
+};
+
+export const checkMovieNameByShowtime = async (showtimeId) => {
+    const response = await api.get(`/movies/admin/movie-name-by-showtime/${showtimeId}`);
+    return response.data;
+};
+
+
 // Deactivate (tạm khóa) tài khoản người dùng
 export const deactivateUser = async (userId) => {
   const response = await api.put(`/accounts/admin/${userId}/delete`);
@@ -87,6 +98,11 @@ export const getSumEmployee = async () => {
 
 export const addEmployee = async (request) => {
   const response = await api.post("/auth/admin/create-employee", request);
+  return response.data;
+};
+
+export const checkEmployeeIsValid = async (username) => {
+  const response = await api.get(`/auth/admin/check-username/${username}`)
   return response.data;
 };
 
@@ -172,6 +188,12 @@ export const deleteRoom = async (roomId) => {
   return response.data;
 };
 
+export const canChangeRoomStatus = async (roomId) => {
+  const response = await api.get(`/rooms/admin/can-change-status/${roomId}`);
+  return response.data; // sẽ trả về true hoặc false từ backend
+};
+
+
 // Showtime
 export const getShowtimes = async () => {
   const response = await api.get("/showtime/admin");
@@ -192,6 +214,11 @@ export const deleteShowtime = async (showtimeId) => {
   const response = await api.delete(`/showtime/admin/${showtimeId}`);
   return response.data;
 };
+export const checkShowTimeExists = async (showtimeId) => {
+  const res = await api.get(`/showtime/admin/check-exist-booked/${showtimeId}`);
+  return res.data;
+};
+
 
 export const getAvailableRooms = async (showDate, startTime, endTime) => {
   const response = await api.get(`/showtime/admin/availablerooms`, {
@@ -207,6 +234,10 @@ export const getAvailableRooms = async (showDate, startTime, endTime) => {
 //Seat
 export const getSeats = async () => {
   const response = await api.get("/seats/admin");
+  return response.data;
+};
+export const checkSeatExists = async (seatName,roomId,excludeId = null) => {
+  const response = await api.get(`/seats/admin/check-exist/${seatName}/${roomId}`)
   return response.data;
 };
 
@@ -325,6 +356,10 @@ export const getSeatsByShowtime = async (showtimeId) => {
   const response = await api.get(
     `/lock-seat-admin/admin/getSeatByShowTime/${showtimeId}`
   );
+  return response.data;
+};
+export const checkSeatBooked = async (seatId) => {
+  const response = await api.get(`/lock-seat-admin/admin/check-seat-booked/${seatId}`)
   return response.data;
 };
 

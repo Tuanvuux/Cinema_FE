@@ -6,7 +6,7 @@ import {
   deleteSeat,
   getRooms,
   getSeatInfo,
-  updateSeatInfo,
+  updateSeatInfo,checkSeatExists
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { CheckCircle, AlertCircle, X } from "lucide-react";
@@ -19,6 +19,8 @@ export default function SeatManagement() {
   const [seatInfo, setSeatInfos] = useState([]);
   const [error, setError] = useState(null);
   // const [selectedSeat, setSelectedSeat] = useState(null);
+  const [errors, setErrors] = useState({});
+
   const [newSeat, setNewSeat] = useState({
     seatName: "",
     roomId: "",
@@ -100,6 +102,7 @@ export default function SeatManagement() {
         modalEditPriceRef.current &&
         !modalEditPriceRef.current.contains(event.target)
       ) {
+        setErrors({});
         setShowEditPriceModal(false);
       }
 
@@ -108,6 +111,7 @@ export default function SeatManagement() {
         modalEditRef.current &&
         !modalEditRef.current.contains(event.target)
       ) {
+        setErrors({});
         setShowEditModal(false);
       }
       if (
@@ -125,6 +129,7 @@ export default function SeatManagement() {
         !modalAddRef.current.contains(event.target)
       ) {
         resetAddModalState();
+        setErrors({});
         setShowAddModal(false);
       }
     };
@@ -202,6 +207,9 @@ export default function SeatManagement() {
   }, []);
 
   const handleSaveEdit = async () => {
+    const isValid = await validateFormEdit();
+    if (!isValid) return;
+
     try {
       const updatedSeat = await updateSeat(editingSeat.seatId, {
         seatName: editingSeat.seatName,
@@ -354,18 +362,12 @@ export default function SeatManagement() {
   }, []);
   // Handle adding a new Seat
   const handleAddSeat = async () => {
-    try {
-      // Ensure the seat has all required data
-      if (
-        !newSeat.seatName ||
-        !newSeat.roomId ||
-        !newSeat.rowLabel ||
-        !newSeat.seatInfoId
-      ) {
-        addToast("Vui lòng điền đầy đủ thông tin!", "error");
-        return;
-      }
+    // Validate form trước
 
+    const isValid = await validateForm();
+    if (!isValid) return;
+
+    try {
       // Prepare data to send to backend
       const seatData = {
         ...newSeat,
@@ -377,6 +379,7 @@ export default function SeatManagement() {
       const addedSeat = await addSeat(seatData);
       setSeats([...seats, addedSeat]);
       addToast("Thêm ghế thành công!", "success");
+
       // Reset form and close modal
       setNewSeat({
         seatName: "",
@@ -386,7 +389,7 @@ export default function SeatManagement() {
         status: "AVAILABLE",
         seatInfoId: seatInfo.length > 0 ? seatInfo[0].id : "", // Reset to default
       });
-
+      setErrors({}); // Reset errors
       setShowAddModal(false);
     } catch (err) {
       addToast("Thêm ghế thất bại!", "error");
@@ -396,6 +399,7 @@ export default function SeatManagement() {
 
   const handleCancel = () => {
     resetAddModalState();
+    setErrors({});
     setShowAddModal(false);
   };
 
@@ -535,12 +539,91 @@ export default function SeatManagement() {
   };
 
   // Handle input change for new Seat form
+
+  const validateForm = async () => {
+    const newErrors = {};
+
+    if (!newSeat.seatName?.trim()) {
+      newErrors.seatName = 'Vui lòng nhập tên ghế';
+    }
+
+    if (!newSeat.roomId) {
+      newErrors.roomId = 'Vui lòng chọn phòng';
+    }
+
+    if (!newSeat.rowLabel?.trim()) {
+      newErrors.rowLabel = 'Vui lòng nhập tên hàng ghế';
+    }
+
+    if (!newSeat.columnNumber || newSeat.columnNumber <= 0) {
+      newErrors.columnNumber = 'Vui lòng nhập số cột ghế hợp lệ';
+    }
+
+    // Nếu không có lỗi cơ bản, kiểm tra trùng tên ghế
+    if (!newErrors.seatName && !newErrors.roomId) {
+      try {
+        const seatExists = await checkSeatExists(newSeat.seatName.trim(), newSeat.roomId);
+        if (seatExists) {
+          newErrors.seatName = 'Tên ghế đã tồn tại trong phòng này';
+        }
+      } catch (error) {
+        console.error('Lỗi kiểm tra trùng tên ghế:', error);
+        newErrors.seatName = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const validateFormEdit = async () => {
+    const newErrors = {};
+
+    if (!editingSeat.seatName?.trim()) {
+      newErrors.seatName = 'Vui lòng nhập tên ghế';
+    }
+
+    if (!editingSeat.room) {
+      newErrors.room = 'Vui lòng chọn phòng';
+    }
+
+    if (!editingSeat.rowLabel?.trim()) {
+      newErrors.rowLabel = 'Vui lòng nhập tên hàng ghế';
+    }
+
+    if (!editingSeat.columnNumber || editingSeat.columnNumber <= 0) {
+      newErrors.columnNumber = 'Vui lòng nhập số cột ghế hợp lệ';
+    }
+
+    // // Nếu không có lỗi cơ bản, kiểm tra trùng tên ghế
+    // if (!newErrors.seatName && !newErrors.room) {
+    //   try {
+    //     const seatExists = await checkSeatExists(editingSeat.seatName.trim(), editingSeat.room);
+    //     if (seatExists) {
+    //       newErrors.seatName = 'Tên ghế đã tồn tại trong phòng này';
+    //     }
+    //   } catch (error) {
+    //     console.error('Lỗi kiểm tra trùng tên ghế:', error);
+    //     newErrors.seatName = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
+    //   }
+    // }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewSeat((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    if (errors[name] && value.trim()) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   return (
@@ -820,16 +903,16 @@ export default function SeatManagement() {
                       </td>
                       <td className="p-3 text-center">{Seat.seatInfoName}</td>
                       <td className="p-3 text-center">
-                        <div className="flex justify-center space-x-3">
+                        <div className="flex justify-center space-x-1">
                           <button
                             onClick={() => handleEditSeat(Seat)}
-                            className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
+                            className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
                           >
                             <span className="material-icons">edit</span>
                           </button>
                           <button
                             onClick={() => handleOpenDeleteModal(Seat)}
-                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
                           >
                             <span className="material-icons">delete</span>
                           </button>
@@ -1038,6 +1121,9 @@ export default function SeatManagement() {
                     className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                     required
                   />
+                  {errors.seatName && (
+                      <p className="text-red-500 text-sm mt-1">{errors.seatName}</p>
+                  )}
                 </div>
 
                 <div>
@@ -1051,7 +1137,13 @@ export default function SeatManagement() {
                     name="room"
                     value={editingSeat.room || ""}
                     onChange={handleInputChangeEdit}
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                    className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundSize: '1.25em'
+                    }}
                   >
                     <option value="">Chọn phòng</option>
                     {rooms.map((room) => (
@@ -1060,6 +1152,9 @@ export default function SeatManagement() {
                       </option>
                     ))}
                   </select>
+                  {errors.room && (
+                      <p className="text-red-500 text-sm mt-1">{errors.room}</p>
+                  )}
                 </div>
                 <div className="flex space-x-4">
                   <div>
@@ -1079,6 +1174,9 @@ export default function SeatManagement() {
                       min="1"
                       required
                     />
+                    {errors.rowLabel && (
+                        <p className="text-red-500 text-sm mt-1">{errors.rowLabel}</p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -1097,6 +1195,9 @@ export default function SeatManagement() {
                       className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                       required
                     />
+                    {errors.columnNumber && (
+                        <p className="text-red-500 text-sm mt-1">{errors.columnNumber}</p>
+                    )}
                   </div>
                 </div>
 
@@ -1255,7 +1356,8 @@ export default function SeatManagement() {
 
               <div className="flex justify-end mt-8 gap-3">
                 <button
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {setShowEditModal(false);
+                    setErrors({});}}
                   className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                 >
                   Hủy
@@ -1275,131 +1377,159 @@ export default function SeatManagement() {
 
       {/* Add Seat Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
-          <div
-            ref={modalAddRef}
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  Thêm ghế mới
-                </h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
-                >
-                  <span className="material-icons">close</span>
-                </button>
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <label
-                      htmlFor="seatName"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+          <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
+            <div
+                ref={modalAddRef}
+                className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Thêm ghế mới
+                  </h2>
+                  <button
+                      onClick={() => setShowAddModal(false)}
+                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
                   >
-                    Tên Ghế <span
-                      className="text-red-500">*</span>
-                  </label>
-                  <input
-                      type="text"
-                      id="seatName"
-                    name="seatName"
-                    value={newSeat.seatName}
-                    onChange={(e) => {
-                      handleInputChange(e);
-                      console.log("Seat Name:", e.target.value);
-                    }}
-                    placeholder="Nhập tên phòng chiếu"
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                    required
-                  />
+                    <span className="material-icons">close</span>
+                  </button>
                 </div>
 
-                <div>
-                  <label
-                      htmlFor="room"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Tên phòng <span
-                      className="text-red-500">*</span>
-                  </label>
-                  <select
-                      id="roomId"
-                      name="roomId"
-                    value={newSeat.roomId}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                  >
-                    <option value="">Chọn phòng</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex space-x-4">
+                <div className="space-y-5">
                   <div>
                     <label
-                        htmlFor="rowLabel"
+                        htmlFor="seatName"
                         className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Tên hàng ghế <span
-                        className="text-red-500">*</span>
+                      Tên Ghế <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
-                        id="rowLabel"
-                      name="rowLabel"
-                      value={newSeat.rowLabel}
-                      onChange={handleInputChange}
-                      placeholder="Nhập số cột ghế"
-                      className="w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                      required
+                        id="seatName"
+                        name="seatName"
+                        value={newSeat.seatName}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          console.log("Seat Name:", e.target.value);
+                        }}
+                        placeholder="Nhập tên ghế"
+                        className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                            errors.seatName
+                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                        }`}
                     />
+                    {errors.seatName && (
+                        <p className="text-red-500 text-sm mt-1">{errors.seatName}</p>
+                    )}
                   </div>
+
                   <div>
                     <label
-                        htmlFor="columnNumber"
+                        htmlFor="roomId"
                         className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Số cột ghế <span
-                        className="text-red-500">*</span>
+                      Tên phòng <span className="text-red-500">*</span>
                     </label>
-                    <input
-                        type="number"
-                        id="columnNumber"
-                      name="columnNumber"
-                      value={newSeat.columnNumber}
-                      onChange={handleInputChange}
-                      placeholder="Nhập số cột ghế"
-                      className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                      required
-                    />
+                    <select
+                        id="roomId"
+                        name="roomId"
+                        value={newSeat.roomId}
+                        onChange={handleInputChange}
+                        className={`appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                            errors.roomId
+                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                        }`}
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '1.25em'
+                        }}
+                    >
+                      <option value="">Chọn phòng</option>
+                      {rooms.map((room) => (
+                          <option key={room.id} value={room.id}>
+                            {room.name}
+                          </option>
+                      ))}
+                    </select>
+                    {errors.roomId && (
+                        <p className="text-red-500 text-sm mt-1">{errors.roomId}</p>
+                    )}
+                  </div>
+
+                  <div className="flex space-x-4">
+                    <div className="flex-1">
+                      <label
+                          htmlFor="rowLabel"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Tên hàng ghế <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                          type="text"
+                          id="rowLabel"
+                          name="rowLabel"
+                          value={newSeat.rowLabel}
+                          onChange={handleInputChange}
+                          placeholder="Nhập số hàng ghế"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                              errors.rowLabel
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
+                      />
+                      {errors.rowLabel && (
+                          <p className="text-red-500 text-sm mt-1">{errors.rowLabel}</p>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <label
+                          htmlFor="columnNumber"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Số cột ghế <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                          type="number"
+                          id="columnNumber"
+                          name="columnNumber"
+                          value={newSeat.columnNumber}
+                          onChange={handleInputChange}
+                          placeholder="Nhập số cột ghế"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                              errors.columnNumber
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
+                      />
+                      {errors.columnNumber && (
+                          <p className="text-red-500 text-sm mt-1">{errors.columnNumber}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-end mt-8 gap-3">
-                <button
-                  onClick={handleCancel}
-                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleAddSeat}
-                  className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600"
-                >
-                  Thêm ghế
-                </button>
+                <div className="flex justify-end mt-8 gap-3">
+                  <button
+                      onClick={handleCancel}
+                      className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                      onClick={handleAddSeat}
+                      className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600"
+                  >
+                    Thêm ghế
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
       )}
 
       {showEditPriceModal && (
@@ -1433,8 +1563,16 @@ export default function SeatManagement() {
                       name="id"
                       value={editSeatInfo.id}
                       onChange={handleInputChangeEditSeatInfo}
-                      className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.75rem center',
+                        backgroundSize: '1.25em',
+                        width: '150px'
+                      }}
+                      className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                     >
+
                       <option value="">Chọn loại ghế</option>
                       {seatInfo.map((seatinfo) => (
                         <option key={seatinfo.id} value={seatinfo.id}>
