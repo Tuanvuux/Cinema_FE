@@ -225,11 +225,17 @@ const SeatSelection = () => {
     isProcessingRef.current = true;
 
     try {
+      if (selectedSeats.length >= 8) {
+        toast.warn("Bạn chỉ được chọn tối đa 8 ghế trong 1 lần đặt.");
+        return;
+      }
+
       if (!selectedSeats.includes(seatId)) {
         const newSelectedSeats = [...selectedSeats, seatId];
         setSelectedSeats(newSelectedSeats);
         updateTotalPrice(newSelectedSeats);
       }
+
       sendSeatAction(seatId, "SELECT", userId);
 
       setSeatMatrix((prevMatrix) =>
@@ -400,7 +406,12 @@ const SeatSelection = () => {
               Hủy
             </button>
             <button
-              className="mt-4 bg-white text-gray-900 border-1 border-gray-900 py-2 px-6 rounded-full hover:text-white hover:bg-gray-900"
+              className={`mt-4 py-2 px-6 rounded-full border-1 ${
+                selectedSeats.length === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-gray-900 hover:text-white hover:bg-gray-900"
+              }`}
+              disabled={selectedSeats.length === 0}
               onClick={handlePayment}
             >
               Đặt vé

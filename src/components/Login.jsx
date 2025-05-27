@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { loginApi } from "../services/api";
-import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import Button from "./ui/button";
@@ -62,7 +61,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-200">
+    <div className="flex items-center justify-center h-screen bg-[url('/background_login.jpg')] bg-cover bg-center bg-no-repeat">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">
           Đăng nhập ngay!
