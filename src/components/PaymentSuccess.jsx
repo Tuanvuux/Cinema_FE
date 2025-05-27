@@ -11,7 +11,6 @@ const PaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchParams] = useSearchParams();
-
   const orderId = searchParams.get("orderId");
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -19,6 +18,7 @@ const PaymentSuccess = () => {
     const fetchTickets = async () => {
       try {
         const data = await getPaymentById(orderId);
+        console.log("data", data);
         setPaymentData(data);
       } catch (err) {
         console.error("Lỗi khi lấy danh sách vé:", err);
@@ -33,7 +33,24 @@ const PaymentSuccess = () => {
     }
   }, [orderId]);
 
-  const isOwner = user && paymentData && user.userId === paymentData.userId;
+  if (loading) return <p className="text-center mt-10">Đang tải...</p>;
+  if (error) return <p className="text-center mt-10 text-red-600">{error}</p>;
+  if (!paymentData) return null;
+
+  const isOwner = user && user.userId === paymentData.userId;
+  if (!isOwner) {
+    return (
+      <div className="text-center mt-10">
+        <h1 className="text-2xl font-semibold text-red-600">
+          Bạn không có quyền xem thông tin này!
+        </h1>
+        <p className="mt-4">
+          Vui lòng kiểm tra lại tài khoản hoặc liên hệ hỗ trợ.
+        </p>
+      </div>
+    );
+  }
+
   const formattedDate = formatDate(paymentData.showDate);
   const formattedTime = formatTime(paymentData.startTime);
 
@@ -43,12 +60,13 @@ const PaymentSuccess = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format: [180, 90], // hoặc "a4", "letter", "legal"
+      format: [180, 90],
     });
 
     for (let index = 0; index < paymentData.paymentDetails.length; index++) {
       const ticket = paymentData.paymentDetails[index];
       if (index > 0) doc.addPage();
+
       doc.setFillColor(255, 253, 208);
       doc.rect(0, 0, 180, 110, "F");
 
@@ -67,28 +85,18 @@ const PaymentSuccess = () => {
       doc.text("Dia Chi: 71 Ngu Hanh Son, Son Tra, Da Nang", 20, 30);
       doc.text(`Phim: ${paymentData.movieTitle}`, 20, 45);
       doc.text(`Phong chieu: ${paymentData.roomName}`, 20, 55);
-      doc.text(`Thoi gian: ${formattedTime} - ${formattedDate}`, 20, 65);
+      doc.text(
+        `Thoi gian: ${formatTime(paymentData.startTime)} - ${formatDate(
+          paymentData.showDate
+        )}`,
+        20,
+        65
+      );
       doc.text(`Ghe: ${ticket.seatName}`, 20, 75);
     }
 
     doc.save("ve-xem-phim.pdf");
   };
-
-  if (loading) return <p className="text-center mt-10">Đang tải...</p>;
-  if (error) return <p className="text-center mt-10 text-red-600">{error}</p>;
-
-  if (!isOwner) {
-    return (
-      <div className="text-center mt-10">
-        <h1 className="text-2xl font-semibold text-red-600">
-          Bạn không có quyền xem thông tin này!
-        </h1>
-        <p className="mt-4">
-          Vui lòng kiểm tra lại tài khoản hoặc liên hệ hỗ trợ.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="text-center mt-10">
@@ -108,7 +116,7 @@ const PaymentSuccess = () => {
           <strong>Phòng:</strong> {paymentData.roomName}
         </p>
         <p>
-          <strong>Thời gian:</strong> {formattedTime}-{formattedDate}
+          <strong>Thời gian:</strong> {formattedTime} - {formattedDate}
         </p>
         <p>
           <strong>Số vé:</strong> {paymentData.sumTicket}
