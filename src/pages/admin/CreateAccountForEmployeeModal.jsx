@@ -1,21 +1,22 @@
 import React, { useState, useEffect,useRef  } from "react";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
-import { addEmployee } from "@/services/apiadmin.jsx";
+import { addEmployee,checkEmployeeIsValid } from "@/services/apiadmin.jsx";
 import Button from "@/components/ui/button.jsx";
 import {CheckCircle, AlertCircle, X } from "lucide-react";
 
 
-export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
+export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmployeeCreated  }) {
     const modalRef = useRef();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [toast, setToast] = useState([]);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
-                onClose(); // Đóng modal
+                handleCancel(); // Đóng modal
             }
         };
 
@@ -108,20 +109,73 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
     });
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+
+        // Xóa lỗi khi user bắt đầu nhập
+        if (errors[name] && value.trim()) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const validateForm = async () => {
+        const newErrors = {};
+
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = 'Vui lòng nhập họ tên';
+        }
+
+        if (!formData.username.trim()) {
+            newErrors.username = 'Vui lòng nhập tên đăng nhập';
+        } else {
+            try {
+                const res = await checkEmployeeIsValid(formData.username);
+                if (res === true) {
+                    newErrors.username = 'Tên nhân viên đã tồn tại!';
+                }
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra username:', error);
+                newErrors.username = 'Không kiểm tra được tên đăng nhập!';
+            }
+        }
+
+        if (!formData.password.trim()) {
+            newErrors.password = 'Vui lòng nhập mật khẩu';
+        }
+
+        if (!formData.confirmPassword.trim()) {
+            newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
+        }
+        else if (formData.confirmPassword !== formData.password ) {
+            newErrors.confirmPassword = 'Mật khẩu mới không khớp';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Kiểm tra xác nhận mật khẩu
-        if (formData.password !== formData.confirmPassword) {
-            addToast("Mật khẩu mới không khớp!", "error");
-            return;
-        }
+        const isValid = await validateForm();
+        if (!isValid) return;
+
+        // // Kiểm tra xác nhận mật khẩu
+        // if (formData.password !== formData.confirmPassword) {
+        //     addToast("Mật khẩu mới không khớp!", "error");
+        //     setErrors(prev => ({
+        //         ...prev,
+        //         confirmPassword: 'Mật khẩu không khớp'
+        //     }));
+        //     return;
+        // }
+
         setIsLoading(true);
 
         try {
@@ -133,10 +187,23 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
             addToast('Tạo tài khoản nhân viên thành công!','success')
             // Reset form
             setFormData({ fullName:'',username: '', password: '', confirmPassword: '' });
+            setErrors({});
+            if (onEmployeeCreated) {
+                await onEmployeeCreated();
+            }
+
+            // // Đóng modal
+            setTimeout(() => {
+                onClose();
+            }, 10);
         } catch (error) {
-            addToast(error.response?.data || 'Lỗi khi tạo tài khoản!','error')
+            // addToast(error.response?.data || 'Lỗi khi tạo tài khoản!','error')
         }
         setIsLoading(false);
+    };
+    const handleCancel = () => {
+        setErrors({});  // reset lỗi
+        onClose();      // gọi hàm đóng modal
     };
 
     return (
@@ -146,7 +213,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
 
             <div className="fixed inset-0 bg-gray-800/30 flex items-center justify-center z-50">
                 <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
-                    <div className="p-4 border-b relative">
+                    <div className="p-4 relative">
                         {/* Nút đóng modal */}
                         <button
                             onClick={onClose}
@@ -157,7 +224,7 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                             &times;
                         </button>
 
-                        <h2 className="text-xl font-bold text-center">Thêm nhân viên</h2>
+                        <h2 className="text-xl font-bold text-left">Thêm nhân viên</h2>
                     </div>
 
                     {/* FORM ĐĂNG KÝ NHÂN VIÊN */}
@@ -172,10 +239,17 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                                    required
+                                    className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                                        errors.fullName
+                                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                            : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                    }`}
                                 />
+                                {errors.fullName && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+                                )}
                             </div>
+
                             <div>
                                 <label className="block font-medium">Tên đăng nhập <span
                                     className="text-red-500">*</span></label>
@@ -184,10 +258,17 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                                    required
+                                    className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                                        errors.username
+                                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                            : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                    }`}
                                 />
+                                {errors.username && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                                )}
                             </div>
+
                             <div className="relative">
                                 <label className="block font-medium">Mật khẩu <span
                                     className="text-red-500">*</span></label>
@@ -196,8 +277,11 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                                    required
+                                    className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                                        errors.password
+                                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                            : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                    }`}
                                 />
                                 <span
                                     className="absolute right-3 top-9 cursor-pointer text-gray-500"
@@ -223,6 +307,9 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                         </svg>
                                     )}
                                 </span>
+                                {errors.password && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                                )}
                             </div>
 
                             <div className="relative">
@@ -233,8 +320,11 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
-                                    required
+                                    className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm transition-all duration-200 ${
+                                        errors.confirmPassword
+                                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                            : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                                    }`}
                                 />
                                 <span
                                     className="absolute right-3 top-9 cursor-pointer text-gray-500"
@@ -260,39 +350,52 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose }) {
                                         </svg>
                                     )}
                                 </span>
-                            </div>
-                            <Button
-                                type="submit"
-                                disabled={isLoading}
-                                className={`w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200 ${
-                                    isLoading ? " cursor-not-allowed" : " "
-                                }`}
-                            >
-                                {isLoading ? (
-                                    <svg
-                                        className="animate-spin h-5 w-5 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                        />
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8v8H4z"
-                                        />
-                                    </svg>
-                                ) : (
-                                    "Tạo tài khoản"
+                                {errors.confirmPassword && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                                 )}
-                            </Button>
+                            </div>
+                            <div className="flex justify-end gap-4 pt-4 mt-8">
+                                <button
+                                    type="button" // Changed to type="button" to prevent form submission
+                                    onClick={handleCancel}
+                                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className={`px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg ${
+                                        isLoading ? " cursor-not-allowed" : " "
+                                    }`}
+                                >
+                                    {isLoading ? (
+                                        <svg
+                                            className="animate-spin h-5 w-5 text-white"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v8H4z"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        "Tạo tài khoản"
+                                    )}
+                                </button>
+                            </div>
+
                         </form>
                     </div>
                 </div>

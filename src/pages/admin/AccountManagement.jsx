@@ -120,11 +120,29 @@ const AccountManagement = () => {
     fetchData();
   }, [viewType]); // <-- Chạy lại khi viewType thay đổi
 
-  const filteredAccount = accounts.filter((account) =>
-    Object.values(account).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredAccount = (accounts || []).filter((account) => {
+    // Kiểm tra account có tồn tại không
+    if (!account) return false;
+
+    // Lọc theo viewType (user hoặc employee)
+    const isEmployee = account.role === 'EMPLOYEE';
+    const isUser = !isEmployee;
+
+    // Chỉ hiển thị loại tài khoản được chọn
+    const matchesViewType = (viewType === 'employee' && isEmployee) ||
+        (viewType === 'user' && isUser);
+
+    if (!matchesViewType) return false;
+
+    // Tìm kiếm theo search term
+    if (!searchTerm.trim()) return true;
+
+    return Object.values(account).some((value) => {
+      // Kiểm tra value có tồn tại và có thể chuyển thành string
+      if (value == null) return false;
+      return value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  });
 
   // Calculate pagination
   const indexOfLast = currentPage * itemsPerPage;
@@ -473,6 +491,36 @@ const AccountManagement = () => {
   //   );
   // };
 
+  const refreshAccountData = async () => {
+    try {
+      setLoading(true);
+
+      // Gọi song song cả hai API
+      const [userResponse, employeeResponse] = await Promise.all([
+        getListUser(),
+        getListEmployee(),
+      ]);
+
+      const users = Array.isArray(userResponse?.data) ? userResponse.data : userResponse;
+      const employees = Array.isArray(employeeResponse?.data) ? employeeResponse.data : employeeResponse;
+
+      // Kết hợp cả hai mảng lại
+      const mergedAccounts = [...(users || []), ...(employees || [])];
+
+      setAccount(mergedAccounts);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      setError("Lỗi khi tải lại dữ liệu");
+      setAccount([]); // Rỗng khi lỗi
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshAccountData();
+  }, []);
+
   return (
       <div className="flex flex-col h-screen bg-gray-50">
         {/*<ToastNotification*/}
@@ -487,6 +535,7 @@ const AccountManagement = () => {
               <CreateAccountForEmployeeModal
                   isOpen={isOpenAddEm}
                   onClose={() => setIsOpenAddEm(false)}
+                  onEmployeeCreated={refreshAccountData}
               />
           )}
 
@@ -688,12 +737,14 @@ const AccountManagement = () => {
                           <td className={`p-3 text-left hidden sm:table-cell ${!account.isActive ? 'text-gray-400' : 'text-gray-600'}`}>{account.fullName}</td>
                           <td className={`p-3 text-left hidden sm:table-cell ${!account.isActive ? 'text-gray-400' : 'text-gray-600'}`}>{account.email}</td>
                           <td className={`p-3 text-center hidden sm:table-cell ${!account.isActive ? 'text-gray-400' : 'text-gray-600'}`}>{account.birthday}</td>
-                          <td className={`p-3 text-center hidden sm:table-cell ${!account.isActive ? 'text-gray-400' : 'text-gray-600'}`}>{account.gender}</td>
+                          <td className={`p-3 text-center hidden sm:table-cell ${!account.isActive ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {account.gender === 'female' ? 'Nữ' : (account.gender === 'male' ? 'Nam' : account.gender)}
+                          </td>
                           <td className="p-3 text-center text-gray-600 hidden sm:table-cell">
                             <div className="flex justify-center space-x-1">
                               <button
                                   onClick={() => handleDetailAccount(account)}
-                                  className={`text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors ${!account.isActive ? 'opacity-75' : ''}`}
+                                  className={`text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors ${!account.isActive ? 'opacity-75' : ''}`}
                                   title="Xem tài khoản"
                               >
                                 <span className="material-icons">info</span>
@@ -702,7 +753,7 @@ const AccountManagement = () => {
                               {account.isActive ? (
                                   <button
                                       onClick={() => handleOpenConfirmModal(account, 'delete')}
-                                      className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                      className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
                                       title="Khóa tài khoản"
                                   >
                                     <span className="material-icons">lock</span>
