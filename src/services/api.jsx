@@ -96,6 +96,8 @@ export const extendSeatLock = async ({ showtimeId, userId, seatIds }) => {
   return response.data;
 };
 
+//payment
+
 export const addPayment = async (data) => {
   const response = await api.post(`/payments/addPayment`, data);
   return response.data;
@@ -110,5 +112,10 @@ export const paymentMomo = async (amount, orderId) => {
 
 export const getPaymentById = async (paymentId) => {
   const response = await api.get(`/payments/${paymentId}`);
+  return response.data;
+};
+
+export const getMaintenanceSeat = async (showtimeId) => {
+  const response = await api.get(`/seats/maintenance/${showtimeId}`);
   return response.data;
 };

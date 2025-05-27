@@ -6,10 +6,11 @@ import "swiper/css/navigation";
 import "swiper/css/thumbs";
 import "swiper/css/autoplay";
 import { useMovies } from "../contexts/MovieContext";
+import { useNavigate } from "react-router-dom";
 export default function s() {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
-
   const { movies, loading } = useMovies();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -17,9 +18,11 @@ export default function s() {
     );
   }
 
+  const movieDetailPage = (movieId) => {
+    navigate(`/movieDetail/${movieId}`);
+  };
   return (
     <div className=" bg-white w-full flex flex-col items-center mt-5">
-      {/* Slider chính */}
       <Swiper
         modules={[Navigation, Thumbs, Autoplay]}
         navigation
@@ -34,6 +37,7 @@ export default function s() {
               src={movie.bannerUrl}
               alt="Movie"
               className="w-full h-full object-cover rounded-lg"
+              onClick={() => movieDetailPage(movie.movieId)}
             />
           </SwiperSlide>
         ))}

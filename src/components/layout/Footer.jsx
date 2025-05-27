@@ -80,26 +80,26 @@ const Footer = () => {
         <div className="mt-8 flex justify-center space-x-4">
           <a
             href="#"
-            className="w-10 h-10 flex items-center justify-center border rounded-full hover:bg-gray-900"
+            className="w-10 h-10 flex items-center justify-center border rounded-full hover:bg-gray-900 hover:text-white"
           >
             <i className="fab fa-facebook-f"></i>
           </a>
           <a
             href="#"
-            className="w-10 h-10 flex items-center justify-center border rounded-full hover:bg-gray-900"
+            className="w-10 h-10 flex items-center justify-center border rounded-full hover:bg-gray-900 hover:text-white"
           >
             <i className="fab fa-instagram"></i>
           </a>
           <a
             href="#"
-            className="w-10 h-10 flex items-center justify-center border rounded-full hover:bg-gray-900"
+            className="w-10 h-10 flex items-center justify-center border rounded-full hover:bg-gray-900 hover:text-white"
           >
             <i className="fab fa-youtube"></i>
           </a>
         </div>
 
         {/* Bản quyền */}
-        <div className="mt-8 text-center text-gray-900">
+        <div className="mt-8 text-center text-gray-900 ">
           <p>Bản quyền © 2025 CineX Cinema</p>
         </div>
       </div>

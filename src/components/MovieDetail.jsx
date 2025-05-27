@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useMovies } from "../contexts/MovieContext";
+import { FaClock, FaRegCalendarAlt } from "react-icons/fa";
+import { formatDate, ageLimit } from "../utils/helpers";
 
 const MovieDetailPage = () => {
   const { movieId } = useParams();
@@ -27,13 +29,8 @@ const MovieDetailPage = () => {
   if (!movie) return <p className="text-center">Không tìm thấy phim.</p>;
 
   return (
-    <div className="container mx-auto p-6 bg-white shadow-md rounded-lg">
+    <div className="container p-6 bg-white shadow-md rounded-lg ml-10">
       {/* Nút đặt vé trên cùng */}
-      <div className="flex justify-end">
-        <button className="bg-[#0D1B2A] text-white px-6 py-2 rounded-lg font-bold">
-          ĐẶT VÉ
-        </button>
-      </div>
 
       {/* Thông tin chính */}
       <div className="flex flex-col md:flex-row items-center md:items-start mt-4">
@@ -47,33 +44,47 @@ const MovieDetailPage = () => {
         {/* Thông tin phim */}
         <div className="md:ml-6 text-black w-full md:w-2/3">
           <h2 className="text-2xl font-bold text-gray-900">{movie.name}</h2>
+          <div className="flex font-bold">
+            <div className="flex items-center gap-1 text-sm mr-10">
+              <FaClock />
+              <span>{movie.duration} phút</span>
+            </div>
+            <div className="flex items-center gap-1 text-sm ">
+              <FaRegCalendarAlt />
+              <span>{movie && formatDate(movie.releaseDate)}</span>
+            </div>
+          </div>
+          <div
+            className={
+              !movie.ageLimit
+                ? "text-green-400 font-bold"
+                : "text-red-500 font-bold"
+            }
+          >
+            {!movie.ageLimit ? "P" : "C" + movie.ageLimit + " "}
+            <span className="text-black font-normal">
+              {ageLimit(movie.ageLimit)}
+            </span>
+          </div>
+          <p>
+            <strong>Quốc gia:</strong> {movie.country}
+          </p>
+          <p>
+            <strong>Thể loại:</strong> {movie.category?.name}
+          </p>
           <p>
             <strong>Đạo diễn:</strong> {movie.director}
           </p>
           <p>
             <strong>Diễn viên:</strong> {movie.actor}
           </p>
-          <p>
-            <strong>Thể loại:</strong> {movie.category?.name}
-          </p>
-          <p>
-            <strong>Khởi chiếu:</strong> {movie.releaseDate}
-          </p>
-          <p>
-            <strong>Thời lượng:</strong> {movie.duration} phút
-          </p>
+
           <p>
             <strong>Ngôn ngữ:</strong> {movie.caption}
-          </p>
-          <p className="text-red-600 font-bold">
-            <strong>Rated:</strong> {movie.ageLimit}
           </p>
 
           {/* Nút hành động */}
           <div className="mt-4 flex space-x-2">
-            <button className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold">
-              Chi tiết
-            </button>
             {movie.trailerUrl && (
               <a
                 href={movie.trailerUrl}
@@ -84,25 +95,18 @@ const MovieDetailPage = () => {
                 Trailer
               </a>
             )}
-            <button className="px-4 py-2 border border-gray-400 rounded-lg">
-              Đánh giá
-            </button>
+            <div className="">
+              <button
+                className="bg-[#0D1B2A] text-white px-6 py-2 rounded-lg font-bold"
+                onClick={() => navigate(`/showtime/${movie.movieId}`)}
+              >
+                ĐẶT VÉ
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Mô tả phim */}
       <div className="mt-6 text-gray-700">{movie.description}</div>
-
-      {/* Nút đặt vé ở cuối */}
-      <div className="flex justify-center mt-6">
-        <button
-          className="bg-[#0D1B2A] text-white px-6 py-2 rounded-lg font-bold"
-          onClick={() => navigate(`/showtime/${movie.movieId}`)}
-        >
-          ĐẶT VÉ
-        </button>
-      </div>
     </div>
   );
 };

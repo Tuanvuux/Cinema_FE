@@ -5,6 +5,7 @@ import AdminRoutes from "./routes/AdminRoutes";
 import PrivateRoutes from "./routes/PrivateRoutes";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 function App() {
   return (
