@@ -7,6 +7,8 @@ import RegisterPage from "../pages/public/RegisterPage";
 import ShowTimePage from "../pages/public/ShowtimePage";
 import UploadImageOnly from "@/pages/admin/UploadImageOnly.jsx";
 import ExportToPNG from "@/pages/admin/ExportToPNG.jsx";
+import ForgotPasswordPage from "../pages/public/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "../pages/public/ResetPasswordPage.jsx";
 
 const PublicRoutes = () => {
   return (
@@ -16,9 +18,11 @@ const PublicRoutes = () => {
       <Route path="/movie" element={<MoviePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-        <Route path="/addimage" element={<UploadImageOnly />} />
-        <Route path="/loadPNG" element={<ExportToPNG />} />
+      <Route path="/addimage" element={<UploadImageOnly />} />
+      <Route path="/loadPNG" element={<ExportToPNG />} />
       <Route path="/showtime/:movieId?" element={<ShowTimePage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
     </Routes>
   );
 };
