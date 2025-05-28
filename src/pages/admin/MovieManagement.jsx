@@ -643,6 +643,29 @@ export default function MovieManagement() {
     setBannerPreview("");
     setVideoPreview("");
   };
+  const removePoster = () => {
+    setPosterPreview("");
+    setValue("posterUrl", ""); // Reset giá trị trong react-hook-form
+    // Reset input file
+    const posterInput = document.querySelector('input[type="file"][accept="image/*"]:first-of-type');
+    if (posterInput) posterInput.value = '';
+  };
+
+  const removeBanner = () => {
+    setBannerPreview("");
+    setValue("bannerUrl", ""); // Reset giá trị trong react-hook-form
+    // Reset input file
+    const bannerInput = document.querySelector('input[type="file"][accept="image/*"]:last-of-type');
+    if (bannerInput) bannerInput.value = '';
+  };
+
+  const removeVideo = () => {
+    setVideoPreview("");
+    setValue("trailerUrl", ""); // Reset giá trị trong react-hook-form
+    // Reset input file
+    const videoInput = document.querySelector('input[type="file"][accept="video/*"]');
+    if (videoInput) videoInput.value = '';
+  };
 
   // Modify the existing function in your code to call handleEditMovie
   // Replace this:
@@ -1173,7 +1196,16 @@ export default function MovieManagement() {
 
                       {posterPreview && (
                           <div className="mt-2">
-                            <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm text-gray-600">Xem trước:</p>
+                              <button
+                                  type="button"
+                                  onClick={removePoster}
+                                  className="text-red-500 hover:text-red-700 text-sm bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors duration-200"
+                              >
+                                Xóa ảnh
+                              </button>
+                            </div>
                             <img
                                 src={posterPreview}
                                 alt="Poster Preview"
@@ -1198,7 +1230,16 @@ export default function MovieManagement() {
 
                       {bannerPreview && (
                           <div className="mt-2">
-                            <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm text-gray-600">Xem trước:</p>
+                              <button
+                                  type="button"
+                                  onClick={removeBanner}
+                                  className="text-red-500 hover:text-red-700 text-sm bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors duration-200"
+                              >
+                                Xóa ảnh
+                              </button>
+                            </div>
                             <img
                                 src={bannerPreview}
                                 alt="Banner Preview"
@@ -1223,6 +1264,16 @@ export default function MovieManagement() {
 
                       {videoPreview && (
                           <div className="mb-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm text-gray-600">Xem trước video:</p>
+                              <button
+                                  type="button"
+                                  onClick={removeVideo}
+                                  className="text-red-500 hover:text-red-700 text-sm bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors duration-200"
+                              >
+                                Xóa video
+                              </button>
+                            </div>
                             <video className="w-full mt-2" controls>
                               <source src={videoPreview} type="video/mp4" />
                               Trình duyệt của bạn không hỗ trợ video.
@@ -1285,7 +1336,6 @@ export default function MovieManagement() {
                 </div>
               </div>
           )}
-
 
           {/* Edit Modal - Add this to your component's return statement */}
           {showEditModal && selectedMovieForAction && (
@@ -1410,16 +1460,24 @@ export default function MovieManagement() {
                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                       />
                     </div>
-
                     {posterPreview && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
-                        <img
-                          src={posterPreview}
-                          alt="Poster Preview"
-                          className="max-h-48 rounded border"
-                        />
-                      </div>
+                        <div className="mt-2">
+                          <div className="flex justify-between items-center mb-2">
+                            <p className="text-sm text-gray-600">Xem trước:</p>
+                            <button
+                                type="button"
+                                onClick={removePoster}
+                                className="text-red-500 hover:text-red-700 text-sm bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors duration-200"
+                            >
+                              Xóa ảnh
+                            </button>
+                          </div>
+                          <img
+                              src={posterPreview}
+                              alt="Poster Preview"
+                              className="max-h-48 rounded border"
+                          />
+                        </div>
                     )}
 
                     <div className="mb-3">
@@ -1435,14 +1493,23 @@ export default function MovieManagement() {
                     </div>
 
                     {bannerPreview && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Xem trước:</p>
-                        <img
-                          src={bannerPreview}
-                          alt="Banner Preview"
-                          className="w-full max-h-32 object-cover rounded border"
-                        />
-                      </div>
+                        <div className="mt-2">
+                          <div className="flex justify-between items-center mb-2">
+                            <p className="text-sm text-gray-600">Xem trước:</p>
+                            <button
+                                type="button"
+                                onClick={removeBanner}
+                                className="text-red-500 hover:text-red-700 text-sm bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors duration-200"
+                            >
+                              Xóa ảnh
+                            </button>
+                          </div>
+                          <img
+                              src={bannerPreview}
+                              alt="Banner Preview"
+                              className="w-full max-h-32 object-cover rounded border"
+                          />
+                        </div>
                     )}
 
                     <div className="mb-3">
@@ -1456,12 +1523,22 @@ export default function MovieManagement() {
                     </div>
 
                     {videoPreview && (
-                      <div className="mb-3">
-                        <video className="w-full mt-2" controls>
-                          <source src={videoPreview} type="video/mp4" />
-                          Trình duyệt của bạn không hỗ trợ video.
-                        </video>
-                      </div>
+                        <div className="mb-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <p className="text-sm text-gray-600">Xem trước video:</p>
+                            <button
+                                type="button"
+                                onClick={removeVideo}
+                                className="text-red-500 hover:text-red-700 text-sm bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors duration-200"
+                            >
+                              Xóa video
+                            </button>
+                          </div>
+                          <video className="w-full mt-2" controls>
+                            <source src={videoPreview} type="video/mp4" />
+                            Trình duyệt của bạn không hỗ trợ video.
+                          </video>
+                        </div>
                     )}
 
                     <div className="mb-3">

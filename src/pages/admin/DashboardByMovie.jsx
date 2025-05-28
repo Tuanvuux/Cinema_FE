@@ -4,6 +4,7 @@ import { getMovieRevenueReport, getMovieViewsReport, getMovieDetailReport } from
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import format from 'date-fns/format';
 import vi from 'date-fns/locale/vi';
+import {RefreshCw} from "lucide-react";
 
 const DashboardByMovie = () => {
     const [startDate, setStartDate] = useState(format(new Date(new Date().setDate(new Date().getDate() - 30)), 'yyyy-MM-dd'));
@@ -15,16 +16,16 @@ const DashboardByMovie = () => {
     const [activeTab, setActiveTab] = useState('revenue');
     const [animateCharts, setAnimateCharts] = useState(false);
 
-    const fetchReports = async () => {
+    const fetchReports = async (start = startDate, end = endDate) => {
         try {
             setLoading(true);
             setAnimateCharts(false);
 
             // Fetch all reports in parallel
             const [revenueResponse, viewsResponse, detailResponse] = await Promise.all([
-                getMovieRevenueReport(startDate, endDate),
-                getMovieViewsReport(startDate, endDate),
-                getMovieDetailReport(startDate, endDate)
+                getMovieRevenueReport(start, end),
+                getMovieViewsReport(start, end),
+                getMovieDetailReport(start, end)
             ]);
 
             // Process revenue data for chart (limit to top 10)
@@ -62,13 +63,25 @@ const DashboardByMovie = () => {
 
     // Load data on component mount and when date range changes
     useEffect(() => {
-        fetchReports();
+        fetchReports(startDate,endDate);
         document.title = 'Báo cáo doanh thu theo phim';
     }, []); // Empty dependency array to run only on mount
 
     const handleGenerateReport = () => {
-        fetchReports();
+        fetchReports(startDate,endDate);
     };
+
+    const handleRefresh = () => {
+        // Reset về ngày mặc định (30 ngày trước đến hôm nay)
+        const defaultStartDate = format(new Date(new Date().setDate(new Date().getDate() - 30)), 'yyyy-MM-dd');
+        const defaultEndDate = format(new Date(), 'yyyy-MM-dd');
+
+        setStartDate(defaultStartDate);
+        setEndDate(defaultEndDate);
+
+        // Fetch reports với ngày mặc định
+        fetchReports(defaultStartDate, defaultEndDate);
+    }
 
     // Format currency for display
     const formatCurrency = (value) => {
@@ -136,7 +149,7 @@ const DashboardByMovie = () => {
                     </div>
 
                     {/* Nút xem báo cáo */}
-                    <div className="flex md:items-end w-full md:w-auto">
+                    <div className="flex items-end md:items-center w-full md:w-auto gap-x-2 pt-[26px]">
                         <button
                             onClick={handleGenerateReport}
                             disabled={loading}
@@ -144,13 +157,24 @@ const DashboardByMovie = () => {
                         >
                             {loading ? (
                                 <div className="flex items-center justify-center">
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor"
+                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     Đang tải...
                                 </div>
                             ) : 'Xem báo cáo'}
+                        </button>
+
+                        <button
+                            onClick={handleRefresh}
+                            className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-200 shadow flex items-center justify-center"
+                            title="Tải lại"
+                        >
+                            <RefreshCw className="h-4 w-4 text-gray-700" />
                         </button>
                     </div>
                 </div>
@@ -158,15 +182,18 @@ const DashboardByMovie = () => {
                 {/* Dashboard Summary Cards */}
                 {!loading && detailData.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div className={`bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-md p-4 text-white transition-all duration-500 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                        <div
+                            className={`bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-md p-4 text-white transition-all duration-500 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
                             <h3 className="text-lg font-semibold mb-2">Tổng doanh thu</h3>
                             <p className="text-2xl font-bold">{formatCurrency(totalRevenue)} VND</p>
                         </div>
-                        <div className={`bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-100 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                        <div
+                            className={`bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-100 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
                             <h3 className="text-lg font-semibold mb-2">Tổng số vé bán</h3>
                             <p className="text-2xl font-bold">{formatCurrency(totalTickets)}</p>
                         </div>
-                        <div className={`bg-gradient-to-r from-blue-300 to-blue-500 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-200 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
+                        <div
+                            className={`bg-gradient-to-r from-blue-300 to-blue-500 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-200 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
                             <h3 className="text-lg font-semibold mb-2">Tổng suất chiếu</h3>
                             <p className="text-2xl font-bold">{formatCurrency(totalShowtimes)}</p>
                         </div>
