@@ -105,7 +105,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-gray-100 mt-5 mb-5">
+    <div className="flex items-center justify-center h-screen bg-[url('/background_login.jpg')] bg-cover bg-center bg-no-repeat mt-5 mb-5">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
           Đăng Ký
