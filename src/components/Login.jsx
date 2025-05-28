@@ -94,7 +94,14 @@ const Login = () => {
               className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
-          <p>Quên mật khẩu?</p>
+          <p className="text-right text-sm">
+            <Link
+              to="/forgot-password"
+              className="text-blue-600 hover:underline"
+            >
+              Quên mật khẩu?
+            </Link>
+          </p>
           <Button
             type="submit"
             disabled={isLoading}
