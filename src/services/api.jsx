@@ -21,11 +21,11 @@ export const getMovies = async () => {
 
 //User
 export const registerAccount = async (formData) => {
-  const response = await api.post("auth/register", formData);
+  const response = await api.post("/auth/register", formData);
   return response.data;
 };
 export const loginApi = async ({ username, password }) => {
-  const response = await api.post("api/auth/login", {
+  const response = await api.post("/auth/login", {
     username,
     password,
   });
@@ -77,7 +77,7 @@ export const getLockedSeat = async (showtimeId) => {
   return response.data;
 };
 export const getUserInfo = async (userId) => {
-  const response = await api.get("user/userInfo", {
+  const response = await api.get("/user/userInfo", {
     params: { userId },
   });
   return response.data;
@@ -117,5 +117,17 @@ export const getPaymentById = async (paymentId) => {
 
 export const getMaintenanceSeat = async (showtimeId) => {
   const response = await api.get(`/seats/maintenance/${showtimeId}`);
+  return response.data;
+};
+
+export const sendForgotPasswordEmail = async (email) => {
+  const response = api.post("/auth/forgot-password", { email });
+  return response.data;
+};
+export const resetPasswordApi = async (token, newPassword) => {
+  const response = api.post("/auth/reset-password", {
+    token,
+    newPassword,
+  });
   return response.data;
 };
