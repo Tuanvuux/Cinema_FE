@@ -6,7 +6,7 @@ export default function Navbar() {
   const { user, logout } = useAuth(); // Lấy thông tin user và logout từ context
   console.log("user", user);
   return (
-    <nav className="bg-white text-gray-900 py-4">
+    <nav className="bg-gray-900 text-white py-4">
       <div className="container mx-auto flex justify-between items-center px-6 font-medium">
         <h1 className="text-2xl font-bold">
           <Link to="/">
@@ -59,7 +59,7 @@ export default function Navbar() {
 
         <div className="text-lg">
           {user ? (
-            <div className="flex items-center text-gray-900">
+            <div className="flex items-center text-white">
               <Link
                 to="/user/userInfo"
                 className="hover:text-yellow-400 font-semibold mx-1"
@@ -72,7 +72,7 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center text-gray-900">
+            <div className="flex items-center text-white">
               <Link to="/login" className="hover:text-yellow-400 mx-1">
                 Đăng nhập
               </Link>
