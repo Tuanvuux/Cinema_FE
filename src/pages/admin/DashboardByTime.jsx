@@ -9,6 +9,7 @@ import {
     Calendar,
     BarChart,
     PieChart,
+    RefreshCw,
     CheckCircle, AlertCircle
 } from 'lucide-react';
 import UserInfo from "@/pages/admin/UserInfo.jsx";
@@ -216,6 +217,9 @@ export default function DashBoardByTime() {
 
     const handleDateRangeSearch = () => {
         fetchPaymentsByDateRange();
+    };
+    const handlePaymentSearch = () => {
+        fetchPayments();
     };
 
     const handleSeeShowtime = async (payment) => {
@@ -776,6 +780,13 @@ export default function DashBoardByTime() {
                                 <Search className="h-5 w-5 mr-2"/>
                                 Tìm kiếm
                             </button>
+                            <button
+                                onClick={handlePaymentSearch}
+                                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-200 shadow flex items-center justify-center"
+                                title="Tải lại"
+                            >
+                                <RefreshCw className="h-4 w-4 text-gray-700"/>
+                            </button>
                             <div className="flex gap-4 ml-auto flex-wrap">
                                 <button
                                     onClick={handleExportPDF}
@@ -793,8 +804,6 @@ export default function DashBoardByTime() {
                                 </button>
                             </div>
                         </div>
-
-
                     ) : (
                         <div className="flex flex-wrap items-center space-x-4 mb-8 justify-center">
                             <select

@@ -236,7 +236,7 @@ export const getSeats = async () => {
   const response = await api.get("/seats/admin");
   return response.data;
 };
-export const checkSeatExists = async (seatName,roomId,excludeId = null) => {
+export const checkSeatExists = async (seatName,roomId) => {
   const response = await api.get(`/seats/admin/check-exist/${seatName}/${roomId}`)
   return response.data;
 };
