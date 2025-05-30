@@ -230,7 +230,7 @@ export default function SeatManagement() {
       setShowEditModal(false);
     } catch (error) {
       addToast("Cập nhật ghế thất bại!");
-      console.error("Lỗi khi cập nhật phòng:", error);
+      console.error("Lỗi khi cập nhật ghế:", error);
     }
 
     setShowEditModal(false);
@@ -285,7 +285,7 @@ export default function SeatManagement() {
   // Add this function to handle bulk deletion
   const handleBulkDelete = () => {
     if (selectedSeats.length === 0) {
-      addToast("Vui lòng chọn ít nhất một lịch chiếu để xóa", "error");
+      addToast("Vui lòng chọn ít nhất một ghế để xóa", "error");
       return;
     }
     // Open a confirmation modal for bulk deletion
@@ -311,9 +311,9 @@ export default function SeatManagement() {
       addToast(`Đã xóa ${selectedSeats.length} ghế thành công!`, "success");
       setBulkDeleteModalOpen(false);
     } catch (error) {
-      addToast("Xóa lịch chiếu thất bại", "error");
+      addToast("Xóa ghế thất bại", "error");
       setBulkDeleteModalOpen(false);
-      console.error("Lỗi khi xóa nhiều phòng chiếu:", error);
+      console.error("Lỗi khi xóa nhiều ghế:", error);
     }
   };
 

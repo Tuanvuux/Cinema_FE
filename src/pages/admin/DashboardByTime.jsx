@@ -918,6 +918,12 @@ export default function DashBoardByTime() {
                             </div>
                             <p className="text-red-600 text-lg font-medium">{error}</p>
                         </div>
+                    ) : filteredPayments.length === 0 ? (
+                        <div className="text-center py-10 bg-gray-50 rounded-lg p-6">
+                            <span className="material-icons text-5xl text-gray-400 mb-3">receipt_long</span>
+                            <h3 className="text-xl font-medium text-gray-700 mb-1">Không tìm thấy giao dịch</h3>
+                            <p className="text-gray-500">Không có giao dịch nào phù hợp với tiêu chí tìm kiếm</p>
+                        </div>
                     ) : viewType === 'table' ? (
                         <>
                             <div

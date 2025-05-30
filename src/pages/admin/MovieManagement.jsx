@@ -249,7 +249,6 @@ export default function MovieManagement() {
       setUploading(false);
     }
   };
-
   const uploadVideo = async (file) => {
     setUploading(true);
     try {
@@ -257,12 +256,11 @@ export default function MovieManagement() {
       setValue("trailerUrl", url);
       setVideoPreview(url);
     } catch (error) {
-      alert("Tải video thất bại!");
+      addToast("Tải video thất bại!",'error');
     } finally {
       setUploading(false);
     }
   };
-
   const onSubmit = async (data) => {
     // Validation cho file uploads
     if (!posterPreview) {
