@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import GradientText from "@/components/ui/GradientText.jsx";
+import { Link } from "react-router-dom";
 
 const navItems = [
   {

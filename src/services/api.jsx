@@ -121,7 +121,7 @@ export const getMaintenanceSeat = async (showtimeId) => {
 };
 
 export const sendForgotPasswordEmail = async (email) => {
-  const response = api.post("/auth/forgot-password", { email });
+    const response = api.post("/auth/forgot-password", { email });
   return response.data;
 };
 export const resetPasswordApi = async (token, newPassword) => {
