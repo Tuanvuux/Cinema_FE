@@ -8,14 +8,14 @@ export default function RegisterPage() {
         document.title = "Đăng ký";
     }, []);
   return (
-    <div className="">
-      <div className="">
+    <div className="min-h-screen flex flex-col">
+      <div className="relative z-10">
         <Navbar />
       </div>
-      <div className="mt-1.5">
+      <div className="justify-center">
         <Register />
       </div>
-      <div className="mt-1.5">
+      <div className="relative z-10">
         <Footer />
       </div>
     </div>

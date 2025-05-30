@@ -1,55 +1,43 @@
 // SeatLegend.js
 import React from "react";
+import {Info, X} from "lucide-react";
 
 const SeatLegend = () => {
   return (
-    <div className="my-4">
-      <div>Chú thích: </div>
-      <div className="flex items-start">
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg border-2 border-gray-300"></div>
-            <p className="m-0">Ghế thường</p>
+      <div className="mt-8 bg-gray-50 rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <Info className="w-4 h-4 mr-2 text-gray-500"/>
+          Chú thích
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg mr-2"></div>
+            <span className="text-sm text-gray-600">Ghế thường</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg border-2 border-yellow-300"></div>
-            <p className="m-0">Ghế VIP</p>
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-white border-2 border-yellow-400 rounded-lg mr-2"></div>
+            <span className="text-sm text-gray-600">Ghế VIP</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg border-2 border-pink-400"></div>
-            <p className="m-0">Ghế đôi</p>
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-white border-2 border-pink-400 rounded-lg mr-2"></div>
+            <span className="text-sm text-gray-600">Ghế đôi</span>
           </div>
-        </div>
-
-        <div className="space-y-2 ml-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-gray-300"></div>
-            <span>Ghế Đang giữ</span>
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gray-800 border-2 border-gray-700 rounded-lg mr-2"></div>
+            <span className="text-sm text-gray-600">Đã đặt</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg border-2 bg-blue-900"></div>
-            <p className="m-0">Ghế đang chọn</p>
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-blue-900 border-2 border-gray-500 rounded-lg mr-2"></div>
+            <span className="text-sm text-gray-600">Đang chọn</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg border-2 bg-black"></div>
-            <p className="m-0">Ghế đã đặt</p>
-          </div>
-        </div>
-        <div className="space-y-2 ml-4">
-          <div className="flex items-center space-x-2 relative">
-            <div className="w-8 h-8 rounded-lg border border-gray-400 relative">
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-full h-full relative">
-                  <span className="absolute w-[2px] h-full bg-gray-500 rotate-45 left-1/2 top-0 transform -translate-x-1/2" />
-                  <span className="absolute w-[2px] h-full bg-gray-500 -rotate-45 left-1/2 top-0 transform -translate-x-1/2" />
-                </div>
-              </div>
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gray-100 border-2 border-gray-300 rounded-lg mr-2 relative">
+              <X className="w-5 h-5 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"/>
             </div>
-            <span>Đang bảo trì</span>
+            <span className="text-sm text-gray-600">Bảo trì</span>
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

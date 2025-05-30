@@ -1,8 +1,12 @@
 import Navbar from "@/components/layout/Navbar";
 import Showtime from "../../components/Showtime";
 import Footer from "@/components/layout/Footer";
+import {useEffect} from "react";
 
 export default function ShowTimePage() {
+    useEffect(() => {
+        document.title = 'Xem lịch chiếu';
+    }, []);
   return (
     <div className="">
       <div className="">
