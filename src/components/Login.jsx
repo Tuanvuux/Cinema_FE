@@ -4,13 +4,15 @@ import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import Button from "./ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // thêm state
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth(); // ✅ login từ context
+  const { login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || "/";
@@ -33,10 +35,8 @@ const Login = () => {
         throw new Error("Tên đăng nhập hoặc mật khẩu không đúng.");
       }
 
-      // Lưu token
       localStorage.setItem("token", response.token);
 
-      // Lưu thông tin người dùng
       const userInfo = {
         userId: response.userId,
         username: response.username,
@@ -46,7 +46,6 @@ const Login = () => {
         gender: response.gender,
       };
 
-      // Gọi context login
       login(userInfo);
 
       alert("Đăng nhập thành công!");
@@ -83,16 +82,28 @@ const Login = () => {
               className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
-          <div className="mb-4">
+          <div className="mb-4 relative">
             <label className="block text-sm font-medium text-gray-900">
               Mật khẩu:
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              className="mt-1 block w-full p-2 border border-gray-400 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 pr-10"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-[38px] text-gray-600"
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+            >
+              {showPassword ? (
+                <FaEyeSlash className="w-5 h-5" />
+              ) : (
+                <FaEye className="w-5 h-5" />
+              )}
+            </button>
           </div>
           <p className="text-right text-sm">
             <Link

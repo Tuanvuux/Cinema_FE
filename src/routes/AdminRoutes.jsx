@@ -9,10 +9,12 @@ import AdminPage from "../pages/admin/AdminPage.jsx";
 import AccountManagement from "@/pages/admin/AccountManagement.jsx";
 import SeatManagement from "@/pages/admin/SeatManagement.jsx";
 import { Outlet } from "react-router-dom";
-import DashBoard from "@/pages/admin/DashBoard.jsx"
+import DashBoard from "@/pages/admin/DashBoard.jsx";
 import AdminLayout from "@/pages/admin/AdminLayout.jsx";
+import PostDetail from "../components/PostDetail.jsx";
+import PostEdit from "../components/PostEdit.jsx";
 
-const AdminOutlet  = () => (
+const AdminOutlet = () => (
   <ProtectAdminRoute>
     <Outlet />
   </ProtectAdminRoute>
@@ -21,11 +23,13 @@ const AdminOutlet  = () => (
 const AdminRoutes = () => {
   return (
     <Routes>
-      <Route element={<AdminOutlet  />}>
-          <Route path="/" element={<AdminLayout />} />
+      <Route element={<AdminOutlet />}>
+        <Route path="/" element={<AdminLayout />} />
         <Route path="/" element={<AdminPage />} />
         <Route path="addcategory" element={<AddCategory />} />
         <Route path="addmovie" element={<AddMovie />} />
+        <Route path="posts/:id" element={<PostDetail />} />
+        <Route path="posts/edit/:id" element={<PostEdit />} />
         {/*<Route path="roommanagement" element={<RoomManagement />} />*/}
         {/*<Route path="showtimemanagement" element={<ShowTimeManagement />} />*/}
         {/*<Route path="moviemanagement" element={<MovieManagement />} />*/}

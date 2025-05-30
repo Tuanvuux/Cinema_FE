@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { registerAccount, verifyAccount } from "../services/api";
 import Button from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +23,8 @@ const Register = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -29,7 +32,6 @@ const Register = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Hàm xử lý đăng ký và gửi mã
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -45,7 +47,7 @@ const Register = () => {
     try {
       const response = await registerAccount(formData);
       if (response) {
-        setIsCodeSent(true); // Hiển thị phần nhập mã
+        setIsCodeSent(true);
         setSuccessMessage("Mã xác nhận đã được gửi đến email của bạn.");
       } else {
         setErrorMessage("Đăng ký thất bại, vui lòng thử lại.");
@@ -57,7 +59,6 @@ const Register = () => {
     }
   };
 
-  // Hàm xử lý xác minh mã
   const handleVerifyCode = async () => {
     if (!verificationCode) {
       setErrorMessage("Vui lòng nhập mã xác nhận.");
@@ -66,7 +67,6 @@ const Register = () => {
 
     try {
       setIsRegistering(true);
-      // Gửi tất cả thông tin cần thiết theo cấu trúc VerifyRequest
       const res = await verifyAccount({
         email: formData.email,
         code: verificationCode,
@@ -81,7 +81,6 @@ const Register = () => {
 
       setSuccessMessage("Tài khoản đã được kích hoạt thành công!");
       setErrorMessage("");
-      // Reset form sau khi xác minh thành công
       setFormData({
         username: "",
         email: "",
@@ -110,6 +109,7 @@ const Register = () => {
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
           Đăng Ký
         </h2>
+
         {errorMessage && (
           <div className="mb-4 text-red-500 text-sm text-center">
             {errorMessage}
@@ -120,6 +120,7 @@ const Register = () => {
             {successMessage}
           </div>
         )}
+
         <form onSubmit={handleRegister}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
@@ -134,6 +135,7 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Email:
@@ -147,32 +149,51 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
-          <div className="mb-4">
+
+          {/* Mật khẩu */}
+          <div className="mb-4 relative">
             <label className="block text-sm font-medium text-gray-700">
               Mật khẩu:
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md pr-10"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-[38px] text-gray-600"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
-          <div className="mb-4">
+
+          {/* Xác nhận mật khẩu */}
+          <div className="mb-4 relative">
             <label className="block text-sm font-medium text-gray-700">
               Xác nhận mật khẩu:
             </label>
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md pr-10"
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-[38px] text-gray-600"
+            >
+              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Họ và tên:
@@ -186,6 +207,7 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Ngày sinh:
@@ -199,6 +221,7 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Địa chỉ:
@@ -212,6 +235,7 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Số điện thoại:
@@ -225,6 +249,7 @@ const Register = () => {
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Giới tính:
@@ -242,6 +267,8 @@ const Register = () => {
               <option value="other">Khác</option>
             </select>
           </div>
+
+          {/* Mã xác nhận */}
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Mã xác nhận:
           </label>
@@ -266,8 +293,7 @@ const Register = () => {
           </div>
         </form>
 
-        {/* Nếu mã xác nhận đã được gửi */}
-
+        {/* Xác minh mã */}
         <div className="mt-6">
           <Button
             onClick={handleVerifyCode}

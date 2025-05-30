@@ -53,10 +53,11 @@ export const getReleaseDate = async (movieId) => {
 };
 
 export const checkMovieNameByShowtime = async (showtimeId) => {
-    const response = await api.get(`/movies/admin/movie-name-by-showtime/${showtimeId}`);
-    return response.data;
+  const response = await api.get(
+    `/movies/admin/movie-name-by-showtime/${showtimeId}`
+  );
+  return response.data;
 };
-
 
 // Deactivate (tạm khóa) tài khoản người dùng
 export const deactivateUser = async (userId) => {
@@ -102,7 +103,7 @@ export const addEmployee = async (request) => {
 };
 
 export const checkEmployeeIsValid = async (username) => {
-  const response = await api.get(`/auth/admin/check-username/${username}`)
+  const response = await api.get(`/auth/admin/check-username/${username}`);
   return response.data;
 };
 
@@ -193,7 +194,6 @@ export const canChangeRoomStatus = async (roomId) => {
   return response.data; // sẽ trả về true hoặc false từ backend
 };
 
-
 // Showtime
 export const getShowtimes = async () => {
   const response = await api.get("/showtime/admin");
@@ -219,7 +219,6 @@ export const checkShowTimeExists = async (showtimeId) => {
   return res.data;
 };
 
-
 export const getAvailableRooms = async (showDate, startTime, endTime) => {
   const response = await api.get(`/showtime/admin/availablerooms`, {
     params: {
@@ -236,8 +235,10 @@ export const getSeats = async () => {
   const response = await api.get("/seats/admin");
   return response.data;
 };
-export const checkSeatExists = async (seatName,roomId) => {
-  const response = await api.get(`/seats/admin/check-exist/${seatName}/${roomId}`)
+export const checkSeatExists = async (seatName, roomId) => {
+  const response = await api.get(
+    `/seats/admin/check-exist/${seatName}/${roomId}`
+  );
   return response.data;
 };
 
@@ -359,7 +360,9 @@ export const getSeatsByShowtime = async (showtimeId) => {
   return response.data;
 };
 export const checkSeatBooked = async (seatId) => {
-  const response = await api.get(`/lock-seat-admin/admin/check-seat-booked/${seatId}`)
+  const response = await api.get(
+    `/lock-seat-admin/admin/check-seat-booked/${seatId}`
+  );
   return response.data;
 };
 
@@ -377,5 +380,10 @@ export const addLockSeatAdmin = async (seatInfoData) => {
 
 export const deleteLockSeat = async (seatId) => {
   const response = await api.delete(`/lock-seat-admin/admin/${seatId}`);
+  return response.data;
+};
+
+export const addPost = async (formattedPost) => {
+  const response = await api.post("/posts", formattedPost);
   return response.data;
 };
