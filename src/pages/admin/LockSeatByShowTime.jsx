@@ -240,19 +240,9 @@ export default function LockSeatByShowTime () {
             setSeatsLock(prevSeat =>
                 prevSeat.filter(Seat => Seat.lockSeatId !== SeatId)
             );
-            setToast({
-                show: true,
-                message: 'Xóa ghế thành công!',
-                type: 'success'
-            });
             handleCloseModal();
             addToast('Xóa ghế thành công!', 'success');
         } catch (error) {
-            setToast({
-                show: true,
-                message: 'Xóa ghế thất bại',
-                type: 'error'
-            })
             handleCloseModal();
             console.error("Lỗi khi xóa ghế:", error);
             addToast('Xóa ghế thất bại', 'error');
