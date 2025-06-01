@@ -87,11 +87,17 @@ export const updateUserInfo = async (userId, data) => {
   const response = await api.put(`/user/userInfo/${userId}`, data);
   return response.data;
 };
-export const extendSeatLock = async ({ showtimeId, userId, seatIds }) => {
+export const extendSeatLock = async ({
+  showtimeId,
+  userId,
+  seatIds,
+  extendTime,
+}) => {
   const response = await api.post("/seats/extend-lock", {
     showtimeId,
     userId,
     seatIds,
+    extendTime,
   });
   return response.data;
 };
@@ -121,7 +127,7 @@ export const getMaintenanceSeat = async (showtimeId) => {
 };
 
 export const sendForgotPasswordEmail = async (email) => {
-    const response = api.post("/auth/forgot-password", { email });
+  const response = api.post("/auth/forgot-password", { email });
   return response.data;
 };
 export const resetPasswordApi = async (token, newPassword) => {
