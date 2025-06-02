@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {getRooms, addRoom, updateRoom, deleteRoom,canChangeRoomStatus} from "../../services/apiadmin.jsx";
+import {getRooms, addRoom, updateRoom, deleteRoom,canChangeRoomStatus,checkRoomNameExists} from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import {AlertCircle, CheckCircle, X} from "lucide-react";
 
@@ -42,6 +42,8 @@ export default function RoomManagement () {
 
     const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
     const [selectedShowtimeIds, setSelectedRoomIds] = useState([]);
+    const [originalRoomName, setOriginalRoomName] = useState('');
+
 
     const [toast, setToast] = useState([]);
 
@@ -49,7 +51,15 @@ export default function RoomManagement () {
     const modalbulkDeRef = useRef();
     const modalAddRef = useRef();
     const filterRef = useRef();
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            const timer = setTimeout(() => {
+                setErrors({});
+            }, 3000);
 
+            return () => clearTimeout(timer); // Dọn dẹp khi component unmount hoặc lỗi mới xuất hiện
+        }
+    }, [errors]);
     useEffect(() => {
         const handleClickOutside = (event) => {
             // Đóng Confirm Modal
@@ -192,14 +202,49 @@ export default function RoomManagement () {
 
     const handleEditRoom = (room) => {
         setEditingRoom(room);
+        setOriginalRoomName(room.name);
         setShowEditModal(true);
     };
+
 
     useEffect(() => {
         document.title = 'Quản lý phòng chiếu';
     }, []);
 
     const handleSaveEdit = async () => {
+        const newErrors = {};
+        if (!editingRoom.name.trim()) editingRoom.name = "Tên phòng là bắt buộc";
+        if (!editingRoom.seatCount || editingRoom.seatCount <= 0) {
+            newErrors.seatCount = "Số ghế phải lớn hơn 0";
+        }
+        if (!editingRoom.numberOfColumns || editingRoom.numberOfColumns <= 0) newErrors.numberOfColumns = "Số cột phải lớn hơn 0";
+        if (!editingRoom.numberOfRows || editingRoom.numberOfRows <= 0) newErrors.numberOfRows = "Số dòng phải lớn hơn 0";
+
+        const seatCount = Number(editingRoom.seatCount);
+        const totalPositions = Number(editingRoom.numberOfRows) * Number(editingRoom.numberOfColumns);
+
+        if (seatCount < totalPositions){
+            // newErrors.seatCount = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
+            newErrors.numberOfRows = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
+            newErrors.numberOfColumns = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
+        }
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+        try {
+            if (editingRoom.name.trim() !== originalRoomName.trim()) {
+                const exists = await checkRoomNameExists(editingRoom.name);
+                if (exists) {
+                    setErrors({ name: "Tên phòng đã tồn tại" });
+                    return;
+                }
+            }
+        } catch (error) {
+            addToast('Lỗi khi kiểm tra tên phòng!', 'error');
+            console.error(error);
+            return;
+        }
         try {
             const updatedRoom = await updateRoom(editingRoom.id, {
                 name: editingRoom.name,
@@ -316,13 +361,25 @@ export default function RoomManagement () {
         const seatCount = Number(newRoom.seatCount);
         const totalPositions = Number(newRoom.numberOfRows) * Number(newRoom.numberOfColumns);
 
-        if (seatCount <= totalPositions){
+        if (seatCount < totalPositions){
             // newErrors.seatCount = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
             newErrors.numberOfRows = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
             newErrors.numberOfColumns = "Số ghế không thể lớn hơn số vị trí (số dòng × số cột)";
         }
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
+            return;
+        }
+
+        try {
+            const exists = await checkRoomNameExists(newRoom.name);
+            if (exists) {
+                setErrors({ name: "Tên phòng đã tồn tại" });
+                return;
+            }
+        } catch (error) {
+            addToast('Lỗi khi kiểm tra tên phòng!', 'error');
+            console.error(error);
             return;
         }
 
@@ -474,7 +531,15 @@ export default function RoomManagement () {
                                 data-filter-toggle
                             >
                                 <span className="material-icons text-gray-600">filter_list</span>
-                                <span className="ml-2 text-gray-700">Bộ lọc</span>
+                                <span className="ml-2 text-gray-700">
+                                     {statusFilter === 'all'
+                                         ? 'Bộ lọc'
+                                         : statusFilter === 'active'
+                                             ? 'Hoạt động'
+                                             : statusFilter === 'inactive'
+                                                 ? 'Không hoạt động'
+                                                 : 'Bộ lọc'}
+                                </span>
                             </button>
                             {/* Dropdown filter */}
                             {showFilter && (
@@ -769,7 +834,7 @@ export default function RoomManagement () {
                         ref={modalbulkDeRef}
                         className="bg-white p-6 rounded-xl shadow-2xl w-11/12 sm:w-96 mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100"
                     >
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Xác nhận xóa hàng loạt</h2>
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Xác nhận xóa phòng</h2>
                         <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa {selectedRooms.length} phòng chiếu
                             đã chọn
                             không?</p>
@@ -823,6 +888,7 @@ export default function RoomManagement () {
                                         className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                         required
                                     />
+                                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                                 </div>
 
                                 <div>
@@ -840,6 +906,7 @@ export default function RoomManagement () {
                                         min="1"
                                         required
                                     />
+                                    {errors.seatCount && <p className="text-red-500 text-sm mt-1">{errors.seatCount}</p>}
                                 </div>
                                 <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                     <div className="w-full sm:w-1/2">
@@ -857,6 +924,7 @@ export default function RoomManagement () {
                                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
+                                        {errors.numberOfColumns && <p className="text-red-500 text-sm mt-1">{errors.numberOfColumns}</p>}
                                     </div>
                                     <div className="w-full sm:w-1/2">
                                         <label htmlFor="numberOfRows"
@@ -873,6 +941,7 @@ export default function RoomManagement () {
                                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"
                                             required
                                         />
+                                        {errors.numberOfRows && <p className="text-red-500 text-sm mt-1">{errors.numberOfRows}</p>}
                                     </div>
                                 </div>
 
@@ -970,7 +1039,6 @@ export default function RoomManagement () {
                                 <button
                                     onClick={handleSaveEdit}
                                     className="px-5 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600"
-                                    disabled={!editingRoom.name || editingRoom.seatCount <= 0}
                                 >
                                     Cập nhật
                                 </button>

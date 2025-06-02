@@ -49,6 +49,15 @@ export default function ShowtimeManagement() {
     const modalAddRef = useRef();
 
     const [toast, setToast] = useState([]);
+    useEffect(() => {
+        if (Object.keys(validationErrors).length > 0) {
+            const timer = setTimeout(() => {
+                setValidationErrors({});
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [validationErrors]);
     // Hàm thêm toast mới
     const addToast = (message, type = 'success') => {
         const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
@@ -267,19 +276,55 @@ export default function ShowtimeManagement() {
             errors.startTime = "Vui lòng chọn giờ bắt đầu";
         }
 
+        if (!endTime) {
+            errors.endTime = "Vui lòng chọn giờ kết thúc";
+        }
+
         if (!selectedRoom) {
             errors.room = "Vui lòng chọn phòng";
         }
 
-        // Kiểm tra ngày chiếu không được trong quá khứ
         if (showDate) {
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             const selectedDate = new Date(showDate);
-            if (selectedDate < today.setHours(0, 0, 0, 0)) {
+            const now = new Date();
+
+            if (selectedDate < today) {
                 errors.showDate = "Ngày chiếu không được trong quá khứ";
             }
-            if (releaseDate && selectedDate < releaseDate) {
-                errors.showDate = "Ngày chiếu không được trước ngày phát hành của phim";
+
+            if (releaseDate) {
+                const release = new Date(releaseDate);
+                release.setHours(0, 0, 0, 0);
+                if (selectedDate < release) {
+                    errors.showDate = "Ngày chiếu không được trước ngày phát hành của phim";
+                }
+            }
+
+            // ✅ Nếu ngày chiếu là hôm nay, kiểm tra startTime không được trước thời gian hiện tại
+            if (
+                selectedDate.toDateString() === today.toDateString() &&
+                startTime &&
+                endTime
+            ) {
+                const [startHour, startMinute] = startTime.split(":").map(Number);
+                const [endHour, endMinute] = endTime.split(":").map(Number);
+
+                const startDateTime = new Date(showDate);
+                startDateTime.setHours(startHour, startMinute, 0, 0);
+
+                const endDateTime = new Date(showDate);
+                endDateTime.setHours(endHour, endMinute, 0, 0);
+
+                if (startDateTime < now) {
+                    errors.startTime = "Giờ bắt đầu phải lớn hơn thời điểm hiện tại";
+                }
+
+                if (endDateTime <= startDateTime) {
+                    errors.endTime = "Giờ kết thúc phải sau giờ bắt đầu";
+                }
             }
         }
 
@@ -396,6 +441,13 @@ export default function ShowtimeManagement() {
     };
 
     const handleEditSubmit = async () => {
+        setValidationErrors({});
+
+        // Validate form
+        if (!validateForm()) {
+            // addToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            return;
+        }
         try {
             const isBooked = await checkShowTimeExists(editingShowtime.showtimeId);
             if (isBooked) {
@@ -855,6 +907,8 @@ export default function ShowtimeManagement() {
                                             </label>
                                             <input
                                                 type="date"
+                                                min="1900-01-01"
+                                                max="2100-12-31"
                                                 onChange={(e) => {
                                                     setShowDate(e.target.value);
                                                     // Clear error khi user nhập
@@ -973,85 +1027,114 @@ export default function ShowtimeManagement() {
                             <div ref={modalEditRef} className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-100 opacity-100">
                                 <div className="p-6">
                                     <h2 className="text-2xl font-semibold mb-4">Chỉnh sửa lịch chiếu</h2>
-                                    <label className="block mb-2">Tên phim</label>
-                                    <select
-                                        name="movieId"
-                                        value={editingShowtime.movieId || ""}
-                                        onChange={handleInputChangeEdit}
-                                        className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1.25em'
-                                        }}>
-                                        <option value="">Chọn phim</option>
-                                        {movies.map(movie => (
-                                            <option key={movie.movieId} value={movie.movieId}>
-                                                {movie.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div>
+                                        <label className="block mb-1.5 text-sm font-medium text-gray-700">Tên phim</label>
+                                        <select
+                                            name="movieId"
+                                            value={editingShowtime.movieId || ""}
+                                            onChange={handleInputChangeEdit}
+                                            className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                                            style={{
+                                                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                                backgroundRepeat: 'no-repeat',
+                                                backgroundPosition: 'right 0.75rem center',
+                                                backgroundSize: '1.25em'
+                                            }}>
+                                            <option value="">Chọn phim</option>
+                                            {movies.map(movie => (
+                                                <option key={movie.movieId} value={movie.movieId}>
+                                                    {movie.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {validationErrors.movie && (
+                                            <p className="text-red-500 text-sm mt-1">{validationErrors.movie}</p>
+                                        )}
+                                    </div>
 
-                                    <label className="block mb-2">Ngày chiếu</label>
-                                    <input type="date" value={editingShowtime.showDate} name="showDate"
-                                           onChange={handleInputChangeEdit}
-                                           className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
-                                    <label className="block mb-2">Giờ bắt đầu</label>
-                                    <input type="time" name="startTime" value={editingShowtime.startTime}
-                                           onChange={(e) => {
-                                               const newStartTime = e.target.value;
-                                               // Cập nhật startTime trước
-                                               setEditingShowtime(prevState => ({
-                                                   ...prevState,
-                                                   startTime: newStartTime
-                                               }));
+                                    <div>
+                                        <label className="block mb-1.5 text-sm font-medium text-gray-700">Ngày chiếu</label>
+                                        <input type="date" value={editingShowtime.showDate} name="showDate"
+                                               min="1900-01-01"
+                                               max="2100-12-31"
+                                               onChange={handleInputChangeEdit}
+                                               className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
+                                        {validationErrors.showDate && (
+                                            <p className="text-red-500 text-sm mt-1">{validationErrors.showDate}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ bắt
+                                            đầu</label>
+                                        <input type="time" name="startTime" value={editingShowtime.startTime}
+                                               onChange={(e) => {
+                                                   const newStartTime = e.target.value;
+                                                   // Cập nhật startTime trước
+                                                   setEditingShowtime(prevState => ({
+                                                       ...prevState,
+                                                       startTime: newStartTime
+                                                   }));
 
-                                               // Sau đó tính toán và cập nhật endTime nếu có movieId
-                                               if (newStartTime && editingShowtime.movieId) {
-                                                   const movie = movies.find(m => m.movieId === editingShowtime.movieId);
-                                                   if (movie) {
-                                                       const startDate = new Date(`1970-01-01T${newStartTime}:00`);
-                                                       const endDate = addMinutes(startDate, movie.duration);
-                                                       const newEndTime = format(endDate, 'HH:mm:ss');
+                                                   // Sau đó tính toán và cập nhật endTime nếu có movieId
+                                                   if (newStartTime && editingShowtime.movieId) {
+                                                       const movie = movies.find(m => m.movieId === editingShowtime.movieId);
+                                                       if (movie) {
+                                                           const startDate = new Date(`1970-01-01T${newStartTime}:00`);
+                                                           const endDate = addMinutes(startDate, movie.duration);
+                                                           const newEndTime = format(endDate, 'HH:mm:ss');
 
-                                                       // Cập nhật lại state với endTime mới
-                                                       setEditingShowtime(prevState => ({
-                                                           ...prevState,
-                                                           startTime: newStartTime,  // đảm bảo startTime được cập nhật
-                                                           endTime: newEndTime
-                                                       }));
+                                                           // Cập nhật lại state với endTime mới
+                                                           setEditingShowtime(prevState => ({
+                                                               ...prevState,
+                                                               startTime: newStartTime,  // đảm bảo startTime được cập nhật
+                                                               endTime: newEndTime
+                                                           }));
+                                                       }
                                                    }
-                                               }
-                                           }}
-                                           className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
-                                    <label className="block mb-2">Giờ kết thúc</label>
-                                    <input type="time" name="endTime" value={editingShowtime.endTime} readOnly
-                                           className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
-                                    <label className="block mb-2">Chọn phòng</label>
-                                    <select
-                                        value={editingShowtime.roomId}
-                                        name="roomId"
-                                        onChange={(e) => setEditingShowtime({
-                                            ...editingShowtime,
-                                            roomId: parseInt(e.target.value)
-                                        })}
-                                        className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1.25em'
-                                        }}
-                                    >
-                                        <option value="">Chọn phòng</option>
-                                        {rooms.map(room => (
-                                            <option key={room.id} value={room.id}
-                                                    disabled={isRoomDisabledEdit(room.id)}>
-                                                {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
-                                            </option>
-                                        ))}
-                                    </select>
+                                               }}
+                                               className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
+                                        {validationErrors.startTime && (
+                                            <p className="text-red-500 text-sm mt-1">{validationErrors.startTime}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block mb-1.5 text-sm font-medium text-gray-700">Giờ kết
+                                            thúc</label>
+                                        <input type="time" name="endTime" value={editingShowtime.endTime} readOnly
+                                               className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm transition-all duration-200"/>
+
+                                    </div>
+                                    <div>
+                                        <label className="block mb-1.5 text-sm font-medium text-gray-700">Chọn
+                                            phòng</label>
+                                        <select
+                                            value={editingShowtime.roomId}
+                                            name="roomId"
+                                            onChange={(e) => setEditingShowtime({
+                                                ...editingShowtime,
+                                                roomId: parseInt(e.target.value)
+                                            })}
+                                            className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                                            style={{
+                                                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                                backgroundRepeat: 'no-repeat',
+                                                backgroundPosition: 'right 0.75rem center',
+                                                backgroundSize: '1.25em'
+                                            }}
+                                        >
+                                            <option value="">Chọn phòng</option>
+                                            {rooms.map(room => (
+                                                <option key={room.id} value={room.id}
+                                                        disabled={isRoomDisabledEdit(room.id)}>
+                                                    {room.name} {isRoomDisabled(room.id) ? "(Đã có lịch chiếu)" : ""}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {validationErrors.room && (
+                                            <p className="text-red-500 text-sm mt-1">{validationErrors.room}</p>
+                                        )}
+                                    </div>
+
 
                                     <div className="flex justify-end mt-6 gap-3">
                                         <button onClick={handleEditSubmit}
@@ -1077,7 +1160,7 @@ export default function ShowtimeManagement() {
                                 className="mx-1 px-3 py-1.5 rounded-md border border-gray-300 disabled:opacity-40 text-sm md:text-base hover:bg-gray-100 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
                                 title="Trang đầu"
                             >
-                                &laquo;
+                            &laquo;
                             </button>
 
                             {/* Nút trang trước */}

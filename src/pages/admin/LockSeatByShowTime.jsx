@@ -57,14 +57,6 @@ export default function LockSeatByShowTime () {
     const [selectedRoomId, setSelectedRoomId] = useState("");
     const [selectedShowtimeId, setSelectedShowtimeId] = useState("");
     const [errors, setErrors] = useState({});
-
-
-    // const [toast, setToast] = useState({
-    //     show: false,
-    //     message: '',
-    //     type: 'success'
-    // });
-
     const [toast, setToast] = useState([]);
 
     const modalConfirmRef = useRef();
@@ -121,6 +113,7 @@ export default function LockSeatByShowTime () {
         try {
             const response = await getShowTimeByRoom(roomId);
             setAvailableShowtimes(response);
+            console.log("availableShowtimes",response)
         } catch (error) {
             console.error("Lỗi khi lấy danh sách suất chiếu:", error);
             setAvailableShowtimes([]);
@@ -871,7 +864,7 @@ export default function LockSeatByShowTime () {
                                     >
                                         <option value="">-- Chọn lịch chiếu --</option>
                                         {availableShowtimes.map(st => (
-                                            <option key={st.showtimeId} value={st.showtimeId}>{st.startTime}</option>
+                                            <option key={st.showtimeId} value={st.showtimeId}>{st.startTime} {st.showDate}</option>
                                         ))}
                                     </select>
                                     {errors.showtimeId && (

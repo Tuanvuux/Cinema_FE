@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getPostById } from "../services/api"; // giả sử bạn đã có hàm này
+import { getPostById } from "../services/apiadmin.jsx";
 
 export default function PostDetail() {
   const { id } = useParams();

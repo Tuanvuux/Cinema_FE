@@ -137,15 +137,4 @@ export const getPosts = async () => {
   return response.data;
 };
 
-export const getPostById = async (postId) => {
-  const response = await api.get(`/posts/${postId}`);
-  return response.data;
-};
 
-export const editPostById = async (postId, postData) => {
-  const response = await api.put(`/posts/${postId}`, {
-    body: JSON.stringify(postData),
-  });
-
-  return response.data;
-};

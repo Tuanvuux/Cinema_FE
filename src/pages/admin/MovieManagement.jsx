@@ -29,7 +29,7 @@ export default function MovieManagement() {
   const [selectedMovie, setSelectedMovie] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors,setErrors } } = useForm();
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState("");
@@ -73,6 +73,15 @@ export default function MovieManagement() {
   const modalbulkDeRef = useRef();
   const modalbulkReRef = useRef();
   const modalAddRef = useRef();
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        setErrors({});
+      }, 3000);
+
+      return () => clearTimeout(timer); // Dọn dẹp khi component unmount hoặc lỗi mới xuất hiện
+    }
+  }, [errors]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1123,15 +1132,26 @@ export default function MovieManagement() {
                         <label className="block mb-2">Ngày phát hành <span className="text-red-500">*</span></label>
                         <input
                             {...register("releaseDate", {
-                              required: "Ngày phát hành là bắt buộc"
+                              required: "Ngày phát hành là bắt buộc",
+                              validate: value => {
+                                const date = new Date(value);
+                                const now = new Date();
+                                const maxDate = new Date("2100-12-31");
+                                if (isNaN(date)) return "Ngày không hợp lệ";
+                                if (date > maxDate) return "Ngày quá xa trong tương lai";
+                                return true;
+                              }
                             })}
                             type="date"
+                            min="1900-01-01"
+                            max="2100-12-31"
                             className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                                 errors.releaseDate
                                     ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                     : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
                             }`}
                         />
+
                         {errors.releaseDate && (
                             <p className="text-red-500 text-sm mt-1">{errors.releaseDate.message}</p>
                         )}
@@ -1143,7 +1163,7 @@ export default function MovieManagement() {
                         <input
                             {...register("ageLimit", {
                               required: "Giới hạn tuổi là bắt buộc",
-                              min: { value: 0, message: "Giới hạn tuổi không được âm" }
+                              min: {value: 0, message: "Giới hạn tuổi không được âm"}
                             })}
                             type="number"
                             placeholder="Giới hạn tuổi"
@@ -1362,31 +1382,58 @@ export default function MovieManagement() {
                     <div className="mb-3">
                       <label className="block mb-2">Tên phim</label>
                       <input
-                        {...register("name", { required: true })}
-                        type="text"
-                        placeholder="Tên phim"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                          {...register("name", {
+                            required: "Tên phim là bắt buộc"
+                          })}
+                          type="text"
+                          placeholder="Tên phim"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.name
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
                       />
+                      {errors.name && (
+                          <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
                       <label className="block mb-2">Đạo diễn</label>
                       <input
-                        {...register("director")}
-                        type="text"
-                        placeholder="Đạo diễn"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                          {...register("director", {
+                            required: "Đạo diễn là bắt buộc"
+                          })}
+                          type="text"
+                          placeholder="Đạo diễn"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.director
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
                       />
+                      {errors.director && (
+                          <p className="text-red-500 text-sm mt-1">{errors.director.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
                       <label className="block mb-2">Diễn viên</label>
                       <input
-                        {...register("actor")}
-                        type="text"
-                        placeholder="Diễn viên"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                          {...register("actor", {
+                            required: "Diễn viên là bắt buộc"
+                          })}
+                          type="text"
+                          placeholder="Diễn viên"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.actor
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
                       />
+                      {errors.actor && (
+                          <p className="text-red-500 text-sm mt-1">{errors.actor.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -1411,30 +1458,70 @@ export default function MovieManagement() {
                     <div className="mb-3">
                       <label className="block mb-2">Thời lượng (phút)</label>
                       <input
-                        {...register("duration", { required: true })}
-                        type="number"
-                        placeholder="Thời lượng (phút)"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                          {...register("duration", {
+                            required: "Thời lượng là bắt buộc",
+                            min: { value: 1, message: "Thời lượng phải lớn hơn 0" }
+                          })}
+                          type="number"
+                          placeholder="Thời lượng (phút)"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.duration
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
                       />
+                      {errors.duration && (
+                          <p className="text-red-500 text-sm mt-1">{errors.duration.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
                       <label className="block mb-2">Ngày phát hành</label>
                       <input
-                        {...register("releaseDate")}
-                        type="date"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                          {...register("releaseDate", {
+                            required: "Ngày phát hành là bắt buộc",
+                            validate: value => {
+                              const date = new Date(value);
+                              const now = new Date();
+                              const maxDate = new Date("2100-12-31");
+                              if (isNaN(date)) return "Ngày không hợp lệ";
+                              if (date > maxDate) return "Ngày quá xa trong tương lai";
+                              return true;
+                            }
+                          })}
+                          type="date"
+                          min="1900-01-01"
+                          max="2100-12-31"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.releaseDate
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
                       />
+
+                      {errors.releaseDate && (
+                          <p className="text-red-500 text-sm mt-1">{errors.releaseDate.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
                       <label className="block mb-2">Giới hạn tuổi</label>
                       <input
-                        {...register("ageLimit")}
-                        type="number"
-                        placeholder="Giới hạn tuổi"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                          {...register("ageLimit", {
+                            required: "Giới hạn tuổi là bắt buộc",
+                            min: {value: 0, message: "Giới hạn tuổi không được âm"}
+                          })}
+                          type="number"
+                          placeholder="Giới hạn tuổi"
+                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.ageLimit
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
                       />
+                      {errors.ageLimit && (
+                          <p className="text-red-500 text-sm mt-1">{errors.ageLimit.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -1542,25 +1629,34 @@ export default function MovieManagement() {
                     <div className="mb-3">
                       <label className="block mb-2">Thể loại:</label>
                       <select
-                        {...register("categoryId", { required: true })}
-                        className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '1.25em'
-                        }}
+                          {...register("categoryId", {
+                            required: "Thể loại là bắt buộc"
+                          })}
+                          className={`appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                              errors.categoryId
+                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                          }`}
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right 0.75rem center',
+                            backgroundSize: '1.25em'
+                          }}
                       >
                         <option value="">Chọn thể loại</option>
                         {categories.map((category) => (
-                          <option
-                            key={category.categoryId}
-                            value={category.categoryId}
-                          >
-                            {category.name}
-                          </option>
+                            <option
+                                key={category.categoryId}
+                                value={category.categoryId}
+                            >
+                              {category.name}
+                            </option>
                         ))}
                       </select>
+                      {errors.categoryId && (
+                          <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>
+                      )}
                     </div>
 
                     <div className="flex justify-end mt-6 gap-3">
