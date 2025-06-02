@@ -9,6 +9,8 @@ import UploadImageOnly from "@/pages/admin/UploadImageOnly.jsx";
 import ExportToPNG from "@/pages/admin/ExportToPNG.jsx";
 import ForgotPasswordPage from "../pages/public/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "../pages/public/ResetPasswordPage.jsx";
+import NewsPage from "../pages/public/NewPage.jsx";
+import NewsDetailPage from "../pages/public/NewsDetailPage.jsx";
 
 const PublicRoutes = () => {
   return (
@@ -23,6 +25,8 @@ const PublicRoutes = () => {
       <Route path="/showtime/:movieId?" element={<ShowTimePage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/news" element={<NewsPage />} />
+      <Route path="/news/:postId" element={<NewsDetailPage />} />
     </Routes>
   );
 };

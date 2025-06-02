@@ -137,6 +137,14 @@ export const resetPasswordApi = async (token, newPassword) => {
   });
   return response.data;
 };
+export const changePasswordApi = async (userId, oldPassword, newPassword) => {
+  const response = await api.post("/auth/change-password", {
+    userId,
+    oldPassword,
+    newPassword,
+  });
+  return response.data;
+};
 
 export const getPosts = async () => {
   const response = await api.get("/posts");
