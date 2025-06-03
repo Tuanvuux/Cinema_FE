@@ -101,6 +101,14 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <ul className="hidden lg:flex space-x-2 text-lg font-medium">
             <li>
+              <Link to="/" className={getLinkClasses("/")}>
+                Trang chủ
+                {isActive("/") && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-yellow-400 rounded-full"></div>
+                )}
+              </Link>
+            </li>
+            <li>
               <Link to="/showtime" className={getLinkClasses("/showtime")}>
                 Lịch chiếu
                 {isActive("/showtime") && (

@@ -151,4 +151,7 @@ export const getPosts = async () => {
   return response.data;
 };
 
-
+export const getPaymentByUserId = async (userId) => {
+  const response = await api.get(`/payments/user/${userId}`);
+  return response.data;
+};

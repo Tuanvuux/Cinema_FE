@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getUserInfo, updateUserInfo } from "../services/api";
+import {
+  getUserInfo,
+  updateUserInfo,
+  changePasswordApi,
+} from "../services/api";
 import {
   User,
   Calendar,
@@ -11,7 +15,9 @@ import {
   CheckCircle,
   AlertCircle,
   UserCircle,
+  History,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const UserInfo = () => {
   const [user, setUser] = useState(null);
@@ -38,6 +44,7 @@ const UserInfo = () => {
   });
   const [passwordError, setPasswordError] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -118,7 +125,11 @@ const UserInfo = () => {
 
     try {
       // Call API to change password (you'll need to implement this)
-      // await changePassword(storedUser.userId, passwordForm.currentPassword, passwordForm.newPassword)
+      await changePasswordApi(
+        storedUser.userId,
+        passwordForm.currentPassword,
+        passwordForm.newPassword
+      );
 
       setToastType("success");
       setToastMessage("Đổi mật khẩu thành công!");
@@ -388,6 +399,15 @@ const UserInfo = () => {
                           Lưu thay đổi
                         </>
                       )}
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/paymentHistory")}
+                      className={`flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                      `}
+                    >
+                      <History className="h-5 w-5 mr-2" />
+                      Lịch sử giao dịch
                     </button>
 
                     <button
