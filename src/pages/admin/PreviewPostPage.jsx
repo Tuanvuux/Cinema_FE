@@ -113,10 +113,10 @@ export default function PreviewPostPage({ onNavigate}) {
 
             if (postId) {
                 await editPostById(postId, formattedPost);
-                addToast("✅ Cập nhật bài viết thành công!",'success');
+                addToast("Cập nhật bài viết thành công!",'success');
             } else {
                 await addPost(formattedPost);
-                addToast("✅ Đăng bài viết thành công!",'success');
+                addToast("Đăng bài viết thành công!",'success');
             }
 
             sessionStorage.removeItem("previewPost");
@@ -192,7 +192,7 @@ export default function PreviewPostPage({ onNavigate}) {
                                         <img
                                             src={typeof post.postImage === 'object' ? post.postImage : post.postImage}
                                             alt={post.title || "Ảnh bài viết"}
-                                            className="w-full max-h-96 object-cover rounded-xl shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                                            className="w-full max-h-96 object-contain rounded-xl shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gray-100"
                                         />
                                         <div
                                             className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
