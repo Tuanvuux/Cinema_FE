@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { addPost, editPostById } from "@/services/apiadmin.jsx";
 import {AlertCircle, CheckCircle, X} from "lucide-react";
 import {useNavigate} from "react-router-dom";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 export default function PreviewPostPage({ onNavigate}) {
     const [post, setPost] = useState(null);
     const [postId, setPostId] = useState(null);
     const [toast, setToast] = useState([]);
     const navigate = useNavigate();
     useEffect(() => {
+        document.title = 'Xem trước';
         const previewPostData = sessionStorage.getItem("previewPost");
         const previewEditData = sessionStorage.getItem("previewEditPost");
 
@@ -152,14 +154,13 @@ export default function PreviewPostPage({ onNavigate}) {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
             <ToastContainer />
-
             <div className="max-w-4xl mx-auto p-6">
                 {/* Header with back button */}
                 <div className="mb-8">
                     <button
                         className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold flex items-center gap-2"
                         onClick={() => {
-                            postId ? onNavigate("post-edit") : onNavigate("create-post")
+                            postId ? onNavigate("post-edit", { postId }) : onNavigate("create-post")
                         }}
                     >
                         ← Quay lại chỉnh sửa
@@ -169,7 +170,7 @@ export default function PreviewPostPage({ onNavigate}) {
                 {/* Main content container */}
                 <div className="bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden">
                     {/* Article header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white">
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-8 text-white">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">👁️</span>
                             <span className="text-lg font-medium bg-white/20 px-3 py-1 rounded-full">
@@ -232,10 +233,10 @@ export default function PreviewPostPage({ onNavigate}) {
                                         className="bg-gradient-to-r from-white to-gray-50 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
                                         {/* Section header */}
                                         <div className="flex items-center gap-3 mb-6">
-                                            <span
-                                                className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                                                {idx + 1}
-                                            </span>
+                                            {/*<span*/}
+                                            {/*    className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">*/}
+                                            {/*    {idx + 1}*/}
+                                            {/*</span>*/}
                                             <h2 className="text-2xl font-bold text-gray-800">
                                                 {section.heading || `Phần ${idx + 1}`}
                                             </h2>
@@ -293,12 +294,12 @@ export default function PreviewPostPage({ onNavigate}) {
                         )}
 
                         {/* Conclusion */}
-                        <div className="mt-10 pt-8 border-t-2 border-gradient-to-r from-blue-200 to-purple-200">
+                        <div className="mt-10 pt-8 border-t border-gray-200 border-gradient-to-r from-blue-200 to-purple-200">
                             {post.conclusion ? (
                                 <div
                                     className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl border-l-4 border-green-500">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-2xl">🎯</span>
+                                        {/*<span className="text-2xl">🎯</span>*/}
                                         <span className="font-bold text-gray-700">KẾT LUẬN</span>
                                     </div>
                                     <p className="text-lg font-medium text-gray-800 leading-relaxed">
@@ -308,7 +309,7 @@ export default function PreviewPostPage({ onNavigate}) {
                             ) : (
                                 <div className="bg-gray-50 p-6 rounded-xl border-l-4 border-gray-300">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-2xl">🎯</span>
+                                        {/*<span className="text-2xl">🎯</span>*/}
                                         <span className="font-bold text-gray-500">KẾT LUẬN</span>
                                     </div>
                                     <p className="text-lg italic text-gray-400">Chưa có kết luận</p>
@@ -321,7 +322,7 @@ export default function PreviewPostPage({ onNavigate}) {
                 {/* Footer back button */}
                 <div className="mt-8 text-center">
                     <button
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold flex items-center gap-2 mx-auto text-lg"
+                        className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-8 py-4 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold flex items-center gap-2 mx-auto text-lg"
                         onClick={handleSubmit}
                     >
                         {postId ? '💾 Cập nhật bài viết' : '✨ Đăng bài viết'}

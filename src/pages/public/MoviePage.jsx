@@ -1,7 +1,8 @@
 import Navbar from "@/components/layout/Navbar";
 import MovieList from "../../components/MovieList";
 import Footer from "@/components/layout/Footer";
-import {useEffect} from "react";
+import React, {useEffect} from "react";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 
 export default function MoviePage() {
     useEffect(() => {
@@ -9,7 +10,8 @@ export default function MoviePage() {
     }, []);
   return (
     <div className="">
-      <div className="">
+        <ScrollToTopButton />
+        <div className="">
         <Navbar />
       </div>
       <div className="mt-1.5">

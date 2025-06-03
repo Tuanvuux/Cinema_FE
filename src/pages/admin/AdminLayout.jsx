@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import NavbarAdminMenu from "@/components/layout/NavbarAdminMenu.jsx";
@@ -17,8 +17,10 @@ import PostManagement from "@/pages/admin/PostManagement.jsx";
 import PreviewPostPage from "@/pages/admin/PreviewPostPage.jsx";
 import PostForm from "@/components/PostForm.jsx";
 import PostEdit from "@/components/PostEdit.jsx";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 
 export default function AdminLayout() {
+  const contentRef = useRef(null);
   const { user } = useAuth();
   const isEmployee = user?.role === "EMPLOYEE";
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,10 +42,15 @@ export default function AdminLayout() {
     }
   }, [currentPage, isEmployee]);
 
-  const handleNavigate = (page) => {
-    setSearchParams({ page });
+  const handleNavigate = (page, extraParams = {}) => {
+    const newParams = {
+      page,
+      ...extraParams,
+    };
+    setSearchParams(newParams);
     setShowSidebar(false);
   };
+
 
   const renderPage = () => {
     const postId = searchParams.get("postId");
@@ -90,6 +97,7 @@ export default function AdminLayout() {
 
   return (
       <div className="flex h-screen overflow-hidden relative">
+        <ScrollToTopButton containerRef={contentRef} />
         <div
             className={`fixed md:static top-0 left-0 z-40 h-full bg-white transition-transform duration-300
                             border-r w-60 ${
@@ -109,7 +117,7 @@ export default function AdminLayout() {
             />
         )}
 
-        <div className="flex-1 p-4 overflow-auto w-full">
+        <div ref={contentRef}  className="flex-1 p-4 overflow-auto w-full">
           <button
               className="md:hidden mb-4 text-gray-700 flex items-center gap-2"
               onClick={() => setShowSidebar(!showSidebar)}

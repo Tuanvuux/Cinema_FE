@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Calendar, ArrowRight, Film, Loader2, AlertCircle } from "lucide-react";
-import { useNews } from "../contexts/NewsContext"; // Đảm bảo context đã đổi tên đúng
+import { useNews } from "../contexts/NewsContext";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
+import React from "react"; // Đảm bảo context đã đổi tên đúng
 
 const News = () => {
   const { news, loading } = useNews();
@@ -95,14 +97,16 @@ const News = () => {
                       <img
                         src={postImage || "/placeholder.svg"}
                         alt={post.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        // className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                         <Film className="h-16 w-16 text-gray-400" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300" />
+                    <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300" />
                     <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="bg-white rounded-full p-2 shadow-lg">
                         <ArrowRight className="h-5 w-5 text-gray-600" />

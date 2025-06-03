@@ -87,14 +87,24 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
             className="mb-4 cursor-pointer text-2xl"
             onClick={() => navigate("/")}
         >
-          <GradientText
-              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
-              animationSpeed={3}
-              showBorder={false}
-              className="custom-class"
-          >
-            CineX Cinema
-          </GradientText>
+          <Link to="/" >
+            <GradientText
+                colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+                animationSpeed={3}
+                showBorder={false}
+                className="custom-class"
+            >
+              CineX Cinema
+            </GradientText>
+          </Link>
+          {/*<GradientText*/}
+          {/*    colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}*/}
+          {/*    animationSpeed={3}*/}
+          {/*    showBorder={false}*/}
+          {/*    className="custom-class"*/}
+          {/*>*/}
+          {/*  CineX Cinema*/}
+          {/*</GradientText>*/}
         </h1>
 
         <nav className="space-y-2 flex-grow">
