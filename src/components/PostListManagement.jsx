@@ -29,8 +29,6 @@ export default function PostListManagement() {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Quản lý bài viết</h1>
-
       {loading && <p>Đang tải dữ liệu...</p>}
       {error && <p className="text-red-600">{error}</p>}
 

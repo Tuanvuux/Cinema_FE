@@ -52,9 +52,9 @@ export const getReleaseDate = async (movieId) => {
   return response.data;
 };
 
-export const checkMovieNameByShowtime = async (showtimeId) => {
+export const checkMovieNameByShowtime = async (movieId) => {
   const response = await api.get(
-    `/movies/admin/movie-name-by-showtime/${showtimeId}`
+    `/movies/admin/movie-name-by-showtime/${movieId}`
   );
   return response.data;
 };
@@ -193,6 +193,13 @@ export const canChangeRoomStatus = async (roomId) => {
   const response = await api.get(`/rooms/admin/can-change-status/${roomId}`);
   return response.data; // sẽ trả về true hoặc false từ backend
 };
+export const checkRoomNameExists = async (name) => {
+  const response = await api.get(`/rooms/admin/check-room-name`, {
+    params: { name }
+  });
+  return response.data; // trả về true hoặc false
+};
+
 
 // Showtime
 export const getShowtimes = async () => {
@@ -382,8 +389,25 @@ export const deleteLockSeat = async (seatId) => {
   const response = await api.delete(`/lock-seat-admin/admin/${seatId}`);
   return response.data;
 };
-
+//Post
 export const addPost = async (formattedPost) => {
-  const response = await api.post("/posts", formattedPost);
+  const response = await api.post("/posts/admin", formattedPost);
+  return response.data;
+};
+export const getPostById = async (postId) => {
+  const response = await api.get(`/posts/admin/${postId}`);
+  return response.data;
+};
+
+export const editPostById = async (postId, postData) => {
+  if (!postId || postId === 'undefined') {
+    throw new Error('Post ID is required');
+  }
+  const response = await api.put(`/posts/admin/${postId}`, postData);
+  return response.data;
+};
+
+export const deletePost = async (postId) => {
+  const response = await api.delete(`/posts/admin/${postId}`);
   return response.data;
 };

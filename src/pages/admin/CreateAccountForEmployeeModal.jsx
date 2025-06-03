@@ -14,6 +14,16 @@ export default function CreateAccountForEmployeeModal({ isOpen, onClose, onEmplo
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            const timer = setTimeout(() => {
+                setErrors({});
+            }, 3000);
+
+            return () => clearTimeout(timer); // Dọn dẹp khi component unmount hoặc lỗi mới xuất hiện
+        }
+    }, [errors]);
+
+    useEffect(() => {
         const handleClickOutside = (event) => {
             if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
                 handleCancel(); // Đóng modal

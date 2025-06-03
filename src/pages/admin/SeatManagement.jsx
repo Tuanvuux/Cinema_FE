@@ -6,7 +6,7 @@ import {
   deleteSeat,
   getRooms,
   getSeatInfo,
-  updateSeatInfo,checkSeatExists
+  updateSeatInfo, checkSeatExists
 } from "../../services/apiadmin.jsx";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
 import { CheckCircle, AlertCircle, X } from "lucide-react";
@@ -20,6 +20,7 @@ export default function SeatManagement() {
   const [error, setError] = useState(null);
   // const [selectedSeat, setSelectedSeat] = useState(null);
   const [errors, setErrors] = useState({});
+  const [originalName, setOriginalName] = useState('');
 
   const [newSeat, setNewSeat] = useState({
     seatName: "",
@@ -78,7 +79,15 @@ export default function SeatManagement() {
   const modalEditPriceRef = useRef();
   const modalAddRef = useRef();
   const filterRef = useRef();
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        setErrors({});
+      }, 3000);
 
+      return () => clearTimeout(timer); // Dọn dẹp khi component unmount hoặc lỗi mới xuất hiện
+    }
+  }, [errors]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Đóng Confirm Modal
@@ -198,6 +207,7 @@ export default function SeatManagement() {
       status: Seat.status,
       seatInfoId: Seat.seatInfoId,
     });
+    setOriginalName(Seat.seatName);
     // setSelectedSeat(Seat);
     setShowEditModal(true);
   };
@@ -238,6 +248,12 @@ export default function SeatManagement() {
 
   const handleSaveEditSeatInfo = async () => {
     try {
+      const newErrors = {};
+      if (editSeatInfo.price < 0) {newErrors.price = "Giá ghế không được âm"};
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
       const updatedSeatInfo = await updateSeatInfo(editSeatInfo.id, {
         name: editSeatInfo.name,
         price: editSeatInfo.price,
@@ -594,19 +610,19 @@ export default function SeatManagement() {
       newErrors.columnNumber = 'Vui lòng nhập số cột ghế hợp lệ';
     }
 
-    // // Nếu không có lỗi cơ bản, kiểm tra trùng tên ghế
-    // if (!newErrors.seatName && !newErrors.room) {
-    //   try {
-    //     const seatExists = await checkSeatExists(editingSeat.seatName.trim(), editingSeat.room);
-    //     if (seatExists) {
-    //       newErrors.seatName = 'Tên ghế đã tồn tại trong phòng này';
-    //     }
-    //   } catch (error) {
-    //     console.error('Lỗi kiểm tra trùng tên ghế:', error);
-    //     newErrors.seatName = 'Không thể kiểm tra tên ghế. Vui lòng thử lại.';
-    //   }
-    // }
-
+    try {
+      if (editingSeat.seatName.trim() !== originalName.trim()) {
+        const exists = await checkSeatExists(editingSeat.seatName,editingSeat.room);
+        if (exists) {
+          setErrors({ seatName: "Tên ghế đã tồn tại" });
+          return;
+        }
+      }
+    } catch (error) {
+      addToast('Lỗi khi kiểm tra tên ghế!', 'error');
+      console.error(error);
+      return;
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -669,7 +685,19 @@ export default function SeatManagement() {
                 <span className="material-icons text-gray-600">
                   filter_list
                 </span>
-                <span className="ml-2 text-gray-700">Bộ lọc</span>
+                <span className="ml-2 text-gray-700">
+                 {statusFilter === 'all'
+                     ? 'Bộ lọc'
+                     : statusFilter === 'AVAILABLE'
+                         ? 'Chưa chọn'
+                         : statusFilter === 'SELECTED'
+                             ? 'Đã chọn'
+                             :statusFilter === 'BOOKED'
+                                ? 'Đã đặt'
+                                 :statusFilter === 'INVALID'
+                                  ?'Vô hiệu hóa'
+                                    : 'Bộ lọc'}
+                </span>
               </button>
               {/* Dropdown filter */}
               {showFilter && (
@@ -682,49 +710,65 @@ export default function SeatManagement() {
                       Lọc theo trạng thái
                     </h3>
                     <div className="flex flex-col space-y-3">
-                      <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
+                      <label
+                          className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                         <input
-                          type="radio"
-                          name="status"
-                          value="all"
-                          checked={statusFilter === "all"}
-                          onChange={() => setStatusFilter("all")}
-                          className="mr-2 h-4 w-4 accent-gray-900"
+                            type="radio"
+                            name="status"
+                            value="all"
+                            checked={statusFilter === "all"}
+                            onChange={() => setStatusFilter("all")}
+                            className="mr-2 h-4 w-4 accent-gray-900"
                         />
                         <span className="text-gray-700">Tất cả</span>
                       </label>
-                      <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
+                      <label
+                          className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                         <input
-                          type="radio"
-                          name="status"
-                          value="AVAILABLE"
-                          checked={statusFilter === "AVAILABLE"}
-                          onChange={() => setStatusFilter("AVAILABLE")}
-                          className="mr-2"
+                            type="radio"
+                            name="status"
+                            value="AVAILABLE"
+                            checked={statusFilter === "AVAILABLE"}
+                            onChange={() => setStatusFilter("AVAILABLE")}
+                            className="mr-2"
                         />
                         <span className="text-gray-700">Chưa chọn</span>
                       </label>
-                      <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
+                      <label
+                          className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                         <input
-                          type="radio"
-                          name="status"
-                          value="SELECTED"
-                          checked={statusFilter === "SELECTED"}
-                          onChange={() => setStatusFilter("SELECTED")}
-                          className="mr-2"
+                            type="radio"
+                            name="status"
+                            value="SELECTED"
+                            checked={statusFilter === "SELECTED"}
+                            onChange={() => setStatusFilter("SELECTED")}
+                            className="mr-2"
                         />
                         <span className="text-gray-700">Đã chọn</span>
                       </label>
-                      <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
+                      <label
+                          className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
                         <input
-                          type="radio"
-                          name="status"
-                          value="BOOKED"
-                          checked={statusFilter === "BOOKED"}
-                          onChange={() => setStatusFilter("BOOKED")}
-                          className="mr-2"
+                            type="radio"
+                            name="status"
+                            value="BOOKED"
+                            checked={statusFilter === "BOOKED"}
+                            onChange={() => setStatusFilter("BOOKED")}
+                            className="mr-2"
                         />
                         <span className="text-gray-700">Đã đặt</span>
+                      </label>
+                      <label
+                          className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors">
+                        <input
+                            type="radio"
+                            name="status"
+                            value="INVALID"
+                            checked={statusFilter === "INVALID"}
+                            onChange={() => setStatusFilter("INVALID")}
+                            className="mr-2"
+                        />
+                        <span className="text-gray-700">Vô hiệu hóa</span>
                       </label>
                     </div>
                   </div>
@@ -735,8 +779,8 @@ export default function SeatManagement() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <button
-                className="bg-gray-900 text-white px-5 py-2.5 rounded-lg flex items-center shadow-md hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1"
-                onClick={() => setShowAddModal(true)}
+                  className="bg-gray-900 text-white px-5 py-2.5 rounded-lg flex items-center shadow-md hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1"
+                  onClick={() => setShowAddModal(true)}
               >
                 <span className="material-icons mr-1">add</span>
                 Thêm ghế
@@ -1600,6 +1644,9 @@ export default function SeatManagement() {
                       min="0"
                       step="0.01"
                     />
+                    {errors.price && (
+                        <p className="text-red-500 text-sm mt-1">{errors.price}</p>
+                    )}
                   </div>
                 </div>
               </div>

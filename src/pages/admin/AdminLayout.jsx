@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import NavbarAdminMenu from "@/components/layout/NavbarAdminMenu.jsx";
 import Dashboard from "@/pages/admin/Dashboard";
@@ -14,41 +15,43 @@ import AccessDenied from "@/pages/admin/AccessDenied.jsx";
 import LockSeatByShowTime from "@/pages/admin/LockSeatByShowTime.jsx";
 import PostManagement from "@/pages/admin/PostManagement.jsx";
 import PreviewPostPage from "@/pages/admin/PreviewPostPage.jsx";
-// import NewsManagement from "@/pages/admin/NewsManagement.jsx";
+import PostForm from "@/components/PostForm.jsx";
+import PostEdit from "@/components/PostEdit.jsx";
 
 export default function AdminLayout() {
   const { user } = useAuth();
   const isEmployee = user?.role === "EMPLOYEE";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [showSidebar, setShowSidebar] = React.useState(false);
 
-  const getDefaultPage = () => {
-    return isEmployee ? "moviemanagement" : "dashboard";
-  };
+  const rawPage = searchParams.get("page");
+  const currentPage = rawPage || (isEmployee ? "moviemanagement" : "dashboard");
 
-  const [currentPage, setCurrentPage] = useState(getDefaultPage);
-  const [showSidebar, setShowSidebar] = useState(false);
-
-  useEffect(() => {
+  // Nếu trang bị cấm, tự động chuyển hướng (chỉ chạy khi URL thay đổi)
+  React.useEffect(() => {
     if (
-      isEmployee &&
-      (currentPage === "dashboard" ||
-        currentPage.startsWith("dashboard-") ||
-        currentPage === "accountmanagement")
+        isEmployee &&
+        (currentPage === "dashboard" ||
+            currentPage.startsWith("dashboard-") ||
+            currentPage === "accountmanagement")
     ) {
-      setCurrentPage(getDefaultPage());
+      setSearchParams({ page: isEmployee ? "moviemanagement" : "dashboard" });
     }
-  }, [user?.role]);
+  }, [currentPage, isEmployee]);
 
   const handleNavigate = (page) => {
-    setCurrentPage(page);
-    setShowSidebar(false); // đóng sidebar trên mobile sau khi click
+    setSearchParams({ page });
+    setShowSidebar(false);
   };
 
   const renderPage = () => {
+    const postId = searchParams.get("postId");
     if (
-      isEmployee &&
-      (currentPage === "dashboard" ||
-        currentPage.startsWith("dashboard-") ||
-        currentPage === "accountmanagement")
+        isEmployee &&
+        (currentPage === "dashboard" ||
+            currentPage.startsWith("dashboard-") ||
+            currentPage === "accountmanagement")
     ) {
       return <AccessDenied />;
     }
@@ -75,51 +78,48 @@ export default function AdminLayout() {
       case "post":
         return <PostManagement onNavigate={handleNavigate} />;
       case "preview":
-        return <PreviewPostPage onNavigate={handleNavigate} />;
-      // case 'newmanagement': return <NewsManagement />;
+        return <PreviewPostPage onNavigate={handleNavigate}/>;
+      case "create-post":
+        return <PostForm onNavigate={handleNavigate}/>;
+      case "post-edit":
+        return <PostEdit onNavigate={handleNavigate} postId={postId}/>;
       default:
         return <Dashboard onNavigate={handleNavigate} />;
     }
   };
 
   return (
-    <div className="flex h-screen overflow-hidden relative">
-      {/* Sidebar – trượt trên mobile, luôn hiển thị trên md */}
-      <div
-        className={`fixed md:static top-0 left-0 z-40 h-full bg-white transition-transform duration-300
-                            border-r w-60 ${
-                              showSidebar
-                                ? "translate-x-0"
-                                : "-translate-x-full"
-                            } md:translate-x-0`}
-      >
-        <NavbarAdminMenu
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
-        />
-      </div>
-
-      {/* Overlay – chỉ hiện khi mở menu trên mobile */}
-      {showSidebar && (
+      <div className="flex h-screen overflow-hidden relative">
         <div
-          className="fixed inset-0 bg-opacity-50 z-30 md:hidden"
-          onClick={() => setShowSidebar(false)}
-        />
-      )}
-
-      {/* Nội dung chính */}
-      <div className="flex-1 p-4 overflow-auto w-full">
-        {/* Nút hamburger chỉ hiện trên mobile */}
-        <button
-          className="md:hidden mb-4 text-gray-700 flex items-center gap-2"
-          onClick={() => setShowSidebar(!showSidebar)}
+            className={`fixed md:static top-0 left-0 z-40 h-full bg-white transition-transform duration-300
+                            border-r w-60 ${
+                showSidebar ? "translate-x-0" : "-translate-x-full"
+            } md:translate-x-0`}
         >
-          {showSidebar ? <X size={24} /> : <Menu size={24} />}
-          <span className="font-semibold">Menu</span>
-        </button>
+          <NavbarAdminMenu
+              currentPage={currentPage}
+              onNavigate={handleNavigate}
+          />
+        </div>
 
-        {renderPage()}
+        {showSidebar && (
+            <div
+                className="fixed inset-0 bg-opacity-50 z-30 md:hidden"
+                onClick={() => setShowSidebar(false)}
+            />
+        )}
+
+        <div className="flex-1 p-4 overflow-auto w-full">
+          <button
+              className="md:hidden mb-4 text-gray-700 flex items-center gap-2"
+              onClick={() => setShowSidebar(!showSidebar)}
+          >
+            {showSidebar ? <X size={24} /> : <Menu size={24} />}
+            <span className="font-semibold">Menu</span>
+          </button>
+
+          {renderPage()}
+        </div>
       </div>
-    </div>
   );
 }

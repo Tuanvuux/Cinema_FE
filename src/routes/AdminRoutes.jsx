@@ -12,7 +12,7 @@ import { Outlet } from "react-router-dom";
 import DashBoard from "@/pages/admin/DashBoard.jsx";
 import AdminLayout from "@/pages/admin/AdminLayout.jsx";
 import PostDetail from "../components/PostDetail.jsx";
-import PostEdit from "../components/PostEdit.jsx";
+// import PostEdit2 from "../components/PostEdit2.jsx";
 
 const AdminOutlet = () => (
   <ProtectAdminRoute>
@@ -25,11 +25,11 @@ const AdminRoutes = () => {
     <Routes>
       <Route element={<AdminOutlet />}>
         <Route path="/" element={<AdminLayout />} />
-        <Route path="/" element={<AdminPage />} />
+        {/*<Route path="/showtime" element={<AdminPage />} />*/}
         <Route path="addcategory" element={<AddCategory />} />
         <Route path="addmovie" element={<AddMovie />} />
         <Route path="posts/:id" element={<PostDetail />} />
-        <Route path="posts/edit/:id" element={<PostEdit />} />
+        {/*<Route path="posts/edit/:id" element={<PostEdit2 />} />*/}
         {/*<Route path="roommanagement" element={<RoomManagement />} />*/}
         {/*<Route path="showtimemanagement" element={<ShowTimeManagement />} />*/}
         {/*<Route path="moviemanagement" element={<MovieManagement />} />*/}

@@ -24,9 +24,9 @@ const navItems = [
     icon: "event_seat",
     label: "Ghế ngồi",
     hasSubmenu: true,
-    submenu: [{ key: "seat-lock", icon: "lock", label: "Khóa ghế theo suất" }],
+    submenu: [{ key: "seat-lock", icon: "lock", label: "Khóa ghế theo lịch" }],
   },
-  { key: "post", icon: "account_circle", label: "Bài viết" },
+  { key: "post", icon: "article", label: "Bài viết" },
   // { key: 'newmanagement', icon: 'article', label: 'Quản lý bài viết' },
 ];
 
@@ -43,6 +43,17 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
       return key === "accountmanagement" || key === "dashboard";
     }
     return false;
+  };
+
+  // Kiểm tra xem menu item có đang active không (bao gồm cả trang con)
+  const isActive = (item) => {
+    if (item.key === "post") {
+      // Với menu "post", kiểm tra cả các trang con
+      return currentPage === "post" || currentPage === "preview" || currentPage === "create-post" || currentPage === "post-edit";
+    }
+
+    // Logic cũ cho các menu khác
+    return currentPage === item.key || currentPage.startsWith(`${item.key}-`);
   };
 
   const handleItemClick = (item) => {
@@ -71,79 +82,79 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
   };
 
   return (
-    <div className="w-60 bg-gray-900 text-white p-4 flex flex-col h-screen">
-      <h1
-        className="mb-4 cursor-pointer text-2xl"
-        onClick={() => navigate("/")}
-      >
-        <GradientText
-          colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
-          animationSpeed={3}
-          showBorder={false}
-          className="custom-class"
+      <div className="w-60 bg-gray-900 text-white p-4 flex flex-col h-screen">
+        <h1
+            className="mb-4 cursor-pointer text-2xl"
+            onClick={() => navigate("/")}
         >
-          CineX Cinema
-        </GradientText>
-      </h1>
+          <GradientText
+              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+              animationSpeed={3}
+              showBorder={false}
+              className="custom-class"
+          >
+            CineX Cinema
+          </GradientText>
+        </h1>
 
-      <nav className="space-y-2 flex-grow">
-        {navItems.map((item) => {
-          const itemDisabled = isDisabled(item.key);
+        <nav className="space-y-2 flex-grow">
+          {navItems.map((item) => {
+            const itemDisabled = isDisabled(item.key);
+            const itemActive = isActive(item);
 
-          return (
-            <div key={item.key} className="space-y-1">
-              <button
-                onClick={() => handleItemClick(item)}
-                disabled={itemDisabled}
-                className={`flex items-center justify-between w-full text-left gap-2 py-2 px-3 rounded transition ${
-                  currentPage === item.key ||
-                  currentPage.startsWith(`${item.key}-`)
-                    ? "bg-gray-800 text-white"
-                    : itemDisabled
-                    ? "text-gray-500 cursor-not-allowed opacity-50" // Mờ đi và không cho phép click
-                    : "hover:bg-gray-700 text-gray-300"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="material-icons">{item.icon}</span>
-                  <span>{item.label}</span>
-                </div>
-                {item.hasSubmenu && !itemDisabled && (
-                  <span className="material-icons text-sm">
+            return (
+                <div key={item.key} className="space-y-1">
+                  <button
+                      onClick={() => handleItemClick(item)}
+                      disabled={itemDisabled}
+                      className={`flex items-center justify-between w-full text-left gap-2 py-2 px-3 rounded transition ${
+                          itemActive
+                              ? "bg-gray-800 text-white"
+                              : itemDisabled
+                                  ? "text-gray-500 cursor-not-allowed opacity-50" // Mờ đi và không cho phép click
+                                  : "hover:bg-gray-700 text-gray-300"
+                      }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.hasSubmenu && !itemDisabled && (
+                        <span className="material-icons text-sm">
                     {expandedItem === item.key ? "expand_less" : "expand_more"}
                   </span>
-                )}
-              </button>
+                    )}
+                  </button>
 
-              {item.hasSubmenu &&
-                expandedItem === item.key &&
-                !itemDisabled && (
-                  <div className="pl-8 space-y-1 bg-gray-800 rounded">
-                    {item.submenu.map((subItem) => (
-                      <button
-                        key={subItem.key}
-                        onClick={() =>
-                          handleSubmenuClick(item.key, subItem.key)
-                        }
-                        className={`flex items-center w-full text-left py-2 px-3 rounded transition ${
-                          currentPage === subItem.key
-                            ? "bg-gray-700 text-white"
-                            : "hover:bg-gray-700 text-gray-300"
-                        }`}
-                      >
+                  {item.hasSubmenu &&
+                      expandedItem === item.key &&
+                      !itemDisabled && (
+                          <div className="pl-8 space-y-1 bg-gray-800 rounded">
+                            {item.submenu.map((subItem) => (
+                                <button
+                                    key={subItem.key}
+                                    onClick={() =>
+                                        handleSubmenuClick(item.key, subItem.key)
+                                    }
+                                    className={`flex items-center w-full text-left py-2 px-3 rounded transition ${
+                                        currentPage === subItem.key
+                                            ? "bg-gray-700 text-white"
+                                            : "hover:bg-gray-700 text-gray-300"
+                                    }`}
+                                >
                         <span className="material-icons mr-2 text-sm">
                           {subItem.icon}
                         </span>
-                        <span>{subItem.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-            </div>
-          );
-        })}
-      </nav>
-    </div>
+                                  <span>{subItem.label}</span>
+                                </button>
+                            ))}
+                          </div>
+                      )}
+                </div>
+            );
+          })}
+        </nav>
+      </div>
   );
 };
 
