@@ -11,6 +11,7 @@ import ForgotPasswordPage from "../pages/public/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "../pages/public/ResetPasswordPage.jsx";
 import NewsPage from "../pages/public/NewPage.jsx";
 import NewsDetailPage from "../pages/public/NewsDetailPage.jsx";
+import PaymentHistoryPage from "../pages/public/PaymentHistoryPage.jsx";
 
 const PublicRoutes = () => {
   return (
@@ -27,6 +28,7 @@ const PublicRoutes = () => {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/news" element={<NewsPage />} />
       <Route path="/news/:postId" element={<NewsDetailPage />} />
+      <Route path="/paymentHistory" element={<PaymentHistoryPage />} />
     </Routes>
   );
 };
