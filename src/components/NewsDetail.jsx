@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, ArrowLeft, AlertCircle } from "lucide-react";
 import { useNews } from "../contexts/NewsContext";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 
 const NewsDetail = () => {
   const { postId } = useParams();
@@ -60,6 +61,7 @@ const NewsDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <ScrollToTopButton />
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => navigate("/news")}

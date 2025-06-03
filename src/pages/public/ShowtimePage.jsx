@@ -1,7 +1,8 @@
 import Navbar from "@/components/layout/Navbar";
 import Showtime from "../../components/Showtime";
 import Footer from "@/components/layout/Footer";
-import {useEffect} from "react";
+import React, {useEffect} from "react";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 
 export default function ShowTimePage() {
     useEffect(() => {
@@ -9,7 +10,8 @@ export default function ShowTimePage() {
     }, []);
   return (
     <div className="">
-      <div className="">
+        <ScrollToTopButton />
+        <div className="">
         <Navbar />
       </div>
       <div className="mt-1.5">
