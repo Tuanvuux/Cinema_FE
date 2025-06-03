@@ -1029,81 +1029,45 @@ export default function MovieManagement() {
 
                       {/* Đạo diễn */}
                       <div className="mb-3">
-                        <label className="block mb-2">Đạo diễn <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Đạo diễn </label>
                         <input
-                            {...register("director", {
-                              required: "Đạo diễn là bắt buộc"
-                            })}
+                            {...register("director")}
                             type="text"
                             placeholder="Đạo diễn"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                                errors.director
-                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                            }`}
+                            className="w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
-                        {errors.director && (
-                            <p className="text-red-500 text-sm mt-1">{errors.director.message}</p>
-                        )}
                       </div>
 
                       {/* Diễn viên */}
                       <div className="mb-3">
-                        <label className="block mb-2">Diễn viên <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Diễn viên</label>
                         <input
-                            {...register("actor", {
-                              required: "Diễn viên là bắt buộc"
-                            })}
+                            {...register("actor")}
                             type="text"
                             placeholder="Diễn viên"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                                errors.actor
-                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                            }`}
+                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
-                        {errors.actor && (
-                            <p className="text-red-500 text-sm mt-1">{errors.actor.message}</p>
-                        )}
                       </div>
 
                       {/* Mô tả phim */}
                       <div className="mb-3">
-                        <label className="block mb-2">Mô tả phim <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Mô tả phim </label>
                         <textarea
-                            {...register("description", {
-                              required: "Mô tả phim là bắt buộc"
-                            })}
+                            {...register("description")}
                             placeholder="Mô tả phim"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                                errors.description
-                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                            }`}
+                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         ></textarea>
-                        {errors.description && (
-                            <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-                        )}
                       </div>
 
                       {/* Quốc gia */}
                       <div className="mb-3">
-                        <label className="block mb-2">Quốc gia <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Quốc gia</label>
                         <input
-                            {...register("country", {
-                              required: "Quốc gia là bắt buộc"
-                            })}
+                            {...register("country")}
                             type="text"
                             placeholder="Quốc gia"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                                errors.country
-                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                            }`}
+                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
-                        {errors.country && (
-                            <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>
-                        )}
                       </div>
 
                       {/* Thời lượng */}
@@ -1159,10 +1123,9 @@ export default function MovieManagement() {
 
                       {/* Giới hạn tuổi */}
                       <div className="mb-3">
-                        <label className="block mb-2">Giới hạn tuổi <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Giới hạn tuổi</label>
                         <input
                             {...register("ageLimit", {
-                              required: "Giới hạn tuổi là bắt buộc",
                               min: {value: 0, message: "Giới hạn tuổi không được âm"}
                             })}
                             type="number"
@@ -1180,22 +1143,13 @@ export default function MovieManagement() {
 
                       {/* Caption */}
                       <div className="mb-3">
-                        <label className="block mb-2">Caption <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Caption</label>
                         <input
-                            {...register("caption", {
-                              required: "Caption là bắt buộc"
-                            })}
+                            {...register("caption")}
                             placeholder="Caption"
                             type="text"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                                errors.caption
-                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                            }`}
+                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
-                        {errors.caption && (
-                            <p className="text-red-500 text-sm mt-1">{errors.caption.message}</p>
-                        )}
                       </div>
 
                       {/* Poster */}
@@ -1268,16 +1222,13 @@ export default function MovieManagement() {
 
                       {/* Trailer */}
                       <div className="mb-3">
-                        <label className="block mb-2">Trailer: <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Trailer:</label>
                         <input
                             type="file"
                             accept="video/*"
                             onChange={(e) => uploadVideo(e.target.files[0])}
                             className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                         />
-                        {errors.trailerUrl && (
-                            <p className="text-red-500 text-sm mt-1">{errors.trailerUrl.message}</p>
-                        )}
                       </div>
 
                       {videoPreview && (
@@ -1301,16 +1252,10 @@ export default function MovieManagement() {
 
                       {/* Thể loại */}
                       <div className="mb-3">
-                        <label className="block mb-2">Thể loại: <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Thể loại:</label>
                         <select
-                            {...register("categoryId", {
-                              required: "Thể loại là bắt buộc"
-                            })}
-                            className={`appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                                errors.categoryId
-                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                    : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                            }`}
+                            {...register("categoryId")}
+                            className= "appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundRepeat: 'no-repeat',
@@ -1328,9 +1273,6 @@ export default function MovieManagement() {
                               </option>
                           ))}
                         </select>
-                        {errors.categoryId && (
-                            <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>
-                        )}
                       </div>
 
                       <div className="flex justify-end mt-6 gap-3">
@@ -1401,35 +1343,20 @@ export default function MovieManagement() {
                     <div className="mb-3">
                       <label className="block mb-2">Đạo diễn</label>
                       <input
-                          {...register("director", {
-                            required: "Đạo diễn là bắt buộc"
-                          })}
+                          {...register("director")}
                           type="text"
                           placeholder="Đạo diễn"
-                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                              errors.director
-                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                          }`}
+                          className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                       />
-                      {errors.director && (
-                          <p className="text-red-500 text-sm mt-1">{errors.director.message}</p>
-                      )}
                     </div>
 
                     <div className="mb-3">
                       <label className="block mb-2">Diễn viên</label>
                       <input
-                          {...register("actor", {
-                            required: "Diễn viên là bắt buộc"
-                          })}
+                          {...register("actor")}
                           type="text"
                           placeholder="Diễn viên"
-                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                              errors.actor
-                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                          }`}
+                          className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                       />
                       {errors.actor && (
                           <p className="text-red-500 text-sm mt-1">{errors.actor.message}</p>
@@ -1508,20 +1435,12 @@ export default function MovieManagement() {
                       <label className="block mb-2">Giới hạn tuổi</label>
                       <input
                           {...register("ageLimit", {
-                            required: "Giới hạn tuổi là bắt buộc",
                             min: {value: 0, message: "Giới hạn tuổi không được âm"}
                           })}
                           type="number"
                           placeholder="Giới hạn tuổi"
-                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                              errors.ageLimit
-                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                          }`}
+                          className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                       />
-                      {errors.ageLimit && (
-                          <p className="text-red-500 text-sm mt-1">{errors.ageLimit.message}</p>
-                      )}
                     </div>
 
                     <div className="mb-3">
@@ -1629,14 +1548,8 @@ export default function MovieManagement() {
                     <div className="mb-3">
                       <label className="block mb-2">Thể loại:</label>
                       <select
-                          {...register("categoryId", {
-                            required: "Thể loại là bắt buộc"
-                          })}
-                          className={`appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
-                              errors.categoryId
-                                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                  : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
-                          }`}
+                          {...register("categoryId")}
+                          className= "appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundRepeat: 'no-repeat',
@@ -1654,9 +1567,6 @@ export default function MovieManagement() {
                             </option>
                         ))}
                       </select>
-                      {errors.categoryId && (
-                          <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>
-                      )}
                     </div>
 
                     <div className="flex justify-end mt-6 gap-3">
