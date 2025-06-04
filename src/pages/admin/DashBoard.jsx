@@ -160,55 +160,6 @@ const Dashboard = ({ onNavigate }) => {
 
                     </div>
                 </div>
-
-            {/*<div className="bg-white rounded-lg shadow-md p-6">*/}
-            {/*    <h2 className="text-xl font-bold mb-4">Hoạt động gần đây</h2>*/}
-
-            {/*    <div className="overflow-x-auto">*/}
-            {/*        <table className="min-w-full bg-white">*/}
-            {/*            <thead>*/}
-            {/*            <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">*/}
-            {/*                    <th className="py-3 px-6 text-left">Thời gian</th>*/}
-            {/*                    <th className="py-3 px-6 text-left">Người dùng</th>*/}
-            {/*                    <th className="py-3 px-6 text-left">Hoạt động</th>*/}
-            {/*                    <th className="py-3 px-6 text-left">Chi tiết</th>*/}
-            {/*                </tr>*/}
-            {/*                </thead>*/}
-            {/*                <tbody className="text-gray-600 text-sm">*/}
-            {/*                <tr className="border-b border-gray-200 hover:bg-gray-50">*/}
-            {/*                    <td className="py-3 px-6 text-left">08/05/2025 14:32</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">admin@example.com</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Thêm phim mới</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Đã thêm phim "Avengers: Endgame"</td>*/}
-            {/*                </tr>*/}
-            {/*                <tr className="border-b border-gray-200 hover:bg-gray-50">*/}
-            {/*                    <td className="py-3 px-6 text-left">08/05/2025 13:45</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">manager@example.com</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Cập nhật lịch chiếu</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Đã thêm 5 suất chiếu mới</td>*/}
-            {/*                </tr>*/}
-            {/*                <tr className="border-b border-gray-200 hover:bg-gray-50">*/}
-            {/*                    <td className="py-3 px-6 text-left">08/05/2025 11:20</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">admin@example.com</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Sửa thông tin phòng</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Cập nhật sơ đồ ghế phòng 3</td>*/}
-            {/*                </tr>*/}
-            {/*                <tr className="border-b border-gray-200 hover:bg-gray-50">*/}
-            {/*                    <td className="py-3 px-6 text-left">08/05/2025 10:15</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">manager@example.com</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Xuất báo cáo</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Báo cáo doanh thu tháng 4</td>*/}
-            {/*                </tr>*/}
-            {/*                <tr className="border-b border-gray-200 hover:bg-gray-50">*/}
-            {/*                    <td className="py-3 px-6 text-left">08/05/2025 09:30</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">admin@example.com</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Thêm tài khoản</td>*/}
-            {/*                    <td className="py-3 px-6 text-left">Tạo tài khoản nhân viên mới</td>*/}
-            {/*                </tr>*/}
-            {/*                </tbody>*/}
-            {/*            </table>*/}
-            {/*        </div>*/}
-            {/*    </div>*/}
             </div>
             );
             };

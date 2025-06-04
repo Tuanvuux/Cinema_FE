@@ -5,6 +5,7 @@ import {AlertCircle, CheckCircle, X} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import UserInfo from "@/pages/admin/UserInfo.jsx";
+import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 const PostForm = ({ onNavigate }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.userId;
@@ -13,6 +14,8 @@ const PostForm = ({ onNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const postImageInputRef = useRef(null);
+  const ContentRef = useRef(null);
+
 
 // Gọi mỗi khi post thay đổi để lưu
   useEffect(() => {
@@ -314,8 +317,9 @@ const PostForm = ({ onNavigate }) => {
   return (
       <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <ToastContainer/>
+        <ScrollToTopButton containerRef={ContentRef} />
         <div className="flex h-full">
-          <div className="flex-1 p-4 md:p-6 overflow-auto">
+          <div ref={ContentRef} className="flex-1 p-4 md:p-6 overflow-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gradient-to-r from-blue-200 to-purple-200">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
                 TẠO BÀI VIẾT

@@ -47,9 +47,10 @@ const PaymentDetailsModal = ({ payment, onClose, isOpen }) => {
                     {/* Movie Information */}
                     <section>
                         <h4 className="text-lg font-bold mb-3 text-gray-700 border-b pb-2">Thông tin phim</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <Info label="Tên phim" value={payment.movieName || "N/A"} />
                             <Info label="ID lịch chiếu" value={payment.scheduleId || "N/A"} />
+                            <Info label="Phòng" value={payment.roomName || "N/A"} />
                         </div>
                     </section>
 

@@ -375,62 +375,73 @@ const Payment = () => {
                     {paymentOptions.map((option) => {
                       const IconComponent = option.icon;
                       return (
-                        <label
-                          key={option.id}
-                          className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                            paymentMethod === option.id
-                              ? "border-gray-600 bg-gray-50 shadow-md"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="payment"
-                            value={option.id}
-                            checked={paymentMethod === option.id}
-                            onChange={handlePaymentChange}
-                            className="sr-only"
-                          />
-
-                          {/* Icon */}
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-gradient-to-br ${option.color} shadow-lg`}
+                          <label
+                              key={option.id}
+                              className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                  paymentMethod === option.id
+                                      ? "border-gray-600 bg-gray-50 shadow-md"
+                                      : "border-gray-200 hover:border-gray-300"
+                              }`}
                           >
-                            <IconComponent className="w-6 h-6 text-white" />
-                          </div>
+                            <input
+                                type="radio"
+                                name="payment"
+                                value={option.id}
+                                checked={paymentMethod === option.id}
+                                onChange={handlePaymentChange}
+                                className="sr-only"
+                            />
 
-                          {/* Content */}
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900">
-                              {option.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {option.description}
-                            </p>
-                          </div>
-
-                          {/* Radio indicator */}
-                          <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              paymentMethod === option.id
-                                ? "border-gray-600 bg-gray-600"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            {paymentMethod === option.id && (
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            )}
-                          </div>
-
-                          {/* Selected overlay */}
-                          {paymentMethod === option.id && (
-                            <div className="absolute top-2 right-2">
-                              <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                                <CheckCircle className="w-4 h-4 text-white" />
-                              </div>
+                            {/* Icon */}
+                            <div
+                                className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-gradient-to-br ${option.color} shadow-lg`}
+                            >
+                              <IconComponent className="w-6 h-6 text-white"/>
                             </div>
-                          )}
-                        </label>
+
+                            {/* Content */}
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">
+                                {option.name}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {option.description}
+                              </p>
+                            </div>
+                            <div
+                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                    paymentMethod === option.id
+                                        ? "border-gray-600 bg-gray-600"
+                                        : "border-gray-300 bg-white"
+                                }`}
+                            >
+                              {paymentMethod === option.id && (
+                                  <CheckCircle className="w-4 h-4 text-white"/>
+                              )}
+                            </div>
+
+                            {/* Radio indicator */}
+                            {/*<div*/}
+                            {/*  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${*/}
+                            {/*    paymentMethod === option.id*/}
+                            {/*      ? "border-gray-600 bg-gray-600"*/}
+                            {/*      : "border-gray-300"*/}
+                            {/*  }`}*/}
+                            {/*>*/}
+                            {/*  {paymentMethod === option.id && (*/}
+                            {/*    <div className="w-2 h-2 bg-white rounded-full"></div>*/}
+                            {/*  )}*/}
+                            {/*</div>*/}
+
+                            {/*/!* Selected overlay *!/*/}
+                            {/*{paymentMethod === option.id && (*/}
+                            {/*  <div className="absolute top-2 right-2">*/}
+                            {/*    <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">*/}
+                            {/*      <CheckCircle className="w-4 h-4 text-white" />*/}
+                            {/*    </div>*/}
+                            {/*  </div>*/}
+                            {/*)}*/}
+                          </label>
                       );
                     })}
                   </div>
@@ -440,7 +451,7 @@ const Payment = () => {
               {/* Right column - Booking details */}
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-xl p-6 shadow-sm">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
                     <Ticket className="w-6 h-6 mr-3 text-gray-600" />
                     Chi tiết đặt vé
                   </h2>
