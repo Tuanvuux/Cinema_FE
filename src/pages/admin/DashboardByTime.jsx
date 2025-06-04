@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+    import React, { useEffect, useState, useRef } from "react";
 import {
     ChevronDown,
     X,
@@ -24,6 +24,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
+    import ScrollToTopButton from "@/pages/admin/ScrollToTopButton.jsx";
 
 
 // Register ChartJS components
@@ -59,7 +60,7 @@ export default function DashBoardByTime() {
     const dropdownRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
     const [toast, setToast] = useState([]);
-
+    const ContentRef = useRef(null);
 
     const addToast = (message, type = 'success') => {
         const id = Date.now(); // Tạo ID duy nhất cho mỗi toast
@@ -388,15 +389,20 @@ export default function DashBoardByTime() {
     };
 
     // Filter and pagination logic
-    const filteredPayments = payments.filter(payment => {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-            (payment.movieName?.toLowerCase().includes(searchLower)) ||
-            (payment.methodPayment?.toLowerCase().includes(searchLower)) ||
-            (payment.username?.toLowerCase().includes(searchLower)) ||
-            (payment.paymentId?.toString().includes(searchLower))
-        );
-    });
+    // const filteredPayments = payments.filter(payment => {
+    //     const searchLower = searchTerm.toLowerCase();
+    //     return (
+    //         (payment.movieName?.toLowerCase().includes(searchLower)) ||
+    //         (payment.methodPayment?.toLowerCase().includes(searchLower)) ||
+    //         (payment.username?.toLowerCase().includes(searchLower)) ||
+    //         (payment.paymentId?.toString().includes(searchLower))
+    //     );
+    // });
+    const filteredPayments = payments.filter((payment) =>
+        Object.values(payment).some((value) =>
+            value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
 
     const indexOfLastPayment = currentPage * itemsPerPage;
     const indexOfFirstPayment = indexOfLastPayment - itemsPerPage;
@@ -678,7 +684,7 @@ export default function DashBoardByTime() {
     return (
         <div className="flex flex-col h-screen bg-gray-50">
             <ToastContainer />
-
+            <ScrollToTopButton containerRef={ContentRef} />
             {selectedPayment && (
                 <PaymentDetailsModal
                     payment={selectedPayment}
@@ -687,8 +693,8 @@ export default function DashBoardByTime() {
                 />
             )}
 
-            <div className="flex flex-col md:flex-row h-full">
-                <div className="flex-1 p-6 overflow-auto">
+            <div  className="flex flex-col md:flex-row h-full">
+                <div ref={ContentRef} className="flex-1 p-6 overflow-auto">
                     <div
                         className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 pb-4 border-b border-gray-200">
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">BÁO CÁO DOANH THU THEO THỜI
