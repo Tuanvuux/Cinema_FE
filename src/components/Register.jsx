@@ -75,8 +75,14 @@ const Register = () => {
         setErrorMessage("Đăng ký thất bại, vui lòng thử lại.");
       }
     } catch (error) {
-      setErrorMessage(error.message || "Đã xảy ra lỗi.");
-    } finally {
+      if (error.response && error.response.data) {
+        setErrorMessage(error.response.data.message || error.response.data);
+      } else if (error.message) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Đã xảy ra lỗi.");
+      }
+    } finally {paymentHistory
       setIsLoading(false);
     }
   };
