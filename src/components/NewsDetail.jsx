@@ -140,9 +140,6 @@ const NewsDetail = () => {
 
             {post.conclusion && (
               <div className="mt-8 pt-8 border-t border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Kết luận
-                </h3>
                 <p className="text-gray-700 leading-relaxed text-lg">
                   {post.conclusion}
                 </p>
