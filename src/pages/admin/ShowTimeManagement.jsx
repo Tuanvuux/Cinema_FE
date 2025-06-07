@@ -181,12 +181,14 @@ export default function ShowtimeManagement() {
 
         fetchReleaseDate();
     }, [selectedMovie]);
-    const isPastShowtime = (showDate) => {
-        const today = new Date();
-        const showDateObj = new Date(showDate);
-        return showDateObj < today.setHours(0, 0, 0, 0); // So sánh chỉ theo ngày, bỏ giờ
-    };
+    const isPastShowtime = (showDate, startTime) => {
+        const now = new Date();
 
+        // Tạo Date object từ showDate và startTime
+        const showDateTime = new Date(`${showDate} ${startTime}`);
+
+        return showDateTime < now;
+    };
     const handleCancel = () => {
         setSelectedMovie("");
         setShowDate("");
@@ -735,11 +737,11 @@ export default function ShowtimeManagement() {
                                 <tbody className="divide-y divide-gray-200">
                                 {currentShowtime
                                     .filter(showtime => {
-                                        const isPast = isPastShowtime(showtime.showDate);
+                                        const isPast = isPastShowtime(showtime.showDate, showtime.startTime);
                                         return showPastShowtimes ? isPast : !isPast;
                                     })
                                     .map((Showtime) => {
-                                        const isPast = isPastShowtime(Showtime.showDate);
+                                        const isPast = isPastShowtime(Showtime.showDate,Showtime.startTime);
                                         return (
                                             <tr key={Showtime.showtimeId}
                                                 className={`border-b transition-colors duration-200 hover:bg-gray-50 ${isPast ? 'opacity-60 cursor-not-allowed' : ''}`}>
