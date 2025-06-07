@@ -272,20 +272,20 @@ export default function MovieManagement() {
   };
   const onSubmit = async (data) => {
     // Validation cho file uploads
-    if (!posterPreview) {
-      addToast("Vui lòng chọn poster!", "error");
-      return;
-    }
-
-    if (!bannerPreview) {
-      addToast("Vui lòng chọn banner!", "error");
-      return;
-    }
-
-    if (!videoPreview) {
-      addToast("Vui lòng chọn trailer!", "error");
-      return;
-    }
+    // if (!posterPreview) {
+    //   addToast("Vui lòng chọn poster!", "error");
+    //   return;
+    // }
+    //
+    // if (!bannerPreview) {
+    //   addToast("Vui lòng chọn banner!", "error");
+    //   return;
+    // }
+    //
+    // if (!videoPreview) {
+    //   addToast("Vui lòng chọn trailer!", "error");
+    //   return;
+    // }
 
     const formattedData = {
       ...data,
@@ -1016,7 +1016,7 @@ export default function MovieManagement() {
                             })}
                             type="text"
                             placeholder="Tên phim"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                            className={`w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                                 errors.name
                                     ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                     : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
@@ -1034,7 +1034,7 @@ export default function MovieManagement() {
                             {...register("director")}
                             type="text"
                             placeholder="Đạo diễn"
-                            className="w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                            className="w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
                       </div>
 
@@ -1045,7 +1045,7 @@ export default function MovieManagement() {
                             {...register("actor")}
                             type="text"
                             placeholder="Diễn viên"
-                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                            className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
                       </div>
 
@@ -1055,7 +1055,7 @@ export default function MovieManagement() {
                         <textarea
                             {...register("description")}
                             placeholder="Mô tả phim"
-                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                            className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         ></textarea>
                       </div>
 
@@ -1066,7 +1066,7 @@ export default function MovieManagement() {
                             {...register("country")}
                             type="text"
                             placeholder="Quốc gia"
-                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                            className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
                       </div>
 
@@ -1109,7 +1109,7 @@ export default function MovieManagement() {
                             type="date"
                             min="1900-01-01"
                             max="2100-12-31"
-                            className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                            className={`w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                                 errors.releaseDate
                                     ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                     : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
@@ -1148,13 +1148,13 @@ export default function MovieManagement() {
                             {...register("caption")}
                             placeholder="Caption"
                             type="text"
-                            className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                            className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                         />
                       </div>
 
                       {/* Poster */}
                       <div className="mb-3">
-                        <label className="block mb-2">Poster: <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Poster:</label>
                         <input
                             type="file"
                             accept="image/*"
@@ -1188,7 +1188,7 @@ export default function MovieManagement() {
 
                       {/* Banner */}
                       <div className="mb-3">
-                        <label className="block mb-2">Banner: <span className="text-red-500">*</span></label>
+                        <label className="block mb-2">Banner:</label>
                         <input
                             type="file"
                             accept="image/*"
@@ -1255,7 +1255,7 @@ export default function MovieManagement() {
                         <label className="block mb-2">Thể loại:</label>
                         <select
                             {...register("categoryId")}
-                            className= "appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                            className= "appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundRepeat: 'no-repeat',
@@ -1329,7 +1329,7 @@ export default function MovieManagement() {
                           })}
                           type="text"
                           placeholder="Tên phim"
-                          className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                          className={`w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                               errors.name
                                   ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                   : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
@@ -1346,7 +1346,7 @@ export default function MovieManagement() {
                           {...register("director")}
                           type="text"
                           placeholder="Đạo diễn"
-                          className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                          className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                       />
                     </div>
 
@@ -1356,7 +1356,7 @@ export default function MovieManagement() {
                           {...register("actor")}
                           type="text"
                           placeholder="Diễn viên"
-                          className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                          className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                       />
                       {errors.actor && (
                           <p className="text-red-500 text-sm mt-1">{errors.actor.message}</p>
@@ -1368,7 +1368,7 @@ export default function MovieManagement() {
                       <textarea
                         {...register("description")}
                         placeholder="Mô tả phim"
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
+                        className="w-full border-gray-300 rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-gray-600 shadow-sm"
                       ></textarea>
                     </div>
 
@@ -1439,7 +1439,7 @@ export default function MovieManagement() {
                           })}
                           type="number"
                           placeholder="Giới hạn tuổi"
-                          className= "w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                          className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                       />
                     </div>
 
@@ -1549,7 +1549,7 @@ export default function MovieManagement() {
                       <label className="block mb-2">Thể loại:</label>
                       <select
                           {...register("categoryId")}
-                          className= "appearance-none w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                          className= "appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundRepeat: 'no-repeat',

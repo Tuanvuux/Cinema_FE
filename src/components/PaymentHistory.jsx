@@ -184,7 +184,7 @@ const PaymentHistory = () => {
             <ArrowLeft className="h-5 w-5 mr-2"/>
             Quay lại trang thông tin cá nhân
           </button>
-          {loading ? (
+          {loading ? (  
               <div
                   className="bg-white shadow-lg rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px]">
                 <Loader2 className="h-12 w-12 text-gray-900 animate-spin mb-4"/>
