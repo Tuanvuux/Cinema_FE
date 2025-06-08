@@ -194,7 +194,7 @@ const DashboardByMovie = () => {
                         </div>
                         <div
                             className={`bg-gradient-to-r from-blue-300 to-blue-500 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-200 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
-                            <h3 className="text-lg font-semibold mb-2">Tổng suất chiếu</h3>
+                            <h3 className="text-lg font-semibold mb-2">Tổng lịch chiếu</h3>
                             <p className="text-2xl font-bold">{formatCurrency(totalShowtimes)}</p>
                         </div>
                         <div className={`bg-gradient-to-r from-blue-200 to-blue-400 rounded-lg shadow-md p-4 text-white transition-all duration-500 delay-300 transform hover:scale-105 ${animateCharts ? 'opacity-100' : 'opacity-0'}`}>
@@ -314,8 +314,8 @@ const DashboardByMovie = () => {
                                 <th className="py-3 px-6 text-left rounded-tl-lg">Tên phim</th>
                                 <th className="py-3 px-6 text-right">Doanh thu (VND)</th>
                                 <th className="py-3 px-6 text-right">Số vé bán</th>
-                                <th className="py-3 px-6 text-right">Số suất chiếu</th>
-                                <th className="py-3 px-6 text-right rounded-tr-lg">Tỷ lệ lấp đầy</th>
+                                <th className="py-3 px-6 text-right">Số lịch chiếu</th>
+                                <th className="py-3 px-6 text-right rounded-tr-lg">Tỷ lệ lấp đầy TB</th>
                             </tr>
                             </thead>
                             <tbody className="text-gray-600 text-sm">
