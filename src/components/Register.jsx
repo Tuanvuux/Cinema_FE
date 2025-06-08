@@ -82,7 +82,7 @@ const Register = () => {
       } else {
         setErrorMessage("Đã xảy ra lỗi.");
       }
-    } finally {paymentHistory
+    } finally {
       setIsLoading(false);
     }
   };
