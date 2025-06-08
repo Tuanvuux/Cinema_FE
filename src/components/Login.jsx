@@ -52,42 +52,62 @@ const Login = () => {
     try {
       const response = await loginApi({ username, password });
 
-      if (!response || !response.token) {
-        throw new Error("Tên đăng nhập hoặc mật khẩu không đúng.");
+      // Kiểm tra nếu response có token (đăng nhập thành công)
+      if (response && response.token) {
+        // Lưu token
+        localStorage.setItem("token", response.token);
+
+        const userInfo = {
+          userId: response.userId,
+          username: response.username,
+          fullName: response.fullName,
+          email: response.email,
+          role: response.role,
+          gender: response.gender,
+        };
+
+        // Gọi context login
+        login(userInfo);
+
+        // Hiển thị toast thành công
+        setSuccessMessage("Đăng nhập thành công!");
+        setShowToast(true);
+
+        // Chuyển hướng sau 1 giây
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 1000);
+      } else {
+        // Nếu không có token, nghĩa là có lỗi
+        throw new Error("Đăng nhập thất bại!");
+      }
+    } catch (error) {
+      let message = "Đăng nhập thất bại!";
+
+      // Xử lý các loại lỗi khác nhau
+      if (error.response) {
+        // Lỗi từ server (4xx, 5xx)
+        if (error.response.status === 401) {
+          message = error.response.data?.message || "Tên đăng nhập hoặc mật khẩu không chính xác!";
+        } else if (error.response.status === 403) {
+          message = error.response.data?.message || "Tài khoản bị khóa hoặc chưa được kích hoạt!";
+        } else if (typeof error.response.data === 'string') {
+          // Nếu backend trả về string
+          message = error.response.data;
+        } else if (error.response.data?.message) {
+          // Nếu backend trả về object có message
+          message = error.response.data.message;
+        }
+      } else if (error.message) {
+        // Lỗi network hoặc lỗi khác
+        message = error.message;
       }
 
-      // Lưu token
-      localStorage.setItem("token", response.token);
-
-      const userInfo = {
-        userId: response.userId,
-        username: response.username,
-        fullName: response.fullName,
-        email: response.email,
-        role: response.role,
-        gender: response.gender,
-      };
-
-      // Gọi context login
-      login(userInfo);
-
-      // Hiển thị toast thành công
-      setSuccessMessage("Đăng nhập thành công!");
-      setShowToast(true);
-
-      // Chuyển hướng sau 1 giây
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 1000);
-    } catch (error) {
-      const message =
-        error.response?.data?.message || error.message || "Đăng nhập thất bại!";
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url('/background_login.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* Overlay for better contrast */}
