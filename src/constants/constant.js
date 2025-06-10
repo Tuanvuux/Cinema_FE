@@ -1,7 +1,7 @@
 import { CreditCard, Smartphone, Globe } from "lucide-react";
 
-export const BASE_URL = "http://localhost:8080";
-// export const BASE_URL = "https://cinema-be-yaoa.onrender.com";
+// export const BASE_URL = "http://localhost:8080";
+export const BASE_URL = "https://cinema-be-yaoa.onrender.com";
 export const paymentOptions = [
   {
     id: "momo",
