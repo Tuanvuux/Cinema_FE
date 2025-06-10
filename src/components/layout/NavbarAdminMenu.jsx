@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useMemo  } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import GradientText from "@/components/ui/GradientText.jsx";
@@ -44,7 +44,9 @@ const NavbarAdminMenu = ({ currentPage, onNavigate }) => {
     }
     return false;
   };
-
+  const filteredNavItems = useMemo(() => {
+    return navItems.filter(item => !isDisabled(item.key));
+  }, [isEmployee]);
   // Kiểm tra xem menu item có đang active không (bao gồm cả trang con)
   const isActive = (item) => {
     if (item.key === "post") {
