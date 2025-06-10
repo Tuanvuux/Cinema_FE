@@ -14,6 +14,7 @@ import {
   Ticket,
   AlertCircle,
   Film,
+  Bookmark
 } from "lucide-react";
 import { formatDate, ageLimit } from "../utils/helpers";
 
@@ -293,9 +294,9 @@ const MovieDetailPage = () => {
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 md:col-span-2">
-                      <Globe className="h-5 w-5 text-gray-500 mt-0.5" />
+                      <Bookmark  className="h-5 w-5 text-gray-500 mt-0.5" />
                       <div>
-                        <p className="font-semibold text-gray-700">Ngôn ngữ</p>
+                        <p className="font-semibold text-gray-700">Chú thích</p>
                         <p className="text-gray-600">{movie.caption}</p>
                       </div>
                     </div>

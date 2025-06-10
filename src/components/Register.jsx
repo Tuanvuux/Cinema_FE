@@ -302,7 +302,6 @@ const Register = () => {
                         <option value="">Chọn giới tính</option>
                         <option value="male">Nam</option>
                         <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
                       </select>
                     </div>
                     <div className="md:col-span-2">

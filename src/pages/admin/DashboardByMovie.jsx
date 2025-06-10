@@ -7,7 +7,7 @@ import vi from 'date-fns/locale/vi';
 import {RefreshCw} from "lucide-react";
 
 const DashboardByMovie = () => {
-    const [startDate, setStartDate] = useState(format(new Date(new Date().setDate(new Date().getDate() - 30)), 'yyyy-MM-dd'));
+    const [startDate, setStartDate] = useState(format(new Date(new Date().setFullYear(new Date().getFullYear() - 2)), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [revenueData, setRevenueData] = useState([]);
     const [viewsData, setViewsData] = useState([]);
@@ -73,7 +73,7 @@ const DashboardByMovie = () => {
 
     const handleRefresh = () => {
         // Reset về ngày mặc định (30 ngày trước đến hôm nay)
-        const defaultStartDate = format(new Date(new Date().setDate(new Date().getDate() - 30)), 'yyyy-MM-dd');
+        const defaultStartDate = format(new Date(new Date().setFullYear(new Date().getFullYear() - 2)), 'yyyy-MM-dd');
         const defaultEndDate = format(new Date(), 'yyyy-MM-dd');
 
         setStartDate(defaultStartDate);
