@@ -31,6 +31,10 @@ const SeatLegend = () => {
             <span className="text-sm text-gray-600">Đang chọn</span>
           </div>
           <div className="flex items-center">
+            <div className="w-8 h-8 bg-gray-300 border-2 border-gray-500 rounded-lg mr-2"></div>
+            <span className="text-sm text-gray-600">Đang giữ</span>
+          </div>
+          <div className="flex items-center">
             <div className="w-8 h-8 bg-gray-100 border-2 border-gray-300 rounded-lg mr-2 relative">
               <X className="w-5 h-5 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"/>
             </div>

@@ -1128,7 +1128,13 @@ export default function MovieManagement() {
                             {...register("ageLimit", {
                               min: {value: 0, message: "Giới hạn tuổi không được âm"}
                             })}
+                            onKeyDown={(e) => {
+                              if (e.key === '-' || e.key === 'e' || e.key === '+' ) {
+                                e.preventDefault();
+                              }
+                            }}
                             type="number"
+                            min= "0"
                             placeholder="Giới hạn tuổi"
                             className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
                                 errors.ageLimit
@@ -1434,13 +1440,20 @@ export default function MovieManagement() {
                     <div className="mb-3">
                       <label className="block mb-2">Giới hạn tuổi</label>
                       <input
-                          {...register("ageLimit", {
-                            min: {value: 0, message: "Giới hạn tuổi không được âm"}
-                          })}
-                          type="number"
-                          placeholder="Giới hạn tuổi"
-                          className= "w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
+                        {...register("ageLimit", {
+                          min: {value: 0, message: "Giới hạn tuổi không được âm"}
+                        })}
+                        type="number"
+                        placeholder="Giới hạn tuổi"
+                        className={`w-full border rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm ${
+                            errors.ageLimit
+                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
+                        }`}
                       />
+                      {errors.ageLimit && (
+                          <p className="text-red-500 text-sm mt-1">{errors.ageLimit.message}</p>
+                      )}
                     </div>
 
                     <div className="mb-3">
