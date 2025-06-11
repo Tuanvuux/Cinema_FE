@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getShowtimes, deleteShowtime, getRooms, addShowtime, updateShowtime, getReleaseDate,checkShowTimeExists } from "../../services/apiadmin.jsx";
+import { getShowtimes, deleteShowtime, getRooms, addShowtime, updateShowtime, getReleaseDate,checkShowTimeExists,checkMovieIsDelete } from "../../services/apiadmin.jsx";
 import { getMovies } from "../../services/api.jsx";
 import { Link } from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
@@ -263,11 +263,21 @@ export default function ShowtimeManagement() {
         }
     };
 
-    const validateForm = () => {
+    const validateForm = async () => {
         const errors = {};
 
         if (!selectedMovie) {
             errors.movie = "Vui lòng chọn phim";
+        } else {
+            try {
+                const isDeleted = await checkMovieIsDelete(selectedMovie);
+                if (isDeleted === true){
+                    errors.movie = "Phim đã bị khóa";
+                }
+            } catch (error){
+                console.error("Lỗi khi kiểm tra isDelete:", error);
+                errors.movie = "Không kiểm tra được trạng thái phim";
+            }
         }
 
         if (!showDate) {
@@ -333,14 +343,87 @@ export default function ShowtimeManagement() {
         setValidationErrors(errors);
         return Object.keys(errors).length === 0;
     };
+    const validateEditForm = async () => {
+        const errors = {};
+        const { movieId, showDate, startTime, endTime, roomId } = editingShowtime;
+
+        if (!movieId) {
+            errors.movie = "Vui lòng chọn phim";
+        }else {
+            try {
+                const isDeleted = await checkMovieIsDelete(movieId);
+                if (isDeleted === true){
+                    errors.movie = "Phim đã bị khóa";
+                }
+            } catch (error){
+                console.error("Lỗi khi kiểm tra isDelete:", error);
+                errors.movie = "Không kiểm tra được trạng thái phim";
+            }
+        }
+
+        if (!showDate) {
+            errors.showDate = "Vui lòng chọn ngày chiếu";
+        }
+
+        if (!startTime) {
+            errors.startTime = "Vui lòng chọn giờ bắt đầu";
+        }
+
+        if (!endTime) {
+            errors.endTime = "Vui lòng chọn giờ kết thúc";
+        }
+
+        if (!roomId) {
+            errors.room = "Vui lòng chọn phòng";
+        }
+
+        if (showDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const selectedDate = new Date(showDate);
+            const now = new Date();
+
+            if (selectedDate < today) {
+                errors.showDate = "Ngày chiếu không được trong quá khứ";
+            }
+
+            if (
+                selectedDate.toDateString() === today.toDateString() &&
+                startTime &&
+                endTime
+            ) {
+                const [startHour, startMinute] = startTime.split(":").map(Number);
+                const [endHour, endMinute] = endTime.split(":").map(Number);
+
+                const startDateTime = new Date(showDate);
+                startDateTime.setHours(startHour, startMinute, 0, 0);
+
+                const endDateTime = new Date(showDate);
+                endDateTime.setHours(endHour, endMinute, 0, 0);
+
+                if (startDateTime < now) {
+                    errors.startTime = "Giờ bắt đầu phải lớn hơn thời điểm hiện tại";
+                }
+
+                if (endDateTime <= startDateTime) {
+                    errors.endTime = "Giờ kết thúc phải sau giờ bắt đầu";
+                }
+            }
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
 
     const handleSubmit = async () => {
         // Reset errors trước khi validate
         setValidationErrors({});
 
         // Validate form
-        if (!validateForm()) {
-            // addToast('Vui lòng điền đầy đủ thông tin!', 'error');
+        const isValid = await validateForm();
+        if (!isValid) {
             return;
         }
 
@@ -446,10 +529,11 @@ export default function ShowtimeManagement() {
         setValidationErrors({});
 
         // Validate form
-        if (!validateForm()) {
-            // addToast('Vui lòng điền đầy đủ thông tin!', 'error');
+        const isValid = await validateEditForm();
+        if (!isValid) {
             return;
         }
+
         try {
             const isBooked = await checkShowTimeExists(editingShowtime.showtimeId);
             if (isBooked) {
