@@ -225,7 +225,10 @@ export const checkShowTimeExists = async (showtimeId) => {
   const res = await api.get(`/showtime/admin/check-exist-booked/${showtimeId}`);
   return res.data;
 };
-
+export const checkMovieIsDelete = async (movieId) => {
+  const res = await api.get(`/showtime/admin/check-isdelete-movie/${movieId}`);
+  return res.data;
+};
 export const getAvailableRooms = async (showDate, startTime, endTime) => {
   const response = await api.get(`/showtime/admin/availablerooms`, {
     params: {
