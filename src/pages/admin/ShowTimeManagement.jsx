@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getShowtimes, deleteShowtime, getRooms, addShowtime, updateShowtime, getReleaseDate,checkShowTimeExists,checkMovieIsDelete } from "../../services/apiadmin.jsx";
+import { getShowtimes, deleteShowtime, getRooms, addShowtime,
+    updateShowtime, getReleaseDate,checkShowTimeExists,checkMovieIsDelete,
+    checkInActiveRoom} from "../../services/apiadmin.jsx";
 import { getMovies } from "../../services/api.jsx";
 import { Link } from "react-router-dom";
 import { format, addMinutes, isSameDay, isSameMinute } from 'date-fns';
@@ -294,6 +296,16 @@ export default function ShowtimeManagement() {
 
         if (!selectedRoom) {
             errors.room = "Vui lòng chọn phòng";
+        } else{
+            try {
+                const isActive = await checkInActiveRoom(selectedRoom);
+                if (isActive === true){
+                    errors.room = "Phòng đã bị khóa";
+                }
+            } catch (error){
+                console.error("Lỗi khi kiểm tra isActive:", error);
+                errors.room = "Không kiểm tra được trạng thái phòng";
+            }
         }
 
         if (showDate) {
@@ -375,6 +387,16 @@ export default function ShowtimeManagement() {
 
         if (!roomId) {
             errors.room = "Vui lòng chọn phòng";
+        } else{
+            try {
+                const isActive = await checkInActiveRoom(roomId);
+                if (isActive === true){
+                    errors.room = "Phòng đã bị khóa";
+                }
+            } catch (error){
+                console.error("Lỗi khi kiểm tra isActive:", error);
+                errors.room = "Không kiểm tra được trạng thái phòng";
+            }
         }
 
         if (showDate) {
@@ -1059,7 +1081,7 @@ export default function ShowtimeManagement() {
                                             <select
                                                 onChange={(e) => {
                                                     setSelectedRoom(parseInt(e.target.value));
-                                                    // Clear error khi user chọn
+                                                    // // Clear error khi user chọn
                                                     if (validationErrors.room) {
                                                         setValidationErrors(prev => ({ ...prev, room: undefined }));
                                                     }
@@ -1069,6 +1091,7 @@ export default function ShowtimeManagement() {
                                                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                         : 'border-gray-300 focus:ring-gray-600 focus:border-gray-600'
                                                 }`}
+                                                // className="appearance-none w-full rounded-lg py-2.5 px-3.5 focus:outline-none focus:ring-2 shadow-sm"
                                                 style={{
                                                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                                                     backgroundRepeat: 'no-repeat',
