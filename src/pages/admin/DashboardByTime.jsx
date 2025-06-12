@@ -223,7 +223,7 @@ export default function DashBoardByTime() {
         fetchPayments();
     };
 
-    const handleSeeShowtime = async (payment) => {
+    const handleSeeDetail = async (payment) => {
         setDetailsLoading(true);
         try {
             const detailedPayment = await getPaymentDetails(payment.paymentId);
@@ -890,7 +890,8 @@ export default function DashBoardByTime() {
                                         )}
                                     </div>
                                 </div>
-                            )}
+                            )
+                            }
 
                             <div className="flex items-center space-x-3 mb-4 sm:mb-0">
                                 <span className="text-gray-700 font-medium">Loại biểu đồ:</span>
@@ -981,7 +982,7 @@ export default function DashBoardByTime() {
                                             </td>
                                             <td className="p-4 text-center">
                                                 <button
-                                                    onClick={() => handleSeeShowtime(payment)}
+                                                    onClick={() => handleSeeDetail(payment)}
                                                     className="text-blue-600 hover:text-blue-800 transition-colors duration-200 p-2 rounded-full hover:bg-blue-100"
                                                     disabled={detailsLoading}
                                                     title="Xem chi tiết"
